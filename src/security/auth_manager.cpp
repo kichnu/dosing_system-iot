@@ -65,6 +65,16 @@ bool verifyPassword(const String& password) {
 }
 
 bool isIPAllowed(IPAddress ip) {
-    // Wszystkie IP dozwolone (local network)
-    return true;
+    // Trusted IPs - bypass authentication (reverse proxy)
+    static const IPAddress trustedIPs[] = {
+        IPAddress(10, 99, 0, 1)   // VPS przez WireGuard tunnel
+    };
+
+    for (const auto& trusted : trustedIPs) {
+        if (ip == trusted) {
+            Serial.printf("[AUTH] Trusted IP: %s\n", ip.toString().c_str());
+            return true;
+        }
+    }
+    return false;
 }

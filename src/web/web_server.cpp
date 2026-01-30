@@ -37,6 +37,12 @@ String getSessionToken(AsyncWebServerRequest* request) {
 }
 
 bool isAuthenticated(AsyncWebServerRequest* request) {
+    // Trusted IPs bypass authentication (VPS reverse proxy)
+    if (isIPAllowed(request->client()->remoteIP())) {
+        return true;
+    }
+
+    // Otherwise check session cookie
     String token = getSessionToken(request);
     if (token.length() == 0) return false;
     return validateSession(token, request->client()->remoteIP());
@@ -47,6 +53,9 @@ bool isAuthenticated(AsyncWebServerRequest* request) {
 // ============================================================================
 
 void handleRoot(AsyncWebServerRequest* request) {
+    
+    IPAddress clientIP = request->client()->remoteIP();                                                                                                                                       
+    Serial.printf("[WEB] ROOT request from: %s\n", clientIP.toString().c_str()); 
     if (!isAuthenticated(request)) {
         request->redirect("/login");
         return;
