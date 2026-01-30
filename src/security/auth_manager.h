@@ -6,7 +6,9 @@
 
 void initAuthManager();
 bool isIPAllowed(IPAddress ip);
+bool isIPWhitelisted(IPAddress ip);
 bool verifyPassword(const String& password);
 String hashPassword(const String& password);
+bool areCredentialsAvailable();
 
 #endif

@@ -6,7 +6,12 @@
 
 void initAuthManager() {
     LOG_INFO("Authentication manager initialized");
-    LOG_INFO("Using %s credentials", areCredentialsLoaded() ? "FRAM" : "fallback");
+    if (areCredentialsLoaded()) {
+        LOG_INFO("Using FRAM admin credentials");
+    } else {
+        LOG_WARNING("NO FRAM CREDENTIALS - Web login will return 503!");
+        LOG_WARNING("Use Captive Portal to configure credentials");
+    }
 }
 
 String hashPassword(const String& password) {
@@ -32,14 +37,15 @@ String hashPassword(const String& password) {
     return hashString;
 }
 
+bool areCredentialsAvailable() {
+    return areCredentialsLoaded();
+}
+
 bool verifyPassword(const String& password) {
-    // Check if FRAM credentials loaded
+    // SECURITY: Block authentication when no FRAM credentials loaded
     if (!areCredentialsLoaded()) {
-        LOG_WARNING("No FRAM credentials - using fallback password 'admin123'");
-        // Fallback for testing without FRAM
-        String testHash = hashPassword("admin123");
-        String inputHash = hashPassword(password);
-        return (inputHash == testHash);
+        LOG_ERROR("Authentication BLOCKED - No FRAM credentials loaded!");
+        return false;
     }
     
     // Get stored hash from FRAM
@@ -64,17 +70,40 @@ bool verifyPassword(const String& password) {
     return valid;
 }
 
-bool isIPAllowed(IPAddress ip) {
-    // Trusted IPs - bypass authentication (reverse proxy)
-    static const IPAddress trustedIPs[] = {
-        IPAddress(10, 99, 0, 1)   // VPS przez WireGuard tunnel
-    };
+// ============================================================================
+// IP WHITELIST - tylko te IP mają w ogóle dostęp do serwera
+// ============================================================================
+static const IPAddress ALLOWED_IPS[] = {
+    IPAddress(192, 168, 2, 10),    // Placeholder - zmień na swoje IP z LAN
+    IPAddress(192, 168, 2, 20),  // Placeholder - zmień na swoje IP z LAN
+    IPAddress(10, 99, 0, 1),      // Podsieć WireGuard
+};
+static const size_t ALLOWED_IPS_COUNT = sizeof(ALLOWED_IPS) / sizeof(ALLOWED_IPS[0]);
 
-    for (const auto& trusted : trustedIPs) {
-        if (ip == trusted) {
-            Serial.printf("[AUTH] Trusted IP: %s\n", ip.toString().c_str());
+// Trusted proxy - omija CAŁĄ autentykację (sesja, hasło)
+static const IPAddress TRUSTED_PROXY_IP(10, 99, 0, 1);  // VPS przez WireGuard tunnel
+
+bool isIPWhitelisted(IPAddress ip) {
+    // Trusted proxy jest zawsze na whiteliście
+    if (ip == TRUSTED_PROXY_IP) {
+        return true;
+    }
+
+    for (size_t i = 0; i < ALLOWED_IPS_COUNT; i++) {
+        if (ip == ALLOWED_IPS[i]) {
             return true;
         }
+    }
+
+    LOG_WARNING("IP %s REJECTED - not on whitelist", ip.toString().c_str());
+    return false;
+}
+
+bool isIPAllowed(IPAddress ip) {
+    // Trusted proxy - bypass authentication (reverse proxy)
+    if (ip == TRUSTED_PROXY_IP) {
+        Serial.printf("[AUTH] Trusted proxy: %s\n", ip.toString().c_str());
+        return true;
     }
     return false;
 }

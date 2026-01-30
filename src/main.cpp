@@ -27,6 +27,8 @@
 #include "provisioning/ap_server.h"
 #include "config/credentials_manager.h"
 #include "hardware/safety_manager.h"
+#include "security/session_manager.h"
+#include "security/rate_limiter.h"
 
 // CLI modules (debug only)
 #if ENABLE_CLI
@@ -480,6 +482,14 @@ void loop() {
                 dosingScheduler.syncTimeState();
             }
         }
+    }
+
+    // === SESSION & RATE LIMITER CLEANUP (every 30s) ===
+    static uint32_t lastSecurityCleanup = 0;
+    if (millis() - lastSecurityCleanup > 30000) {
+        lastSecurityCleanup = millis();
+        updateSessionManager();
+        updateRateLimiter();
     }
 
     // Update scheduler (main dosing logic)

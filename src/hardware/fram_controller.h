@@ -128,4 +128,7 @@ private:
 
 extern FramController framController;
 
+// Flag blokująca odczyt FRAM z HTTP podczas zapisu
+extern volatile bool framBusy;
+
 #endif // FRAM_CONTROLLER_H

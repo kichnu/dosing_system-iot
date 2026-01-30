@@ -8,6 +8,9 @@
 // Global instance
 FramController framController;
 
+// Flag blokująca odczyt FRAM z HTTP podczas zapisu
+volatile bool framBusy = false;
+
 // CRC32 lookup table (polynomial 0xEDB88320)
 static const uint32_t crc32_table[256] PROGMEM = {
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
@@ -254,30 +257,33 @@ bool FramController::writeBytes(uint16_t address, const void* data, size_t lengt
         Serial.println(F("[FRAM] Write out of bounds!"));
         return false;
     }
-    
+
+    framBusy = true;
     const uint8_t* buf = (const uint8_t*)data;
-    
+
     // Write in chunks (Wire buffer is limited to 32 bytes including address)
     size_t remaining = length;
     while (remaining > 0) {
         size_t chunk = min(remaining, (size_t)30);  // 30 data + 2 address
-        
+
         Wire.beginTransmission(FRAM_I2C_ADDRESS);
         Wire.write((uint8_t)(address >> 8));
         Wire.write((uint8_t)(address & 0xFF));
-        
+
         for (size_t i = 0; i < chunk; i++) {
             Wire.write(*buf++);
         }
-        
+
         if (Wire.endTransmission() != 0) {
+            framBusy = false;
             return false;
         }
-        
+
         address += chunk;
         remaining -= chunk;
     }
-    
+
+    framBusy = false;
     return true;
 }
 

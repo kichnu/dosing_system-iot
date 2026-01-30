@@ -149,7 +149,7 @@ static const uint8_t VALIDATE_PINS[4] = {
 // ============================================================================
 // SESSION & SECURITY (z bazowego projektu)
 // ============================================================================
-#define SESSION_TIMEOUT_MS          3600000 // 1 godzina
+#define SESSION_TIMEOUT_MS          1800000 // 30 minut
 #define MAX_LOGIN_ATTEMPTS          5
 #define LOGIN_LOCKOUT_MS            300000  // 5 minut blokady
 #define RATE_LIMIT_REQUESTS         100

@@ -8,9 +8,12 @@
 #include "../config/config.h"
 #include "../security/session_manager.h"
 #include "../security/auth_manager.h"
+#include "../security/rate_limiter.h"
+#include "../core/logging.h"
 #include "../algorithm/channel_manager.h"
 #include "../hardware/dosing_scheduler.h"
 #include "../hardware/rtc_controller.h"
+#include "../hardware/fram_controller.h"
 
 // ============================================================================
 // SERVER INSTANCE
@@ -36,16 +39,40 @@ String getSessionToken(AsyncWebServerRequest* request) {
     return "";
 }
 
+// Sprawdzenie whitelisty IP - 403 przed jakimkolwiek przetwarzaniem
+bool checkWhitelist(AsyncWebServerRequest* request) {
+    if (!isIPWhitelisted(request->client()->remoteIP())) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return false;
+    }
+    return true;
+}
+
 bool isAuthenticated(AsyncWebServerRequest* request) {
-    // Trusted IPs bypass authentication (VPS reverse proxy)
-    if (isIPAllowed(request->client()->remoteIP())) {
+    IPAddress clientIP = request->client()->remoteIP();
+
+    // Whitelist check first
+    if (!isIPWhitelisted(clientIP)) {
+        return false;
+    }
+
+    // Trusted proxy bypass all auth
+    if (isIPAllowed(clientIP)) {
         return true;
     }
 
-    // Otherwise check session cookie
+    // Rate limit check (before session validation)
+    if (isRateLimited(clientIP) || isIPBlocked(clientIP)) {
+        return false;
+    }
+
+    // Record request for rate limiting
+    recordRequest(clientIP);
+
+    // Check session cookie
     String token = getSessionToken(request);
     if (token.length() == 0) return false;
-    return validateSession(token, request->client()->remoteIP());
+    return validateSession(token, clientIP);
 }
 
 // ============================================================================
@@ -53,9 +80,10 @@ bool isAuthenticated(AsyncWebServerRequest* request) {
 // ============================================================================
 
 void handleRoot(AsyncWebServerRequest* request) {
-    
-    IPAddress clientIP = request->client()->remoteIP();                                                                                                                                       
-    Serial.printf("[WEB] ROOT request from: %s\n", clientIP.toString().c_str()); 
+    if (!checkWhitelist(request)) return;
+
+    IPAddress clientIP = request->client()->remoteIP();
+    Serial.printf("[WEB] ROOT request from: %s\n", clientIP.toString().c_str());
     if (!isAuthenticated(request)) {
         request->redirect("/login");
         return;
@@ -64,6 +92,8 @@ void handleRoot(AsyncWebServerRequest* request) {
 }
 
 void handleLogin(AsyncWebServerRequest* request) {
+    if (!checkWhitelist(request)) return;
+
     if (isAuthenticated(request)) {
         request->redirect("/");
         return;
@@ -72,25 +102,50 @@ void handleLogin(AsyncWebServerRequest* request) {
 }
 
 void handleApiLogin(AsyncWebServerRequest* request) {
+    if (!checkWhitelist(request)) return;
+
+    IPAddress clientIP = request->client()->remoteIP();
+
+    // Rate limit / block check
+    if (isRateLimited(clientIP) || isIPBlocked(clientIP)) {
+        request->send(429, "application/json",
+            "{\"success\":false,\"error\":\"Too many requests. Try again later.\"}");
+        return;
+    }
+
     if (!request->hasParam("password", true)) {
+        recordFailedLogin(clientIP);
         request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing password\"}");
         return;
     }
-    
+
+    // SECURITY: Check if FRAM credentials are configured
+    if (!areCredentialsAvailable()) {
+        LOG_WARNING("Login attempt with no FRAM credentials from %s",
+                    clientIP.toString().c_str());
+        request->send(503, "application/json",
+            "{\"success\":false,"
+            "\"error\":\"System not configured\","
+            "\"message\":\"FRAM credentials required. Use Captive Portal to configure.\","
+            "\"setup\":\"Hold button 5s at boot -> Connect to DOZOWNIK-SETUP -> Configure credentials\"}");
+        return;
+    }
+
     String password = request->getParam("password", true)->value();
-    
+
     if (verifyPassword(password)) {
-        String token = createSession(request->client()->remoteIP());
-        
-        AsyncWebServerResponse* response = request->beginResponse(200, "application/json", 
+        String token = createSession(clientIP);
+
+        AsyncWebServerResponse* response = request->beginResponse(200, "application/json",
             "{\"success\":true}");
-        response->addHeader("Set-Cookie", "session=" + token + "; Path=/; HttpOnly");
+        response->addHeader("Set-Cookie", "session=" + token + "; Path=/; HttpOnly; SameSite=Strict");
         request->send(response);
-        
-        Serial.printf("[WEB] Login OK from %s\n", request->client()->remoteIP().toString().c_str());
+
+        Serial.printf("[WEB] Login OK from %s\n", clientIP.toString().c_str());
     } else {
+        recordFailedLogin(clientIP);
         request->send(401, "application/json", "{\"success\":false,\"error\":\"Invalid password\"}");
-        Serial.printf("[WEB] Login FAILED from %s\n", request->client()->remoteIP().toString().c_str());
+        Serial.printf("[WEB] Login FAILED from %s\n", clientIP.toString().c_str());
     }
 }
 
@@ -102,7 +157,7 @@ void handleApiLogout(AsyncWebServerRequest* request) {
     
     AsyncWebServerResponse* response = request->beginResponse(200, "application/json", 
         "{\"success\":true}");
-    response->addHeader("Set-Cookie", "session=; Path=/; HttpOnly; Max-Age=0");
+    response->addHeader("Set-Cookie", "session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
     request->send(response);
     
     Serial.println(F("[WEB] Logout"));
@@ -115,6 +170,11 @@ void handleApiLogout(AsyncWebServerRequest* request) {
 void handleApiDosingStatus(AsyncWebServerRequest* request) {
     if (!isAuthenticated(request)) {
         request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+        return;
+    }
+
+    if (framBusy) {
+        request->send(503, "application/json", "{\"error\":\"FRAM busy, retry\"}");
         return;
     }
     
@@ -262,6 +322,47 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
     }
     
     Serial.printf("[WEB] Config update CH%d\n", channel);
+
+    // === Input validation before applying ===
+    // Events bitmask: only bits 1-23 valid (hour 0 reserved for daily reset)
+    if (doc["events"].is<uint32_t>()) {
+        uint32_t events = doc["events"].as<uint32_t>();
+        if (events & ~0x00FFFFFE) {  // bits 24+ or bit 0
+            request->send(400, "application/json",
+                "{\"success\":false,\"error\":\"Invalid events bitmask (valid: bits 1-23)\"}");
+            return;
+        }
+    }
+
+    // Days bitmask: only bits 0-6 valid (Mon-Sun)
+    if (doc["days"].is<uint8_t>()) {
+        uint8_t days = doc["days"].as<uint8_t>();
+        if (days & ~0x7F) {  // bits 7+
+            request->send(400, "application/json",
+                "{\"success\":false,\"error\":\"Invalid days bitmask (valid: bits 0-6)\"}");
+            return;
+        }
+    }
+
+    // Daily dose: MIN_SINGLE_DOSE_ML - MAX_DAILY_DOSE_ML
+    if (doc["dailyDose"].is<float>()) {
+        float dose = doc["dailyDose"].as<float>();
+        if (dose < MIN_SINGLE_DOSE_ML || dose > MAX_DAILY_DOSE_ML) {
+            request->send(400, "application/json",
+                "{\"success\":false,\"error\":\"Invalid dailyDose (valid: 1.0-500.0 ml)\"}");
+            return;
+        }
+    }
+
+    // Dosing rate: MIN_DOSING_RATE - MAX_DOSING_RATE
+    if (doc["dosingRate"].is<float>()) {
+        float rate = doc["dosingRate"].as<float>();
+        if (rate < MIN_DOSING_RATE || rate > MAX_DOSING_RATE) {
+            request->send(400, "application/json",
+                "{\"success\":false,\"error\":\"Invalid dosingRate (valid: 0.1-5.0 ml/s)\"}");
+            return;
+        }
+    }
 
     // Build atomic config update (prevents partial writes race condition)
     ChannelManager::ConfigUpdate update;
@@ -510,6 +611,11 @@ void handleApiContainerVolumeGet(AsyncWebServerRequest* request) {
         request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
         return;
     }
+
+    if (framBusy) {
+        request->send(503, "application/json", "{\"error\":\"FRAM busy, retry\"}");
+        return;
+    }
     
     // Get channel from query param: /api/container-volume?channel=0
     if (!request->hasParam("channel")) {
@@ -694,6 +800,7 @@ void handleApiResetDosed(AsyncWebServerRequest* request) {
 }
 
 void handleNotFound(AsyncWebServerRequest* request) {
+    if (!checkWhitelist(request)) return;
     request->send(404, "text/plain", "Not Found");
 }
 
@@ -706,6 +813,7 @@ void initWebServer() {
     
     // Init dependencies
     initSessionManager();
+    initRateLimiter();
     initAuthManager();
     
     // === PAGE ROUTES ===
