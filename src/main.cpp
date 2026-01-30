@@ -525,7 +525,39 @@ void loop() {
                       dosingScheduler.isEnabled() ? "ON" : "OFF");
     }
     #endif
-    
+
+    // === 24H AUTO-RESTART (ochrona przed fragmentacją pamięci) ===
+    // Raz dziennie w oknie 00:15-00:45 UTC (po daily reset, przed eventami o 01:00)
+    // Flaga statyczna zapobiega wielokrotnym próbom w tej samej godzinie 0
+    {
+        static bool autoRestartDone = false;
+
+        if (initStatus.rtc_ok) {
+            TimeInfo now = rtcController.getTime();
+
+            // Reset flagi poza godziną 0 — gotowy na następne okno
+            if (now.hour != 0) {
+                autoRestartDone = false;
+            }
+
+            // Warunki restartu: okno czasowe + scheduler IDLE + pompy wyłączone
+            if (!autoRestartDone &&
+                now.hour == 0 && now.minute >= 15 && now.minute <= 45 &&
+                dosingScheduler.getState() == SchedulerState::IDLE &&
+                !relayController.isAnyOn() &&
+                !safetyManager.isCriticalErrorActive())
+            {
+                autoRestartDone = true;
+                Serial.println(F("[MAIN] === DAILY AUTO-RESTART ==="));
+                Serial.printf("[MAIN] Uptime: %lu min, Time: %02d:%02d UTC\n",
+                              millis() / 60000, now.hour, now.minute);
+                Serial.println(F("[MAIN] Restarting for memory health..."));
+                delay(500);
+                ESP.restart();
+            }
+        }
+    }
+
     delay(10);
 }
 
