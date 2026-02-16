@@ -155,6 +155,9 @@ static const uint8_t VALIDATE_PINS[4] = {
 #define RATE_LIMIT_REQUESTS         100
 #define RATE_LIMIT_WINDOW_MS        60000   // 1 minuta
 
+// ================= TRUSTED PROXY (WireGuard VPS) =================
+extern const IPAddress TRUSTED_PROXY_IP;
+
 // ============================================================================
 // SERIAL DEBUG
 // ============================================================================

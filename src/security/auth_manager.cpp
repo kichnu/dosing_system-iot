@@ -72,16 +72,16 @@ bool verifyPassword(const String& password) {
 
 // ============================================================================
 // IP WHITELIST - tylko te IP mają w ogóle dostęp do serwera
+// Proxy IP NIE jest w ALLOWED_IPS[] — ma oddzielną ścieżkę (auto-auth)
 // ============================================================================
 static const IPAddress ALLOWED_IPS[] = {
     IPAddress(192, 168, 2, 10),    // Placeholder - zmień na swoje IP z LAN
-    IPAddress(192, 168, 2, 20),  // Placeholder - zmień na swoje IP z LAN
-    IPAddress(10, 99, 0, 1),      // Podsieć WireGuard
+    IPAddress(192, 168, 2, 20),    // Placeholder - zmień na swoje IP z LAN
 };
 static const size_t ALLOWED_IPS_COUNT = sizeof(ALLOWED_IPS) / sizeof(ALLOWED_IPS[0]);
 
-// Trusted proxy - omija CAŁĄ autentykację (sesja, hasło)
-static const IPAddress TRUSTED_PROXY_IP(10, 99, 0, 1);  // VPS przez WireGuard tunnel
+// Trusted proxy - omija CAŁĄ autentykację ESP32 (VPS już uwierzytelnił)
+const IPAddress TRUSTED_PROXY_IP(10, 99, 0, 1);  // VPS przez WireGuard tunnel
 
 bool isIPWhitelisted(IPAddress ip) {
     // Trusted proxy jest zawsze na whiteliście
@@ -99,10 +99,30 @@ bool isIPWhitelisted(IPAddress ip) {
     return false;
 }
 
+bool isTrustedProxy(IPAddress ip) {
+    return ip == TRUSTED_PROXY_IP;
+}
+
+IPAddress resolveClientIP(AsyncWebServerRequest* request) {
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (isTrustedProxy(sourceIP) && request->hasHeader("X-Forwarded-For")) {
+        String xff = request->getHeader("X-Forwarded-For")->value();
+        int comma = xff.indexOf(',');
+        String clientStr = (comma > 0) ? xff.substring(0, comma) : xff;
+        clientStr.trim();
+        IPAddress realIP;
+        if (realIP.fromString(clientStr)) {
+            LOG_INFO("Proxy request: %s via %s", clientStr.c_str(), sourceIP.toString().c_str());
+            return realIP;
+        }
+        LOG_WARNING("Failed to parse X-Forwarded-For: %s", xff.c_str());
+    }
+    return sourceIP;
+}
+
 bool isIPAllowed(IPAddress ip) {
     // Trusted proxy - bypass authentication (reverse proxy)
-    if (ip == TRUSTED_PROXY_IP) {
-        Serial.printf("[AUTH] Trusted proxy: %s\n", ip.toString().c_str());
+    if (isTrustedProxy(ip)) {
         return true;
     }
     return false;

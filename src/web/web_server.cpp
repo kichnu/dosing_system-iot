@@ -28,9 +28,9 @@ bool serverRunning = false;
 String getSessionToken(AsyncWebServerRequest* request) {
     if (request->hasHeader("Cookie")) {
         String cookie = request->header("Cookie");
-        int idx = cookie.indexOf("session=");
+        int idx = cookie.indexOf("session_token=");
         if (idx >= 0) {
-            int start = idx + 8;
+            int start = idx + 14;
             int end = cookie.indexOf(";", start);
             if (end < 0) end = cookie.length();
             return cookie.substring(start, end);
@@ -49,30 +49,28 @@ bool checkWhitelist(AsyncWebServerRequest* request) {
 }
 
 bool isAuthenticated(AsyncWebServerRequest* request) {
-    IPAddress clientIP = request->client()->remoteIP();
+    IPAddress sourceIP = request->client()->remoteIP();
 
-    // Whitelist check first
-    if (!isIPWhitelisted(clientIP)) {
-        return false;
-    }
-
-    // Trusted proxy bypass all auth
-    if (isIPAllowed(clientIP)) {
+    // VPS proxy auto-auth — VPS już uwierzytelnił użytkownika
+    if (isTrustedProxy(sourceIP)) {
         return true;
     }
 
-    // Rate limit check (before session validation)
-    if (isRateLimited(clientIP) || isIPBlocked(clientIP)) {
+    // Dostęp LAN — pełny łańcuch: whitelist -> rate limit -> sesja
+    if (!isIPWhitelisted(sourceIP)) {
         return false;
     }
 
-    // Record request for rate limiting
-    recordRequest(clientIP);
+    if (isRateLimited(sourceIP) || isIPBlocked(sourceIP)) {
+        return false;
+    }
+
+    recordRequest(sourceIP);
 
     // Check session cookie
     String token = getSessionToken(request);
     if (token.length() == 0) return false;
-    return validateSession(token, clientIP);
+    return validateSession(token, sourceIP);
 }
 
 // ============================================================================
@@ -80,31 +78,43 @@ bool isAuthenticated(AsyncWebServerRequest* request) {
 // ============================================================================
 
 void handleRoot(AsyncWebServerRequest* request) {
-    if (!checkWhitelist(request)) return;
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return;
+    }
 
-    IPAddress clientIP = request->client()->remoteIP();
+    IPAddress clientIP = resolveClientIP(request);
     Serial.printf("[WEB] ROOT request from: %s\n", clientIP.toString().c_str());
     if (!isAuthenticated(request)) {
-        request->redirect("/login");
+        request->redirect("login");
         return;
     }
     request->send(200, "text/html", getDashboardHTML());
 }
 
 void handleLogin(AsyncWebServerRequest* request) {
-    if (!checkWhitelist(request)) return;
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return;
+    }
 
     if (isAuthenticated(request)) {
-        request->redirect("/");
+        request->redirect("./");
         return;
     }
     request->send(200, "text/html", getLoginHTML());
 }
 
 void handleApiLogin(AsyncWebServerRequest* request) {
-    if (!checkWhitelist(request)) return;
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return;
+    }
 
-    IPAddress clientIP = request->client()->remoteIP();
+    IPAddress clientIP = resolveClientIP(request);
 
     // Rate limit / block check
     if (isRateLimited(clientIP) || isIPBlocked(clientIP)) {
@@ -138,7 +148,7 @@ void handleApiLogin(AsyncWebServerRequest* request) {
 
         AsyncWebServerResponse* response = request->beginResponse(200, "application/json",
             "{\"success\":true}");
-        response->addHeader("Set-Cookie", "session=" + token + "; Path=/; HttpOnly; SameSite=Strict");
+        response->addHeader("Set-Cookie", "session_token=" + token + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=1800");
         request->send(response);
 
         Serial.printf("[WEB] Login OK from %s\n", clientIP.toString().c_str());
@@ -157,7 +167,7 @@ void handleApiLogout(AsyncWebServerRequest* request) {
     
     AsyncWebServerResponse* response = request->beginResponse(200, "application/json", 
         "{\"success\":true}");
-    response->addHeader("Set-Cookie", "session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+    response->addHeader("Set-Cookie", "session_token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
     request->send(response);
     
     Serial.println(F("[WEB] Logout"));
@@ -799,8 +809,28 @@ void handleApiResetDosed(AsyncWebServerRequest* request) {
     Serial.printf("[WEB] Reset dosed CH%d: %s\n", channel, success ? "OK" : "FAILED");
 }
 
+void handleHealth(AsyncWebServerRequest* request) {
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return;
+    }
+
+    String json = "{";
+    json += "\"status\":\"ok\",";
+    json += "\"device_name\":\"" + String(DEVICE_ID) + "\",";
+    json += "\"uptime\":" + String(millis());
+    json += "}";
+
+    request->send(200, "application/json", json);
+}
+
 void handleNotFound(AsyncWebServerRequest* request) {
-    if (!checkWhitelist(request)) return;
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "text/plain", "Forbidden");
+        return;
+    }
     request->send(404, "text/plain", "Not Found");
 }
 
@@ -821,6 +851,7 @@ void initWebServer() {
     server.on("/login", HTTP_GET, handleLogin);
     
     // === API ROUTES ===
+    server.on("/api/health", HTTP_GET, handleHealth);
     server.on("/api/login", HTTP_POST, handleApiLogin);
     server.on("/api/logout", HTTP_POST, handleApiLogout);
     server.on("/api/dosing-status", HTTP_GET, handleApiDosingStatus); 

@@ -61,7 +61,7 @@ const password=document.getElementById("password").value;
 const errorDiv=document.getElementById("error");
 fetch("api/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"password="+encodeURIComponent(password)})
 .then(r=>r.json())
-.then(data=>{if(data.success){window.location.href="/";}else{errorDiv.textContent=data.error||"Login failed";errorDiv.style.display="block";}})
+.then(data=>{if(data.success){window.location.href="./";}else{errorDiv.textContent=data.error||"Login failed";errorDiv.style.display="block";}})
 .catch(()=>{errorDiv.textContent="Connection error";errorDiv.style.display="block";});
 });
     </script>
@@ -383,6 +383,14 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
                 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button><button class="btn btn-primary" onclick="confirmSave()">Save</button></div>
             </div>
         </div>
+        <div class="modal-overlay" id="sessionExpiredModal">
+            <div class="modal-box">
+                <div class="modal-icon warn"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div class="modal-title">Session Expired</div>
+                <div class="modal-text">Your session has expired. Please log in again.</div>
+                <div class="modal-actions"><a class="btn btn-primary" href="login" onclick="if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';return false;}">Login</a></div>
+            </div>
+        </div>
     </div>
 <script>
 const CFG={CHANNEL_COUNT:4,EVENTS_PER_DAY:23,FIRST_EVENT_HOUR:1,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:1.0,CALIB_SEC:30,SWIPE_THRESHOLD:50};
@@ -593,8 +601,9 @@ function setupTouch(){
     },{passive:true});
 }
 
+function showSessionExpired(){document.getElementById('sessionExpiredModal').classList.add('show');}
 function loadStatus(){
-    fetch('api/dosing-status').then(r=>r.json()).then(data=>{
+    fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
         if(data.channels){
             data.channels.forEach((chData,i)=>{
                 if(i===editingChannel)return;
@@ -634,7 +643,7 @@ function loadStatus(){
 function popcount(n){let count=0;while(n){count+=n&1;n>>>=1;}return count;}
 function getStateLabel(state){return{inactive:'Inactive',incomplete:'Setup',invalid:'Invalid',configured:'Active',pending:'Pending'}[state]||state;}
 function updateClock(){const now=new Date();document.getElementById('sysTime').textContent=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');}
-function logout(){showConfirm('Logout','End current session?','logout',()=>{fetch('api/logout',{method:'POST'}).then(()=>location.href='/login');});}
+function logout(){showConfirm('Logout','End current session?','logout',()=>{fetch('api/logout',{method:'POST'}).then(()=>{if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';}else{window.location.href='login';}});});}
 
 function saveContainerSize(idx){
     const input=document.getElementById(`container_${idx}`);
