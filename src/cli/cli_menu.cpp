@@ -6,9 +6,7 @@
 #include "../config/config.h"
 #include <esp_system.h>
 
-// External variables from main
 extern volatile bool systemHalted;
-extern bool gpioValidationEnabled;
 
 void printBanner() {
     Serial.println();
@@ -62,7 +60,7 @@ void printSystemInfo() {
     Serial.printf ("|  Firmware:        %-40s |\n", FIRMWARE_VERSION);
     Serial.printf ("|  Channels:        %-40d |\n", CHANNEL_COUNT);
     Serial.printf ("|  System Halted:   %-40s |\n", systemHalted ? "YES" : "NO");
-    Serial.printf ("|  GPIO Validation: %-40s |\n", gpioValidationEnabled ? "ENABLED" : "DISABLED");
+    Serial.printf ("|  Pump monitor: %-43s |\n", "UART2 (reserved, Edge Impulse)");
     Serial.println(F("+----------------------------------------------------------+"));
     Serial.printf ("|  Chip Model:      %-40s |\n", ESP.getChipModel());
     Serial.printf ("|  CPU Freq:        %-37d MHz |\n", ESP.getCpuFreqMHz());

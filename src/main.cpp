@@ -42,7 +42,6 @@
 // ============================================================================
 volatile bool systemHalted = false;  // volatile: accessed from multiple contexts (main loop, web handlers, SafetyManager)
 bool pumpGlobalEnabled = true;
-bool gpioValidationEnabled = GPIO_VALIDATION_DEFAULT;
 InitStatus initStatus;
 
 // ============================================================================
@@ -101,10 +100,10 @@ void initHardware() {
         Serial.println(F("FAILED!"));
     }
     
-    // --- Relay Controller ---
-    Serial.print(F("[INIT] Relays... "));
+    // --- Pump Controller (ULN2003AN) ---
+    Serial.print(F("[INIT] Pumps (ULN2003AN)... "));
     relayController.begin();
-    initStatus.relays_ok = true;  // begin() nie zwraca błędu
+    initStatus.pumps_ok = true;
     Serial.println(F("OK"));
     
     // // --- GPIO Validator ---

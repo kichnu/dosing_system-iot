@@ -1,10 +1,10 @@
 /**
- * DOZOWNIK - FRAM Memory Layout
- * 
+ * DOZOWNIK - FRAM Memory Layout v8
+ *
  * Mapa adresów pamięci FRAM MB85RC256V (32 kB).
- * Wszystkie struktury wyrównane do 16 bajtów dla łatwiejszego debugowania.
- * 
- * UWAGA: Sekcja CREDENTIALS kompatybilna z projektem DOLEWKA (1024 B)
+ * UWAGA: Niezgodność wersji powoduje automatyczny factory reset.
+ *
+ * Sekcja CREDENTIALS kompatybilna z projektem DOLEWKA (1024 B) — NIE RUSZAĆ.
  */
 
 #ifndef FRAM_LAYOUT_H
@@ -15,37 +15,38 @@
 #include "dosing_types.h"
 
 // ============================================================================
-// FRAM CHIP PARAMETERS
+// FRAM CHIP
 // ============================================================================
 #define FRAM_SIZE_BYTES         32768   // 32 kB (0x8000)
-#define FRAM_PAGE_SIZE          16      // Alignment boundary
+#define FRAM_PAGE_SIZE          16
 
 // ============================================================================
-// MAGIC NUMBERS & VERSION
+// MAGIC & VERSION
 // ============================================================================
-#define FRAM_MAGIC_NUMBER       0x444F5A41  // "DOZA" in ASCII
-#define FRAM_LAYOUT_VERSION     7           // v7: Added DosedTracker
+#define FRAM_MAGIC_NUMBER       0x444F5A41  // "DOZA"
+#define FRAM_LAYOUT_VERSION     8           // v8: 8 channels, no GPIO validation, new sections
 
 // ============================================================================
-// FRAM MEMORY LAYOUT v6 - CORRECTED
-// MB85RC256V: 32KB (32,768 bytes = 0x8000)
+// MEMORY MAP v8
 // ============================================================================
-// Section             | Address    | Size      | Description
-// --------------------|------------|-----------|--------------------------------
-// HEADER              | 0x0000     | 32 B      | Magic, version, checksum
-// CREDENTIALS         | 0x0020     | 1024 B    | Encrypted WiFi credentials
-// SYSTEM_STATE        | 0x0420     | 32 B      | Global system state
-// ACTIVE_CONFIG       | 0x0440     | 192 B     | Active config (6 × 32B max)
-// PENDING_CONFIG      | 0x0500     | 192 B     | Pending config (6 × 32B max)
-// DAILY_STATE         | 0x05C0     | 144 B     | Daily state (6 × 24B max)
-// CRITICAL_ERROR      | 0x0650     | 32 B      | Critical error state
-// AUTH_DATA           | 0x0670     | 64 B      | Admin password hash
-// SESSION_DATA        | 0x06B0     | 128 B     | Session data
-// CONTAINER_VOLUME    | 0x0730     | 48 B      | Container volumes (6 × 8B)
-// DOSED_TRACKER       | 0x0760     | 48 B      | Dosed since reset (6 × 8B)
-// (free)              | 0x0790     | 112 B     | Reserved for future use
-// RESERVED            | 0x0800     | 30,720 B  | Future expansion (~30KB free)
-// (end of FRAM)       | 0x8000     |           |
+// Section            | Address  | Size      | Description
+// -------------------|----------|-----------|----------------------------------
+// HEADER             | 0x0000   | 32 B      | Magic, version
+// CREDENTIALS        | 0x0020   | 1024 B    | Encrypted WiFi (DOLEWKA compat)
+// SYSTEM_STATE       | 0x0420   | 32 B      | Global system state
+// ACTIVE_CONFIG      | 0x0440   | 256 B     | Active config  (8 × 32B)
+// PENDING_CONFIG     | 0x0540   | 256 B     | Pending config (8 × 32B)
+// DAILY_STATE        | 0x0640   | 192 B     | Daily state    (8 × 24B)
+// CRITICAL_ERROR     | 0x0700   | 32 B      | Critical error state
+// AUTH_DATA          | 0x0720   | 64 B      | Admin password hash
+// SESSION_DATA       | 0x0760   | 128 B     | Session persistence
+// CONTAINER_VOLUME   | 0x07E0   | 64 B      | Container vol  (8 × 8B)
+// DOSED_TRACKER      | 0x0820   | 64 B      | Dosed tracker  (8 × 8B)
+// CHANNEL_LABELS     | 0x0860   | 256 B     | Channel names  (8 × 32B)  NEW
+// CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)  NEW
+// PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
+// FREE               | 0x0A80   | 128 B     | Rezerva
+// RESERVED           | 0x0B00   | ~28.9 KB  | Przyszłe użycie
 // ============================================================================
 
 // ----------------------------------------------------------------------------
@@ -55,30 +56,25 @@
 #define FRAM_SIZE_HEADER            32
 
 #pragma pack(push, 1)
-
 struct FramHeader {
-    uint32_t magic;             // FRAM_MAGIC_NUMBER
-    uint16_t layout_version;    // FRAM_LAYOUT_VERSION
-    uint16_t channel_count;     // Aktywna liczba kanałów
-    uint32_t init_timestamp;    // Timestamp pierwszej inicjalizacji
-    uint32_t last_write;        // Timestamp ostatniego zapisu
-    uint8_t  flags;             // Flagi systemowe
-    uint8_t  _reserved[11];     // Padding
-    uint32_t header_crc;        // CRC32 headera
+    uint32_t magic;
+    uint16_t layout_version;
+    uint16_t channel_count;
+    uint32_t init_timestamp;
+    uint32_t last_write;
+    uint8_t  flags;
+    uint8_t  _reserved[11];
+    uint32_t header_crc;
 };
-
 #pragma pack(pop)
 
 static_assert(sizeof(FramHeader) == FRAM_SIZE_HEADER, "FramHeader size mismatch");
 
 // ----------------------------------------------------------------------------
-// CREDENTIALS SECTION (0x0020 - 0x041F)
-// Kompatybilne z projektem DOLEWKA - NIE ZMIENIAĆ ROZMIARU!
+// CREDENTIALS (0x0020 - 0x041F) — NIE ZMIENIAĆ, kompatybilność DOLEWKA
 // ----------------------------------------------------------------------------
 #define FRAM_ADDR_CREDENTIALS       0x0020
 #define FRAM_SIZE_CREDENTIALS       1024
-
-// Struktura credentials zdefiniowana w fram_encryption.h
 
 // ----------------------------------------------------------------------------
 // SYSTEM STATE (0x0420 - 0x043F)
@@ -86,241 +82,152 @@ static_assert(sizeof(FramHeader) == FRAM_SIZE_HEADER, "FramHeader size mismatch"
 #define FRAM_ADDR_SYSTEM_STATE      0x0420
 #define FRAM_SIZE_SYSTEM_STATE      32
 
-// Używa struct SystemState z dosing_types.h
-
 // ----------------------------------------------------------------------------
-// ACTIVE CONFIG (0x0440 - 0x04FF)
-// Obecnie działająca konfiguracja kanałów
+// ACTIVE CONFIG (0x0440 - 0x053F)  8 × 32B = 256B
 // ----------------------------------------------------------------------------
 #define FRAM_ADDR_ACTIVE_CONFIG     0x0440
-#define FRAM_SIZE_ACTIVE_CONFIG     (CHANNEL_COUNT * sizeof(ChannelConfig))
-
-// Makro do obliczenia adresu kanału
+#define FRAM_SIZE_ACTIVE_CONFIG     (8 * sizeof(ChannelConfig))   // 256B
 #define FRAM_ADDR_ACTIVE_CH(n)      (FRAM_ADDR_ACTIVE_CONFIG + ((n) * sizeof(ChannelConfig)))
 
 // ----------------------------------------------------------------------------
-// PENDING CONFIG (0x0500 - 0x05BF)
-// Konfiguracja oczekująca na aktywację (od następnej doby)
+// PENDING CONFIG (0x0540 - 0x063F)  8 × 32B = 256B
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_PENDING_CONFIG    0x0500
-#define FRAM_SIZE_PENDING_CONFIG    (CHANNEL_COUNT * sizeof(ChannelConfig))
-
+#define FRAM_ADDR_PENDING_CONFIG    0x0540
+#define FRAM_SIZE_PENDING_CONFIG    (8 * sizeof(ChannelConfig))   // 256B
 #define FRAM_ADDR_PENDING_CH(n)     (FRAM_ADDR_PENDING_CONFIG + ((n) * sizeof(ChannelConfig)))
 
 // ----------------------------------------------------------------------------
-// DAILY STATE (0x05C0 - 0x064F)
-// Stan dzienny kanałów - resetowany o północy
+// DAILY STATE (0x0640 - 0x06FF)  8 × 24B = 192B
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_DAILY_STATE       0x05C0
-#define FRAM_SIZE_DAILY_STATE_MAX   (6 * sizeof(ChannelDailyState))  // Zawsze rezerwuj na 6 kanałów
-#define FRAM_SIZE_DAILY_STATE       (CHANNEL_COUNT * sizeof(ChannelDailyState))
-
+#define FRAM_ADDR_DAILY_STATE       0x0640
+#define FRAM_SIZE_DAILY_STATE       (8 * sizeof(ChannelDailyState))  // 192B
 #define FRAM_ADDR_DAILY_CH(n)       (FRAM_ADDR_DAILY_STATE + ((n) * sizeof(ChannelDailyState)))
 
 // ----------------------------------------------------------------------------
-// CRITICAL ERROR STATE (0x0650 - 0x066F)
+// CRITICAL ERROR (0x0700 - 0x071F)
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_CRITICAL_ERROR    0x0650
+#define FRAM_ADDR_CRITICAL_ERROR    0x0700
 #define FRAM_SIZE_CRITICAL_ERROR    32
 
-// Używa struct CriticalErrorState z dosing_types.h (32 bajty)
-
 // ----------------------------------------------------------------------------
-// AUTH DATA (0x0670 - 0x06AF)
-// Hash hasła administratora + salt
+// AUTH DATA (0x0720 - 0x075F)
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_AUTH_DATA         0x0670
+#define FRAM_ADDR_AUTH_DATA         0x0720
 #define FRAM_SIZE_AUTH_DATA         64
 
 #pragma pack(push, 1)
-
 struct AuthData {
-    uint8_t  password_hash[32];     // SHA-256 hash
-    uint8_t  salt[16];              // Random salt
-    uint8_t  hash_iterations;       // Liczba iteracji PBKDF2
-    uint8_t  password_set;          // Czy hasło zostało ustawione (0/1)
-    uint8_t  _reserved[10];         // Padding
-    uint32_t crc32;                 // CRC32
+    uint8_t  password_hash[32];
+    uint8_t  salt[16];
+    uint8_t  hash_iterations;
+    uint8_t  password_set;
+    uint8_t  _reserved[10];
+    uint32_t crc32;
 };
-
 #pragma pack(pop)
 
 static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch");
 
 // ----------------------------------------------------------------------------
-// SESSION DATA (0x06B0 - 0x072F)
-// Dane sesji (persistence między restartami)
+// SESSION DATA (0x0760 - 0x07DF)
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_SESSION_DATA      0x06B0
+#define FRAM_ADDR_SESSION_DATA      0x0760
 #define FRAM_SIZE_SESSION_DATA      128
 
 // ----------------------------------------------------------------------------
-// CONTAINER VOLUME (0x0730 - 0x075F)
-// Pojemność i pozostała ilość płynu w pojemnikach (6 kanałów × 8B)
+// CONTAINER VOLUME (0x07E0 - 0x081F)  8 × 8B = 64B
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_CONTAINER_VOLUME      0x0730
-#define FRAM_SIZE_CONTAINER_VOLUME      48      // 6 kanałów × 8B
-
-#define FRAM_ADDR_CONTAINER_CH(n)       (FRAM_ADDR_CONTAINER_VOLUME + ((n) * 8))
+#define FRAM_ADDR_CONTAINER_VOLUME  0x07E0
+#define FRAM_SIZE_CONTAINER_VOLUME  (8 * sizeof(ContainerVolume))   // 64B
+#define FRAM_ADDR_CONTAINER_CH(n)   (FRAM_ADDR_CONTAINER_VOLUME + ((n) * sizeof(ContainerVolume)))
 
 // ----------------------------------------------------------------------------
-// DOSED TRACKER (0x0760 - 0x078F)
-// Suma dozowana od ostatniego resetu (6 kanałów × 8B)
+// DOSED TRACKER (0x0820 - 0x085F)  8 × 8B = 64B
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_DOSED_TRACKER         0x0760
-#define FRAM_SIZE_DOSED_TRACKER         48      // 6 kanałów × 8B
-
-#define FRAM_ADDR_DOSED_TRACKER_CH(n)   (FRAM_ADDR_DOSED_TRACKER + ((n) * 8))
+#define FRAM_ADDR_DOSED_TRACKER     0x0820
+#define FRAM_SIZE_DOSED_TRACKER     (8 * sizeof(DosedTracker))      // 64B
+#define FRAM_ADDR_DOSED_TRACKER_CH(n) (FRAM_ADDR_DOSED_TRACKER + ((n) * sizeof(DosedTracker)))
 
 // ----------------------------------------------------------------------------
-// FREE SPACE (0x0790 - 0x07FF)
-// Zarezerwowane na przyszłość (112B)
+// CHANNEL LABELS (0x0860 - 0x095F)  8 × 32B = 256B  [NOWE]
+// Nazwy/przeznaczenie kanałów konfigurowane w GUI
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_FREE_SPACE            0x0790
-#define FRAM_SIZE_FREE_SPACE            112
+#define FRAM_ADDR_CHANNEL_LABELS    0x0860
+#define FRAM_SIZE_CHANNEL_LABELS    (8 * sizeof(ChannelLabel))      // 256B
+#define FRAM_ADDR_LABEL_CH(n)       (FRAM_ADDR_CHANNEL_LABELS + ((n) * sizeof(ChannelLabel)))
 
 // ----------------------------------------------------------------------------
-// RESERVED (0x0800 - 0x7FFF)
-// Daily Log removed - free space (~30KB) for future use
+// CHANNEL PARAMS (0x0960 - 0x0A5F)  8 × 32B = 256B  [NOWE]
+// Min/max dawki per kanał, konfigurowane w GUI
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_RESERVED              0x0800
-#define FRAM_SIZE_RESERVED              (FRAM_SIZE_BYTES - FRAM_ADDR_RESERVED)  // ~30KB
+#define FRAM_ADDR_CHANNEL_PARAMS    0x0960
+#define FRAM_SIZE_CHANNEL_PARAMS    (8 * sizeof(ChannelParams))     // 256B
+#define FRAM_ADDR_PARAMS_CH(n)      (FRAM_ADDR_CHANNEL_PARAMS + ((n) * sizeof(ChannelParams)))
+
+// ----------------------------------------------------------------------------
+// PUMP MONITOR CONFIG (0x0A60 - 0x0A7F)  32B  [REZERWACJA — Edge Impulse]
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_PUMP_MON_CONFIG   0x0A60
+#define FRAM_SIZE_PUMP_MON_CONFIG   32
+
+// ----------------------------------------------------------------------------
+// FREE (0x0A80 - 0x0AFF)  128B
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_FREE_SPACE        0x0A80
+#define FRAM_SIZE_FREE_SPACE        128
+
+// ----------------------------------------------------------------------------
+// RESERVED (0x0B00 - 0x7FFF)  ~28.9 KB
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_RESERVED          0x0B00
+#define FRAM_SIZE_RESERVED          (FRAM_SIZE_BYTES - FRAM_ADDR_RESERVED)
 
 // ============================================================================
 // COMPILE-TIME VALIDATION
 // ============================================================================
 
 static_assert(FRAM_ADDR_RESERVED + FRAM_SIZE_RESERVED == FRAM_SIZE_BYTES,
-              "Reserved section calculation error!");
+              "FRAM reserved section calculation error!");
+
+static_assert(FRAM_ADDR_ACTIVE_CONFIG + FRAM_SIZE_ACTIVE_CONFIG <= FRAM_ADDR_PENDING_CONFIG,
+              "ACTIVE_CONFIG overlaps PENDING_CONFIG!");
+
+static_assert(FRAM_ADDR_PENDING_CONFIG + FRAM_SIZE_PENDING_CONFIG <= FRAM_ADDR_DAILY_STATE,
+              "PENDING_CONFIG overlaps DAILY_STATE!");
 
 // ============================================================================
 // FRAM OPERATIONS (deklaracje)
 // ============================================================================
 
-/**
- * Inicjalizacja FRAM - sprawdza magic number, inicjalizuje jeśli pusta
- * @return true jeśli FRAM gotowa do użycia
- */
 bool framInit();
-
-/**
- * Sprawdź czy FRAM jest zainicjalizowana
- */
 bool framIsInitialized();
-
-/**
- * Wyczyść całą FRAM i zainicjalizuj od nowa
- */
 bool framFactoryReset();
-
-/**
- * Odczytaj header FRAM
- */
 bool framReadHeader(FramHeader* header);
-
-/**
- * Zapisz header FRAM
- */
 bool framWriteHeader(const FramHeader* header);
 
-// --- Channel Config ---
-
-/**
- * Odczytaj aktywną konfigurację kanału
- */
 bool framReadActiveConfig(uint8_t channel, ChannelConfig* config);
-
-/**
- * Zapisz aktywną konfigurację kanału
- */
 bool framWriteActiveConfig(uint8_t channel, const ChannelConfig* config);
-
-/**
- * Odczytaj pending konfigurację kanału
- */
 bool framReadPendingConfig(uint8_t channel, ChannelConfig* config);
-
-/**
- * Zapisz pending konfigurację kanału
- */
 bool framWritePendingConfig(uint8_t channel, const ChannelConfig* config);
-
-/**
- * Skopiuj pending do active (podczas resetu dobowego)
- */
 bool framApplyPendingConfig(uint8_t channel);
-
-/**
- * Skopiuj active do pending (cancel changes)
- */
 bool framRevertPendingConfig(uint8_t channel);
 
-// --- Daily State ---
-
-/**
- * Odczytaj stan dzienny kanału
- */
 bool framReadDailyState(uint8_t channel, ChannelDailyState* state);
-
-/**
- * Zapisz stan dzienny kanału
- */
 bool framWriteDailyState(uint8_t channel, const ChannelDailyState* state);
-
-/**
- * Resetuj stan dzienny wszystkich kanałów
- */
 bool framResetAllDailyStates(uint8_t currentDay);
 
-// --- Dosed Tracker ---
-
-/**
- * Odczytaj dosed tracker kanału
- */
 bool framReadDosedTracker(uint8_t channel, DosedTracker* tracker);
-
-/**
- * Zapisz dosed tracker kanału
- */
 bool framWriteDosedTracker(uint8_t channel, const DosedTracker* tracker);
-
-/**
- * Resetuj dosed tracker kanału (wyzeruj sumę)
- */
 bool framResetDosedTracker(uint8_t channel);
 
-// --- System State ---
-
-/**
- * Odczytaj stan systemu
- */
 bool framReadSystemState(SystemState* state);
-
-/**
- * Zapisz stan systemu
- */
 bool framWriteSystemState(const SystemState* state);
 
-// --- Low-level ---
+// Channel labels/params dostępne przez framController.readChannelLabel/Params()
 
-/**
- * Odczytaj surowe bajty z FRAM
- */
 bool framReadBytes(uint16_t address, void* buffer, size_t length);
-
-/**
- * Zapisz surowe bajty do FRAM
- */
 bool framWriteBytes(uint16_t address, const void* data, size_t length);
-
-/**
- * Sprawdź obecność FRAM na I2C
- */
 bool framProbe();
-
-/**
- * Dump sekcji FRAM do Serial (debug)
- */
 void framDumpSection(uint16_t address, size_t length);
 
 #endif // FRAM_LAYOUT_H

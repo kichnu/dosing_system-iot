@@ -22,7 +22,6 @@ extern RtcController rtcController;
 extern ChannelManager channelManager;
 extern DosingScheduler dosingScheduler;
 extern volatile bool systemHalted;
-extern bool gpioValidationEnabled;
 
 // ============================================================================
 // SERIAL COMMAND PROCESSOR
@@ -183,9 +182,7 @@ void processSerialCommand() {
 
         case 'y':
         case 'Y':
-            gpioValidationEnabled = !gpioValidationEnabled;
-            Serial.printf("[CMD] GPIO Validation: %s\n",
-                          gpioValidationEnabled ? "ENABLED" : "DISABLED");
+            Serial.println(F("[CMD] GPIO validation removed (ULN2003AN mode)"));
             break;
 
         case 'z':

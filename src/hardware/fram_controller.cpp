@@ -549,3 +549,48 @@ bool FramController::initializeDosedTrackers() {
     Serial.println(F("[FRAM] Dosed trackers initialized"));
     return true;
 }
+// ============================================================================
+// CHANNEL LABELS (nazwy kanałów)
+// ============================================================================
+
+bool FramController::readChannelLabel(uint8_t channel, ChannelLabel* label) {
+    if (channel >= CHANNEL_COUNT || !label) return false;
+    uint16_t addr = FRAM_ADDR_LABEL_CH(channel);
+    if (!readBytes(addr, label, sizeof(ChannelLabel))) return false;
+    uint32_t crc = calculateCRC32(label, sizeof(ChannelLabel) - sizeof(uint32_t));
+    if (label->crc32 != crc) {
+        memset(label, 0, sizeof(ChannelLabel));
+        return false;
+    }
+    return true;
+}
+
+bool FramController::writeChannelLabel(uint8_t channel, const ChannelLabel* label) {
+    if (channel >= CHANNEL_COUNT || !label) return false;
+    ChannelLabel tmp = *label;
+    tmp.crc32 = calculateCRC32(&tmp, sizeof(ChannelLabel) - sizeof(uint32_t));
+    return writeBytes(FRAM_ADDR_LABEL_CH(channel), &tmp, sizeof(ChannelLabel));
+}
+
+// ============================================================================
+// CHANNEL PARAMS (min/max dawki per kanał)
+// ============================================================================
+
+bool FramController::readChannelParams(uint8_t channel, ChannelParams* params) {
+    if (channel >= CHANNEL_COUNT || !params) return false;
+    uint16_t addr = FRAM_ADDR_PARAMS_CH(channel);
+    if (!readBytes(addr, params, sizeof(ChannelParams))) return false;
+    uint32_t crc = calculateCRC32(params, sizeof(ChannelParams) - sizeof(uint32_t));
+    if (params->crc32 != crc) {
+        memset(params, 0, sizeof(ChannelParams));
+        return false;
+    }
+    return true;
+}
+
+bool FramController::writeChannelParams(uint8_t channel, const ChannelParams* params) {
+    if (channel >= CHANNEL_COUNT || !params) return false;
+    ChannelParams tmp = *params;
+    tmp.crc32 = calculateCRC32(&tmp, sizeof(ChannelParams) - sizeof(uint32_t));
+    return writeBytes(FRAM_ADDR_PARAMS_CH(channel), &tmp, sizeof(ChannelParams));
+}

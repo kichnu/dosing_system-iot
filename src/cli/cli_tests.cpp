@@ -431,15 +431,12 @@ void testScheduler() {
 
                         // Wait and show progress
                         SchedulerState state;
-                        while ((state = dosingScheduler.getState()) == SchedulerState::VALIDATING ||
-                               state == SchedulerState::DOSING ||
+                        while ((state = dosingScheduler.getState()) == SchedulerState::DOSING ||
                                state == SchedulerState::WAITING_PUMP) {
                             dosingScheduler.update();
                             relayController.update();
 
-                            if (state == SchedulerState::VALIDATING) {
-                                Serial.println(F("  Validating GPIO..."));
-                            } else if (relayController.isAnyOn()) {
+                            if (relayController.isAnyOn()) {
                                 Serial.printf("  Pump running: %lu ms\n",
                                               relayController.getActiveRuntime());
                             }
@@ -523,80 +520,35 @@ void measureGpioTiming(uint8_t channel) {
         return;
     }
 
-    Serial.printf("\n[MEASURE] === GPIO Timing Test CH%d ===\n", channel);
-    Serial.printf("[MEASURE] Relay pin: GPIO%d\n", RELAY_PINS[channel]);
-    Serial.printf("[MEASURE] Validate pin: GPIO%d\n", VALIDATE_PINS[channel]);
+    Serial.printf("\n[MEASURE] === Pump Timing Test CH%d ===\n", channel);
+    Serial.printf("[MEASURE] Pump pin: GPIO%d\n", PUMPS_PINS[channel]);
+    Serial.printf("[MEASURE] Initial pump state: %s\n",
+                  digitalRead(PUMPS_PINS[channel]) ? "HIGH(ON)" : "LOW(OFF)");
 
-    // Read initial state
-    bool initialState = digitalRead(VALIDATE_PINS[channel]);
-    Serial.printf("[MEASURE] Initial validate state: %s\n", initialState ? "HIGH" : "LOW");
-
-    // Check if pump already running
     if (relayController.isAnyOn()) {
         Serial.println(F("[MEASURE] ERROR: Another pump running!"));
         return;
     }
 
-    Serial.println(F("[MEASURE] Starting relay..."));
-
-    // Turn on relay
+    Serial.println(F("[MEASURE] Starting pump..."));
     uint32_t startTime = micros();
-    RelayResult res = relayController.turnOn(channel, 10000); // 10s max
+    RelayResult res = relayController.turnOn(channel, 5000);
 
     if (res != RelayResult::OK) {
         Serial.printf("[MEASURE] Failed to start: %s\n", RelayController::resultToString(res));
         return;
     }
 
-    // Poll for state change
-    const uint32_t TIMEOUT_MS = 5000;  // 5 second timeout
-    const uint32_t POLL_INTERVAL_US = 100;  // Poll every 100µs
+    Serial.printf("[MEASURE] Pump ON, GPIO%d = %s\n",
+                  PUMPS_PINS[channel], digitalRead(PUMPS_PINS[channel]) ? "HIGH" : "LOW");
 
-    uint32_t changeTime = 0;
-    bool stateChanged = false;
-    bool expectedState = !initialState;  // Oczekujemy zmiany stanu
-
-    Serial.printf("[MEASURE] Waiting for validate pin to go %s...\n",
-                  expectedState ? "HIGH" : "LOW");
-
-    while ((micros() - startTime) < (TIMEOUT_MS * 1000UL)) {
-        bool currentState = digitalRead(VALIDATE_PINS[channel]);
-
-        if (currentState == expectedState) {
-            changeTime = micros() - startTime;
-            stateChanged = true;
-            break;
-        }
-
-        delayMicroseconds(POLL_INTERVAL_US);
-    }
-
-    // Turn off relay
+    delay(2000);
     relayController.turnOff(channel);
 
-    // Report results
-    Serial.println(F("\n[MEASURE] === RESULTS ==="));
-
-    if (stateChanged) {
-        float timeMs = changeTime / 1000.0f;
-        Serial.printf("[MEASURE] State changed after: %.2f ms (%lu µs)\n", timeMs, changeTime);
-        Serial.printf("[MEASURE] Current GPIO_CHECK_DELAY_MS: %d ms\n", GPIO_CHECK_DELAY_MS);
-
-        if (timeMs < GPIO_CHECK_DELAY_MS) {
-            Serial.printf("[MEASURE] OK - delay is sufficient (margin: %.1f ms)\n",
-                          GPIO_CHECK_DELAY_MS - timeMs);
-        } else {
-            Serial.printf("[MEASURE] WARNING - delay too short! Increase by %.1f ms\n",
-                          timeMs - GPIO_CHECK_DELAY_MS + 500);
-        }
-    } else {
-        Serial.println(F("[MEASURE] TIMEOUT - no state change detected!"));
-        Serial.println(F("[MEASURE] Check wiring or validate pin configuration"));
-    }
-
-    // Final state
-    bool finalState = digitalRead(VALIDATE_PINS[channel]);
-    Serial.printf("[MEASURE] Final validate state: %s\n", finalState ? "HIGH" : "LOW");
+    uint32_t duration = (micros() - startTime) / 1000;
+    Serial.printf("[MEASURE] Done. Total time: %lu ms\n", duration);
+    Serial.printf("[MEASURE] Final pump state: %s\n",
+                  digitalRead(PUMPS_PINS[channel]) ? "HIGH(ON!)" : "LOW(OFF)");
     Serial.println();
 }
 
@@ -609,11 +561,11 @@ void printChannelConfigSize() {
     Serial.printf ("|  ChannelConfig:       %3d bytes         |\n", sizeof(ChannelConfig));
     Serial.printf ("|  ChannelDailyState:   %3d bytes         |\n", sizeof(ChannelDailyState));
     Serial.printf ("|  SystemState:         %3d bytes         |\n", sizeof(SystemState));
-    Serial.printf ("|  ErrorState:          %3d bytes         |\n", sizeof(ErrorState));
+    Serial.printf ("|  CriticalErrorState:  %3d bytes         |\n", sizeof(CriticalErrorState));
     Serial.printf ("|  FramHeader:          %3d bytes         |\n", sizeof(FramHeader));
     Serial.printf ("|  AuthData:            %3d bytes         |\n", sizeof(AuthData));
     Serial.println(F("+-----------------------------------------+"));
-    Serial.printf ("|  RelayState:          %3d bytes         |\n", sizeof(RelayState));
+    Serial.printf ("|  PumpChannelState:    %3d bytes         |\n", sizeof(PumpChannelState));
     Serial.println(F("+-----------------------------------------+"));
     Serial.println();
 }

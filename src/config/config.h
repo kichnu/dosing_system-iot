@@ -1,9 +1,43 @@
 /**
  * DOZOWNIK - System Configuration
- * 
+ *
  * Główny plik konfiguracyjny systemu dozowania nawozów.
  * Zawiera stałe systemowe, pinout GPIO, limity i parametry czasowe.
  */
+
+// ============================================================
+// Waveshare ESP32-S3-Pico — Pin Assignment v2.0
+// ============================================================
+//
+//  Top edge: GND ─ USB_D- ─ USB_D+ ─ GPIO 0 (BOOT strapping) ─ GPIO 3 (strapping) ─ GPIO 21 (FREE)
+//
+//                                                      ┌─────────────────────┐
+//                                                      │       USB-C         │
+//                                    FREE  GPIO 11 ────┤                     ├──── VBUS (5V)
+//                                    FREE  GPIO 12 ────┤                     ├──── VSYS (5V)
+//                                           GND   ────┤                     ├──── GND
+//                           PUMP_0   GPIO 13 ────┤  ULN2003AN          ├──── EN   (3V3_EN)
+//                           PUMP_1   GPIO 14 ────┤  ULN2003AN          ├──── 3V3  (OUT)
+//                           PUMP_2   GPIO 15 ────┤  ULN2003AN          ├──── GPIO 10  FREE
+//                           PUMP_3   GPIO 16 ────┤  ULN2003AN          ├──── GPIO  9  FREE
+//                                           GND   ────┤                     ├──── GND
+//                           PUMP_4   GPIO 17 ────┤  ULN2003AN          ├──── GPIO  8  [RGB LED!]
+//                           PUMP_5   GPIO 18 ────┤  ULN2003AN          ├──── GPIO  7  I2C_SCL
+//                           PUMP_6   GPIO 33 ────┤  ULN2003AN          ├──── RUN  (hw reset)
+//                           PUMP_7   GPIO 34 ────┤  ULN2003AN          ├──── GPIO  6  I2C_SDA
+//                                           GND   ────┤                     ├──── GND
+//              PUMP_MONITOR_RX  GPIO 35 ────┤  UART2 ← Edge Impulse  ├──── GPIO  5  BUZZER
+//              PUMP_MONITOR_TX  GPIO 36 ────┤  UART2 → Edge Impulse  ├──── GPIO  4  RESET_BUTTON
+//                          FREE GPIO 37 ────┤                         ├──── GPIO  2  FREE
+//                  MASTER_RELAY GPIO 38 ────┤  safety cutoff          ├──── GPIO  1  FREE
+//                                           GND   ────┤                     ├──── GND
+//                   JTAG(MTCK)  GPIO 39 ────┤                         ├──── GPIO 41  JTAG(MTDI)
+//                   JTAG(MTDO)  GPIO 40 ────┤                         ├──── GPIO 42  JTAG(MTMS)
+//                                                      └─────────────────────┘
+//
+// Etykiety kanałów konfigurowane w GUI (domyślne):
+//   CH0=Ca  CH1=kH  CH2=Jod  CH3=phyto  CH4=Food_1  CH5=Food_2  CH6=--  CH7=--
+// ============================================================
 
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -14,148 +48,110 @@
 // DEVICE IDENTIFICATION
 // ============================================================================
 #define DEVICE_ID           "DOZOWNIK"
-#define FIRMWARE_VERSION    "2.0.0"
+#define FIRMWARE_VERSION    "4.0.0"
 #define DEVICE_TYPE         "dosing_system"
 
 // ============================================================================
 // CHANNEL CONFIGURATION
-// Zmień CHANNEL_COUNT dla różnych wersji sprzętowych (1-6)
 // ============================================================================
-#define CHANNEL_COUNT       4
-
-// ============================================================================
-// GPIO PINOUT - RELAY OUTPUTS (Active HIGH)
-// ============================================================================
-#define RELAY_PIN_CH0       4
-#define RELAY_PIN_CH1       5
-#define RELAY_PIN_CH2       6
-#define RELAY_PIN_CH3       7
-#define RELAY_PIN_CH4       8
-#define RELAY_PIN_CH5       9
-
-// Tablica pinów relay (inicjalizowana w relay_controller.cpp)
-// static const uint8_t RELAY_PINS[6] = {
-//     RELAY_PIN_CH0, RELAY_PIN_CH1, RELAY_PIN_CH2,
-//     RELAY_PIN_CH3, RELAY_PIN_CH4, RELAY_PIN_CH5
-// };
-
-static const uint8_t RELAY_PINS[4] = {
-    RELAY_PIN_CH0, RELAY_PIN_CH1, RELAY_PIN_CH2,
-    RELAY_PIN_CH3
-};
+#define CHANNEL_COUNT       8
 
 // ============================================================================
-// GPIO PINOUT - VALIDATION INPUTS (Pump feedback)
+// GPIO PINOUT - PUMP OUTPUTS (ULN2003AN — Active HIGH)
 // ============================================================================
-#define VALIDATE_PIN_CH0    13
-#define VALIDATE_PIN_CH1    14
-#define VALIDATE_PIN_CH2    15
-#define VALIDATE_PIN_CH3    16
-#define VALIDATE_PIN_CH4    17
-#define VALIDATE_PIN_CH5    18
+#define PUMP_PIN_CH0       13
+#define PUMP_PIN_CH1       14
+#define PUMP_PIN_CH2       15
+#define PUMP_PIN_CH3       16
+#define PUMP_PIN_CH4       17
+#define PUMP_PIN_CH5       18
+#define PUMP_PIN_CH6       33
+#define PUMP_PIN_CH7       34
 
-// static const uint8_t VALIDATE_PINS[6] = {
-//     VALIDATE_PIN_CH0, VALIDATE_PIN_CH1, VALIDATE_PIN_CH2,
-//     VALIDATE_PIN_CH3, VALIDATE_PIN_CH4, VALIDATE_PIN_CH5
-// };
-
-static const uint8_t VALIDATE_PINS[4] = {
-    VALIDATE_PIN_CH0, VALIDATE_PIN_CH1, VALIDATE_PIN_CH2,
-    VALIDATE_PIN_CH3
+static const uint8_t PUMPS_PINS[CHANNEL_COUNT] = {
+    PUMP_PIN_CH0, PUMP_PIN_CH1, PUMP_PIN_CH2, PUMP_PIN_CH3,
+    PUMP_PIN_CH4, PUMP_PIN_CH5, PUMP_PIN_CH6, PUMP_PIN_CH7
 };
 
 // ============================================================================
 // I2C CONFIGURATION (FRAM + RTC)
 // ============================================================================
-#define I2C_SDA_PIN         11
-#define I2C_SCL_PIN         12
-#define I2C_FREQUENCY       400000  // 400 kHz
+#define I2C_SDA_PIN         6
+#define I2C_SCL_PIN         7
+#define I2C_FREQUENCY       400000
 
 #define FRAM_I2C_ADDRESS    0x50
 #define RTC_I2C_ADDRESS     0x68
 
 // ============================================================================
+// PUMP MONITOR UART (Edge Impulse ESP32 — rezerwacja interfejsu)
+// ============================================================================
+#define PUMP_MONITOR_RX_PIN     35
+#define PUMP_MONITOR_TX_PIN     36
+#define PUMP_MONITOR_BAUD       115200
+
+// ============================================================================
 // TIMING CONSTANTS
 // ============================================================================
-// Harmonogram eventów
-#define EVENTS_PER_DAY              23      // Godziny 01:00-23:00
-#define FIRST_EVENT_HOUR            1       // Pierwsza godzina eventów
-#define LAST_EVENT_HOUR             23      // Ostatnia godzina eventów
-#define RESERVED_HOUR               0       // 00:xx zarezerwowane 
+// Harmonogram eventów — tylko parzyste godziny 02, 04, 06 ... 22
+#define EVENTS_PER_DAY              11      // 11 parzystych godzin
+#define FIRST_EVENT_HOUR            2       // Pierwsza godzina eventu
+#define LAST_EVENT_HOUR             22      // Ostatnia godzina eventu
+#define RESERVED_HOUR               0       // 00:xx zarezerwowane (daily reset)
+#define EVENT_VALID_HOURS_MASK      0x00555554UL  // bity 2,4,6,...,22
+
+// Offset kanałów od godziny eventu (minuty):
+//   CH0=:00  CH1=:15  CH2=:30  CH3=:45
+//   CH4=(+1h):00  CH5=(+1h):15  CH6=(+1h):30  CH7=(+1h):45
+#define CHANNEL_OFFSET_MINUTES      15
+
+#define EVENT_WINDOW_SECONDS        300
+#define EVENT_CHECK_INTERVAL_MS     10000
 #define WDT_TIMEOUT_SECONDS         30
-
-// Offsety czasowe kanałów (w minutach)
-#define CHANNEL_OFFSET_MINUTES      15      // CH0=:00, CH1=:10, CH2=:20...
-
-// Okno czasowe eventu
-#define EVENT_WINDOW_SECONDS        300     // 5 minut na wykonanie eventu
-#define EVENT_CHECK_INTERVAL_MS     10000   // Sprawdzanie co 10 sekund
 
 // ============================================================================
 // PUMP TIMING
 // ============================================================================
-#define MAX_PUMP_DURATION_SECONDS   180     // Maksymalny czas pracy pompy (3 min)
+#define MAX_PUMP_DURATION_SECONDS   180
 #define MAX_PUMP_DURATION_MS        (MAX_PUMP_DURATION_SECONDS * 1000UL)
 
-#define CALIBRATION_DURATION_SEC    30      // Czas kalibracji pompy
+#define CALIBRATION_DURATION_SEC    30
 #define CALIBRATION_DURATION_MS     (CALIBRATION_DURATION_SEC * 1000UL)
-
-// // ============================================================================
-// // GPIO VALIDATION
-// // ============================================================================
-
-// #define GPIO_VALIDATION_DEFAULT     true    // Wartość startowa
-// extern bool gpioValidationEnabled;  
-
-// // #define GPIO_VALIDATION_ENABLED     false    // Globalne włączenie walidacji
-// #define GPIO_CHECK_DELAY_MS         200    // Opóźnienie przed sprawdzeniem (2s)
-// #define GPIO_DEBOUNCE_MS            100    // Czas debounce (1s)
-// #define GPIO_EXPECTED_STATE         HIGH    // Oczekiwany stan przy działającej pompie
 
 // ============================================================================
 // DOSING LIMITS
 // ============================================================================
-#define MIN_SINGLE_DOSE_ML          1.0f    // Minimalna pojedyncza dawka
-#define MAX_SINGLE_DOSE_ML          50.0f   // Maksymalna pojedyncza dawka
-#define MAX_DAILY_DOSE_ML           500.0f  // Maksymalna dawka dzienna
-#define MAX_WEEKLY_DOSE_ML          3500.0f // Maksymalna dawka tygodniowa
-
-#define DEFAULT_DOSING_RATE         0.33f   // Domyślna wydajność pompy (ml/s)
-#define MIN_DOSING_RATE             0.1f    // Minimalna wydajność
-#define MAX_DOSING_RATE             5.0f    // Maksymalna wydajność
-
-// ============================================================================
-// CONTAINER VOLUME TRACKING
-// ============================================================================
-#define CONTAINER_MIN_ML            100     // Minimalna pojemność pojemnika (ml)
-#define CONTAINER_MAX_ML            5000    // Maksymalna pojemność pojemnika (ml)
-#define CONTAINER_DEFAULT_ML        1000    // Domyślna pojemność (ml)
-#define LOW_VOLUME_THRESHOLD_PCT    10      // Próg ostrzeżenia o niskim stanie (%)
+#define MIN_SINGLE_DOSE_ML          0.1f
+#define MAX_SINGLE_DOSE_ML          50.0f
+#define MAX_DAILY_DOSE_ML           500.0f
+#define MAX_WEEKLY_DOSE_ML          3500.0f
+#define DEFAULT_DOSING_RATE         0.33f
+#define MIN_DOSING_RATE             0.1f
+#define MAX_DOSING_RATE             5.0f
 
 // ============================================================================
 // CONTAINER VOLUME TRACKING
 // ============================================================================
-#define CONTAINER_MIN_ML            100     // Minimalna pojemność pojemnika (ml)
-#define CONTAINER_MAX_ML            5000    // Maksymalna pojemność pojemnika (ml)
-#define CONTAINER_DEFAULT_ML        1000    // Domyślna pojemność (ml)
-#define LOW_VOLUME_THRESHOLD_PCT    10      // Próg ostrzeżenia o niskim stanie (%)
+#define CONTAINER_MIN_ML            100
+#define CONTAINER_MAX_ML            5000
+#define CONTAINER_DEFAULT_ML        1000
+#define LOW_VOLUME_THRESHOLD_PCT    10
 
 // ============================================================================
 // DAILY RESET
 // ============================================================================
-#define DAILY_RESET_HOUR            0       // Godzina resetu (00:xx UTC)
-#define DAILY_RESET_MARGIN_SEC      60      // Margines bezpieczeństwa
+#define DAILY_RESET_HOUR            0
+#define DAILY_RESET_MARGIN_SEC      60
 
 // ============================================================================
-// SESSION & SECURITY (z bazowego projektu)
+// SESSION & SECURITY
 // ============================================================================
-#define SESSION_TIMEOUT_MS          1800000 // 30 minut
+#define SESSION_TIMEOUT_MS          1800000
 #define MAX_LOGIN_ATTEMPTS          5
-#define LOGIN_LOCKOUT_MS            300000  // 5 minut blokady
+#define LOGIN_LOCKOUT_MS            300000
 #define RATE_LIMIT_REQUESTS         100
-#define RATE_LIMIT_WINDOW_MS        60000   // 1 minuta
+#define RATE_LIMIT_WINDOW_MS        60000
 
-// ================= TRUSTED PROXY (WireGuard VPS) =================
 extern const IPAddress TRUSTED_PROXY_IP;
 
 // ============================================================================
@@ -165,16 +161,16 @@ extern const IPAddress TRUSTED_PROXY_IP;
 #define DEBUG_ENABLED               true
 
 // ============================================================================
-// WIFI (do nadpisania przez credentials_manager)
+// WIFI
 // ============================================================================
-#define WIFI_CONNECT_TIMEOUT_MS     25000   // Timeout połączenia WiFi
-#define WIFI_RECONNECT_INTERVAL_MS  30000   // Interwał reconnect
+#define WIFI_CONNECT_TIMEOUT_MS     25000
+#define WIFI_RECONNECT_INTERVAL_MS  30000
 
 // ============================================================================
 // SYSTEM FLAGS
 // ============================================================================
-extern volatile bool systemHalted;  // Flaga błędu krytycznego (volatile: multi-context access)
-extern bool pumpGlobalEnabled;      // Globalne włączenie pomp
+extern volatile bool systemHalted;
+extern bool pumpGlobalEnabled;
 
 // ============================================================================
 // HELPER MACROS
@@ -185,7 +181,6 @@ extern bool pumpGlobalEnabled;      // Globalne włączenie pomp
 #define MIN_TO_SEC(min)     ((min) * 60)
 #define MIN_TO_MS(min)      ((min) * 60000UL)
 
-// Bitmask helpers
 #define BIT_SET(mask, bit)      ((mask) |= (1UL << (bit)))
 #define BIT_CLEAR(mask, bit)    ((mask) &= ~(1UL << (bit)))
 #define BIT_CHECK(mask, bit)    (((mask) >> (bit)) & 1)
@@ -194,23 +189,18 @@ extern bool pumpGlobalEnabled;      // Globalne włączenie pomp
 // ============================================================================
 // NTP CONFIGURATION
 // ============================================================================
+#define NTP_SERVER_1            "216.239.35.0"
+#define NTP_SERVER_2            "216.239.35.4"
+#define NTP_SERVER_3            "162.159.200.1"
 
-// NTP servers (IP addresses - no DNS required)
-#define NTP_SERVER_1            "216.239.35.0"      // time.google.com
-#define NTP_SERVER_2            "216.239.35.4"      // time2.google.com
-#define NTP_SERVER_3            "162.159.200.1"     // time.cloudflare.com
+#define NTP_GMT_OFFSET_SEC      0
+#define NTP_DAYLIGHT_OFFSET_SEC 0
 
-// Timezone (UTC for RTC storage, conversion in GUI if needed)
-#define NTP_GMT_OFFSET_SEC      0                   // RTC stores UTC
-#define NTP_DAYLIGHT_OFFSET_SEC 0                   // No DST for UTC
+#define NTP_SYNC_TIMEOUT_MS     20000
+#define NTP_SYNC_RETRY_DELAY_MS 500
+#define NTP_RESYNC_INTERVAL_MS  3600000
+#define NTP_MIN_VALID_YEAR      2024
 
-// Sync settings
-#define NTP_SYNC_TIMEOUT_MS     20000               // 20 seconds max wait
-#define NTP_SYNC_RETRY_DELAY_MS 500                 // Delay between retries
-#define NTP_RESYNC_INTERVAL_MS  3600000             // Resync every 1 hour
-#define NTP_MIN_VALID_YEAR      2024                // Timestamp sanity check
-
-// Popcount (liczba ustawionych bitów)
 inline uint8_t popcount8(uint8_t n) {
     uint8_t count = 0;
     while (n) { count += n & 1; n >>= 1; }
@@ -227,94 +217,56 @@ inline uint8_t popcount32(uint32_t n) {
 #define ENABLE_FULL_LOGGING     true
 
 // ============================================================================
-// SAFETY SYSTEM CONFIGURATION
+// SAFETY SYSTEM
 // ============================================================================
 
-// --- Master Relay (główne odcięcie zasilania pomp) ---
+// Master relay (opcjonalny external safety cutoff)
 #define MASTER_RELAY_PIN              38
-#define MASTER_RELAY_ACTIVE           HIGH    // Stan aktywny (pompy zasilone)
-#define MASTER_RELAY_INACTIVE         LOW     // Stan bezpieczny (pompy odcięte)
+#define MASTER_RELAY_ACTIVE           HIGH
+#define MASTER_RELAY_INACTIVE         LOW
 
-// --- Buzzer (sygnalizacja błędu) ---
-#define BUZZER_PIN                    39      // Z prov_config.h
+// Buzzer
+#define BUZZER_PIN                    5
 #define BUZZER_ACTIVE                 HIGH
 #define BUZZER_INACTIVE               LOW
-#define BUZZER_ERROR_ON_MS            100     // HIGH przez 0.5s
-#define BUZZER_ERROR_OFF_MS           500    // LOW przez 1.0s
+#define BUZZER_ERROR_ON_MS            100
+#define BUZZER_ERROR_OFF_MS           500
 
-// --- Reset Button ---
-#define RESET_BUTTON_PIN              40      // Z prov_config.h
-#define RESET_BUTTON_ACTIVE           LOW     // Aktywny stan (pull-up)
-#define RESET_BUTTON_HOLD_MS          5000    // 5 sekund przytrzymania
-
-// --- GPIO Validation (rozszerzone) ---
-#define GPIO_VALIDATION_DEFAULT       true
-#define GPIO_DEBOUNCE_MS              5       // Debounce dla każdego odczytu
-#define GPIO_CHECK_DELAY_MS           200     // Po włączeniu, przed sprawdzeniem HIGH
-#define GPIO_POST_CHECK_DELAY_MS      200     // Po wyłączeniu, przed sprawdzeniem LOW
-#define GPIO_STATE_IDLE               LOW     // Stan spoczynkowy (przekaźnik OFF)
-#define GPIO_STATE_ACTIVE             HIGH    // Stan aktywny (przekaźnik ON)
+// Reset button
+#define RESET_BUTTON_PIN              4
+#define RESET_BUTTON_ACTIVE           LOW
+#define RESET_BUTTON_HOLD_MS          5000
 
 // ============================================================================
 // INITIALIZATION STATUS
 // ============================================================================
 
-/**
- * Status inicjalizacji komponentów systemu
- */
 struct InitStatus {
-    // Hardware
     bool i2c_ok;
     bool fram_ok;
     bool rtc_ok;
-    bool relays_ok;
-    
-    // Network
+    bool pumps_ok;
     bool wifi_ok;
     bool webserver_ok;
-    
-    // Application
     bool channel_manager_ok;
     bool scheduler_ok;
-    
-    // Overall
-    bool critical_ok;       // Czy komponenty krytyczne działają
-    bool system_ready;      // Czy system gotowy do pracy
-    
-    /**
-     * Sprawdź czy hardware krytyczny OK
-     */
+    bool critical_ok;
+    bool system_ready;
+
     bool isHardwareOk() const {
-        return i2c_ok && fram_ok && rtc_ok && relays_ok;
+        return i2c_ok && fram_ok && rtc_ok && pumps_ok;
     }
-    
-    /**
-     * Sprawdź czy aplikacja OK
-     */
     bool isApplicationOk() const {
         return channel_manager_ok && scheduler_ok;
     }
-    
-    /**
-     * Reset do wartości domyślnych
-     */
     void reset() {
-        i2c_ok = false;
-        fram_ok = false;
-        rtc_ok = false;
-        relays_ok = false;
-        wifi_ok = false;
-        webserver_ok = false;
-        channel_manager_ok = false;
-        scheduler_ok = false;
-        critical_ok = false;
-        system_ready = false;
+        i2c_ok = false; fram_ok = false; rtc_ok = false; pumps_ok = false;
+        wifi_ok = false; webserver_ok = false;
+        channel_manager_ok = false; scheduler_ok = false;
+        critical_ok = false; system_ready = false;
     }
 };
 
-/**
- * Globalny status inicjalizacji
- */
 extern InitStatus initStatus;
 
 #endif // CONFIG_H

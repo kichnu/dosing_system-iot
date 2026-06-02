@@ -21,16 +21,12 @@ const char* channelStateToString(ChannelState state) {
 
 const char* errorTypeToString(CriticalErrorType error) {
     switch (error) {
-        case ERROR_NONE:                    return "NONE";
-        case ERROR_GPIO_PRE_CHECK_FAILED:   return "GPIO_PRE_CHECK_FAILED";
-        case ERROR_GPIO_RUN_CHECK_FAILED:   return "GPIO_RUN_CHECK_FAILED";
-        case ERROR_GPIO_POST_CHECK_FAILED:  return "GPIO_POST_CHECK_FAILED";
-        case ERROR_PUMP_TIMEOUT:            return "PUMP_TIMEOUT";
-        case ERROR_FRAM_FAILURE:            return "FRAM_FAILURE";
-        case ERROR_RTC_FAILURE:             return "RTC_FAILURE";
-        case ERROR_RELAY_STUCK:             return "RELAY_STUCK";
-        case ERROR_UNKNOWN:                 return "UNKNOWN";
-        default:                            return "UNDEFINED";
+        case ERROR_NONE:         return "NONE";
+        case ERROR_PUMP_TIMEOUT: return "PUMP_TIMEOUT";
+        case ERROR_FRAM_FAILURE: return "FRAM_FAILURE";
+        case ERROR_RTC_FAILURE:  return "RTC_FAILURE";
+        case ERROR_UNKNOWN:      return "UNKNOWN";
+        default:                 return "UNDEFINED";
     }
 }
 

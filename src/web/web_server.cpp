@@ -198,7 +198,7 @@ void handleApiDosingStatus(AsyncWebServerRequest* request) {
     // Active dosing info
     if (relayController.isAnyOn()) {
         doc["activeChannel"] = relayController.getActiveChannel();
-        doc["activeEventHour"] = dosingScheduler.getCurrentEvent().hour;
+        doc["activeEventHour"] = dosingScheduler.getCurrentEvent().event_hour;
         doc["activeRemainingMs"] = relayController.getRemainingTime();
     } else {
         doc["activeChannel"] = -1;
@@ -234,7 +234,29 @@ for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
         ch["days"] = cfg.days_bitmask;
         ch["dailyDose"] = cfg.daily_dose_ml;
         ch["dosingRate"] = cfg.dosing_rate;
-        ch["enabled"] = cfg.enabled ? true : false;
+        ch["enabled"] = (bool)cfg.enabled;
+
+        // Channel label (name)
+        ChannelLabel label;
+        if (framController.readChannelLabel(i, &label) && label.name[0] != '\0') {
+            ch["name"] = label.name;
+        } else {
+            char defName[8];
+            snprintf(defName, sizeof(defName), "CH%d", i);
+            ch["name"] = defName;
+        }
+
+        // Channel params (min/max doses)
+        ChannelParams params;
+        if (framController.readChannelParams(i, &params)) {
+            ch["minSingleDose"] = params.min_single_dose_ml;
+            ch["maxSingleDose"] = params.max_single_dose_ml;
+            ch["maxDailyDose"]  = params.max_daily_dose_ml;
+        } else {
+            ch["minSingleDose"] = MIN_SINGLE_DOSE_ML;
+            ch["maxSingleDose"] = MAX_SINGLE_DOSE_ML;
+            ch["maxDailyDose"]  = MAX_DAILY_DOSE_ML;
+        }
         
         ch["eventsCompleted"] = daily.events_completed;
         ch["eventsFailed"] = daily.events_failed;
@@ -334,12 +356,12 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
     Serial.printf("[WEB] Config update CH%d\n", channel);
 
     // === Input validation before applying ===
-    // Events bitmask: only bits 1-23 valid (hour 0 reserved for daily reset)
+    // Events bitmask: tylko parzyste godziny 2,4,...,22 (maska 0x00555554)
     if (doc["events"].is<uint32_t>()) {
         uint32_t events = doc["events"].as<uint32_t>();
-        if (events & ~0x00FFFFFE) {  // bits 24+ or bit 0
+        if (events & ~EVENT_VALID_HOURS_MASK) {
             request->send(400, "application/json",
-                "{\"success\":false,\"error\":\"Invalid events bitmask (valid: bits 1-23)\"}");
+                "{\"success\":false,\"error\":\"Invalid events bitmask (valid: even hours 2-22)\"}");
             return;
         }
     }
@@ -374,7 +396,7 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         }
     }
 
-    // Build atomic config update (prevents partial writes race condition)
+    // Build atomic config update
     ChannelManager::ConfigUpdate update;
 
     if (doc["events"].is<uint32_t>()) {
@@ -401,8 +423,24 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         Serial.printf("  Rate: %.3f ml/s\n", update.rate);
     }
 
+    if (doc["enabled"].is<bool>()) {
+        update.has_enabled = true;
+        update.enabled = doc["enabled"].as<bool>();
+        Serial.printf("  Enabled: %s\n", update.enabled ? "true" : "false");
+    }
+
     // Apply all changes atomically
     bool success = channelManager.updatePendingConfigBatch(channel, update);
+
+    // Save channel name if provided
+    if (doc["name"].is<const char*>()) {
+        const char* name = doc["name"].as<const char*>();
+        ChannelLabel label;
+        memset(&label, 0, sizeof(label));
+        strncpy(label.name, name, sizeof(label.name) - 1);
+        framController.writeChannelLabel(channel, &label);
+        Serial.printf("  Name: %s\n", label.name);
+    }
     
     // Validate config
     ValidationError valErr;
@@ -866,6 +904,17 @@ void initWebServer() {
     server.on("/api/container-volume", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiContainerVolumeSet);
     server.on("/api/refill", HTTP_POST, handleApiRefill);
     server.on("/api/reset-dosed", HTTP_POST, handleApiResetDosed);
+
+    // === PUMP MONITOR (Edge Impulse — stub, future implementation) ===
+    server.on("/api/pump-monitor-status", HTTP_GET, [](AsyncWebServerRequest* request) {
+        if (!isAuthenticated(request)) {
+            request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+            return;
+        }
+        // Placeholder — przyszła integracja z Edge Impulse przez UART2
+        request->send(200, "application/json",
+            "{\"monitor_active\":false,\"channels\":[]}");
+    });
 
     // === 404 HANDLER ===
     server.onNotFound(handleNotFound);

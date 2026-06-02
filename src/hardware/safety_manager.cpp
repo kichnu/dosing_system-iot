@@ -58,9 +58,7 @@ bool SafetyManager::enableIfSafe() {
         Serial.printf("[SAFETY] Type: %s, Channel: %d\n", 
                       errorTypeToString(_currentError.error_type),
                       _currentError.channel);
-        Serial.printf("[SAFETY] Timestamp: %lu, Phase: %d\n",
-                      _currentError.timestamp,
-                      _currentError.phase);
+        Serial.printf("[SAFETY] Timestamp: %lu\n", _currentError.timestamp);
         Serial.println(F("[SAFETY] Master relay: REMAINS INACTIVE"));
         Serial.println(F("[SAFETY] Buzzer: ACTIVE"));
         Serial.println(F("[SAFETY] Press RESET button for 5s to clear"));
@@ -97,55 +95,39 @@ void SafetyManager::update() {
 
 void SafetyManager::triggerCriticalError(CriticalErrorType type,
                                           uint8_t channel,
-                                          ValidationPhase phase,
                                           uint32_t errorData) {
     Serial.println();
     Serial.println(F("+==========================================================+"));
     Serial.println(F("|            *** CRITICAL ERROR TRIGGERED ***              |"));
     Serial.println(F("+==========================================================+"));
 
-    
-    // 1. NATYCHMIAST wyłącz master relay
     _setMasterRelay(false);
     Serial.println(F("[CRITICAL] Master relay DISABLED immediately!"));
-    
-    // 2. Zapisz snapshot GPIO
-    _takeGpioSnapshot();
-    
-    // 3. Wypełnij strukturę błędu
-    _currentError.active_flag = 1;
-    _currentError.error_type = type;
-    _currentError.channel = channel;
-    _currentError.phase = phase;
-    _currentError.timestamp = rtcController.getUnixTime();
-    _currentError.error_data = errorData;
+
+    _takePumpSnapshot();
+
+    _currentError.active_flag  = 1;
+    _currentError.error_type   = type;
+    _currentError.channel      = channel;
+    _currentError.timestamp    = rtcController.getUnixTime();
+    _currentError.error_data   = errorData;
     _currentError.total_critical_errors++;
     _currentError.write_count++;
-    
-    // 4. Zapisz do FRAM (persystencja!)
+
     _saveErrorToFRAM();
     Serial.println(F("[CRITICAL] Error saved to FRAM"));
 
-    // 5. Ustaw flagę i włącz buzzer
     _errorActive = true;
     _buzzerState = true;
     digitalWrite(BUZZER_PIN, BUZZER_ACTIVE);
     _buzzerLastToggle = millis();
-    
-    // 7. Wypisz szczegóły
-    Serial.printf("[CRITICAL] Type: %s (%d)\n", 
-                  errorTypeToString(type), type);
+
+    Serial.printf("[CRITICAL] Type: %s (%d)\n", errorTypeToString(type), type);
     Serial.printf("[CRITICAL] Channel: %d\n", channel);
-    Serial.printf("[CRITICAL] Phase: %d\n", phase);
-    Serial.printf("[CRITICAL] GPIO snapshot: 0x%02X\n", 
-                  _currentError.gpio_state_snapshot);
-    Serial.printf("[CRITICAL] Relay snapshot: 0x%02X\n",
-                  _currentError.relay_state_snapshot);
-    Serial.printf("[CRITICAL] Total errors: %d\n",
-                  _currentError.total_critical_errors);
-    Serial.println(F(""));
+    Serial.printf("[CRITICAL] Pump was running: %d\n", _currentError.pump_was_running);
+    Serial.printf("[CRITICAL] Total errors: %d\n", _currentError.total_critical_errors);
     Serial.println(F("[CRITICAL] >>> SYSTEM LOCKED - PRESS RESET FOR 5s <<<"));
-    Serial.println(F(""));
+    Serial.println();
 }
 
 bool SafetyManager::resetCriticalError() {
@@ -252,27 +234,15 @@ void SafetyManager::_handleResetButton() {
     }
 }
 
-void SafetyManager::_takeGpioSnapshot() {
-    // Snapshot GPIO validation pins
-    uint8_t gpioSnapshot = 0;
+void SafetyManager::_takePumpSnapshot() {
+    // Snapshot stanu wyjść pompy (ULN2003AN — HIGH = ON)
+    uint8_t pumpSnapshot = 0;
     for (int i = 0; i < CHANNEL_COUNT; i++) {
-        if (digitalRead(VALIDATE_PINS[i]) == HIGH) {
-            gpioSnapshot |= (1 << i);
+        if (digitalRead(PUMPS_PINS[i]) == HIGH) {
+            pumpSnapshot |= (1 << i);
         }
     }
-    _currentError.gpio_state_snapshot = gpioSnapshot;
-    
-    // Snapshot relay pins
-    uint8_t relaySnapshot = 0;
-    for (int i = 0; i < CHANNEL_COUNT; i++) {
-        if (digitalRead(RELAY_PINS[i]) == HIGH) {
-            relaySnapshot |= (1 << i);
-        }
-    }
-    _currentError.relay_state_snapshot = relaySnapshot;
-    
-    // Czy pompa pracowała
-    _currentError.pump_was_running = (relaySnapshot != 0) ? 1 : 0;
+    _currentError.pump_was_running = (pumpSnapshot != 0) ? 1 : 0;
 }
 
 void SafetyManager::_saveErrorToFRAM() {
@@ -334,12 +304,12 @@ void SafetyManager::printStatus() const {
     Serial.printf("Critical error: %s\n", _errorActive ? "ACTIVE" : "None");
     
     if (_errorActive) {
-        Serial.printf("  Type: %s (%d)\n", 
+        Serial.printf("  Type: %s (%d)\n",
                       errorTypeToString(_currentError.error_type),
                       _currentError.error_type);
         Serial.printf("  Channel: %d\n", _currentError.channel);
-        Serial.printf("  Phase: %d\n", _currentError.phase);
         Serial.printf("  Timestamp: %lu\n", _currentError.timestamp);
+        Serial.printf("  Pump was running: %d\n", _currentError.pump_was_running);
     }
     
     Serial.printf("Total errors (history): %d\n", _currentError.total_critical_errors);

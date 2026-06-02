@@ -393,7 +393,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
         </div>
     </div>
 <script>
-const CFG={CHANNEL_COUNT:4,EVENTS_PER_DAY:23,FIRST_EVENT_HOUR:1,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:1.0,CALIB_SEC:30,SWIPE_THRESHOLD:50};
+const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,CALIB_SEC:30,SWIPE_THRESHOLD:50};
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -407,7 +407,7 @@ let pendingRefillChannel=-1;
 
 function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
-        channels.push({id:i,events:0,days:0,dailyDose:0,dosingRate:0.33,eventsCompleted:0,eventsFailed:0,state:'inactive',containerMl:1000,remainingMl:1000,remainingPct:100,lowVolume:false,daysRemaining:999,totalDosedMl:0});
+        channels.push({id:i,events:0,days:0,dailyDose:0,dosingRate:0.33,enabled:true,name:'CH'+i,eventsCompleted:0,eventsFailed:0,state:'inactive',containerMl:1000,remainingMl:1000,remainingPct:100,lowVolume:false,daysRemaining:999,totalDosedMl:0});
     }
     setupHeaderToggle();
     renderOverview();
@@ -445,11 +445,13 @@ function getNextEventHour(ch,chIdx){
     const utcHour=now.getUTCHours();
     const utcMinute=now.getUTCMinutes();
     const channelOffset=chIdx*CFG.CHANNEL_OFFSET_MIN;
-    for(let h=CFG.FIRST_EVENT_HOUR;h<=23;h++){
+    for(let h=CFG.FIRST_EVENT_HOUR;h<=CFG.LAST_EVENT_HOUR;h+=2){
         if(!(ch.events&(1<<h)))continue;
         if(ch.eventsCompleted&(1<<h))continue;
-        if(h>utcHour)return h;
-        if(h===utcHour&&channelOffset>utcMinute)return h;
+        const actualH=h+Math.floor(chIdx*CFG.CHANNEL_OFFSET_MIN/60);
+        const actualM=(chIdx*CFG.CHANNEL_OFFSET_MIN)%60;
+        if(actualH>utcHour)return h;
+        if(actualH===utcHour&&actualM>utcMinute)return h;
     }
     return -1;
 }
@@ -473,13 +475,19 @@ function renderChannelCard(ch,idx){
     else if(pumpTime>CFG.MAX_PUMP_SEC){validClass='err';validMsg=`Pump time ${pumpTime.toFixed(0)}s > max ${CFG.MAX_PUMP_SEC}s`;validIcon='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';}
 
     let eventsHtml='';
-    for(let h=CFG.FIRST_EVENT_HOUR;h<=23;h++){
+    // Parzyste godziny 02,04,...,22; rzeczywisty czas wykonania uwzględnia offset kanału
+    const chOffsetMin=idx*CFG.CHANNEL_OFFSET_MIN;
+    const chActualH=Math.floor(chOffsetMin/60);
+    const chActualM=chOffsetMin%60;
+    for(let h=CFG.FIRST_EVENT_HOUR;h<=CFG.LAST_EVENT_HOUR;h+=2){
         const checked=(ch.events&(1<<h))?'checked':'';
         const done=(ch.eventsCompleted&(1<<h))?'done':'';
         const failed=(ch.eventsFailed&(1<<h))?'failed':'';
         const running=(idx===activeChannel&&h===activeEventHour)?'running':'';
         const next=(h===nextEvent&&!running)?'next':'';
-        const timeStr=String(h).padStart(2,'0')+':'+String(idx*CFG.CHANNEL_OFFSET_MIN).padStart(2,'0');
+        // Wyświetl rzeczywistą godzinę wykonania (eventHour + offset)
+        const dispH=(h+chActualH)%24;
+        const timeStr=String(dispH).padStart(2,'0')+':'+String(chActualM).padStart(2,'0');
         eventsHtml+=`<div class="event-slot ${done} ${failed} ${running} ${next}"><input type="checkbox" id="ev_${idx}_${h}" class="event-cb" data-ch="${idx}" data-hour="${h}" ${checked}><label for="ev_${idx}_${h}" class="event-lbl"><span class="event-time">${timeStr}</span><span class="event-dot"></span></label></div>`;
     }
     
@@ -490,11 +498,12 @@ function renderChannelCard(ch,idx){
         daysHtml+=`<div class="day-slot ${today}"><input type="checkbox" id="day_${idx}_${d}" class="day-cb" data-ch="${idx}" data-day="${d}" ${checked}><label for="day_${idx}_${d}" class="day-lbl"><span class="day-name">${name}</span></label></div>`;
     });
 
-    return `<div class="channel-card" data-ch="${idx}">
+    const enabledClass=ch.enabled?'':'channel-disabled';
+    return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
 ${ch.state==='pending'?`<div class="pending-banner"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Changes pending – active from tomorrow</div>`:''}
-<div class="card-header"><div class="channel-title"><span class="channel-number">Channel ${idx+1}</span><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div></div>
+<div class="card-header"><div class="channel-title"><span class="channel-number">${ch.name||('CH'+idx)}</span><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><button class="btn-toggle-enable ${ch.enabled?'on':'off'}" onclick="toggleChannelEnabled(${idx})" title="${ch.enabled?'Disable channel':'Enable channel'}">${ch.enabled?'ON':'OFF'}</button></div>
 <div class="card-content">
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of 23</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Dosing Volume</div></div><div class="section-body"><div class="volume-group full-width"><label class="volume-label">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="calc-grid"><div class="calc-item hl"><div class="calc-lbl">Single Dose</div><div class="calc-val" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="calc-item"><div class="calc-lbl">Pump Time</div><div class="calc-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="calc-item"><div class="calc-lbl">Weekly</div><div class="calc-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div><button class="btn btn-primary save-btn" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button></div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Container Volume</div></div><div class="section-body"><div class="volume-group full-width"><label class="volume-label">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="50" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="volume-group full-width"><label class="volume-label">Days Left</label><div class="calc-item-full" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="bar-group"><div class="bar-row"><span class="bar-label ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">remaining ${(ch.remainingMl||1000).toFixed(0)} ml</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div><div class="bar-row"><span class="bar-label" id="dosedLabel_${idx}">dosed ${(ch.totalDosedMl||0).toFixed(1)} ml</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div><div class="buttons-row"><button class="btn btn-primary refill-btn" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill Container</button><button class="btn btn-primary reset-btn" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div></div></div>
@@ -612,6 +621,8 @@ function loadStatus(){
                     channels[i].days=chData.days||0;
                     channels[i].dailyDose=chData.dailyDose||0;
                     channels[i].dosingRate=chData.dosingRate||0.33;
+                    channels[i].enabled=chData.enabled!==false;
+                    channels[i].name=chData.name||('CH'+i);
                     channels[i].eventsCompleted=chData.eventsCompleted||0;
                     channels[i].eventsFailed=chData.eventsFailed||0;
                     channels[i].state=chData.state||'inactive';
@@ -693,11 +704,27 @@ function confirmSave(){
     const idx=pendingSaveChannel;
     closeSaveModal();
     const ch=channels[idx];
-    const payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ch.dailyDose,dosingRate:ch.dosingRate};
+    const payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ch.dailyDose,dosingRate:ch.dosingRate,enabled:ch.enabled!==false};
     fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json())
     .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';renderChannels();renderOverview();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
     .catch(()=>showAlert('Error','Connection error','err'));
+}
+
+function toggleChannelEnabled(idx){
+    const ch=channels[idx];
+    const newEnabled=!ch.enabled;
+    fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({channel:idx,enabled:newEnabled})})
+    .then(r=>r.json()).then(data=>{
+        if(data.success||data.hasPending){
+            ch.enabled=newEnabled;
+            // Odśwież kartę kanału
+            const card=document.querySelector(`.channel-card[data-ch="${idx}"]`);
+            if(card){card.outerHTML=renderChannelCard(ch,idx);}
+            bindChannelEvents(idx);
+        }
+    }).catch(err=>console.error('Toggle enabled error:',err));
 }
 
 function resetDosed(idx){

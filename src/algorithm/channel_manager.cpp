@@ -226,13 +226,13 @@ bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdat
 
     // Apply all updates atomically to RAM cache
     if (update.has_events) {
-        uint32_t events = update.events & 0x00FFFFFE;  // Mask valid hours
+        // Maska tylko parzyste godziny 2,4,...,22
+        uint32_t events = update.events & EVENT_VALID_HOURS_MASK;
         _pendingConfig[channel].events_bitmask = events;
-        _pendingConfig[channel].enabled = (events > 0) ? 1 : 0;
     }
 
     if (update.has_days) {
-        _pendingConfig[channel].days_bitmask = update.days & 0x7F;  // Mask valid days
+        _pendingConfig[channel].days_bitmask = update.days & 0x7F;
     }
 
     if (update.has_dose) {
@@ -247,6 +247,10 @@ bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdat
         if (rate < MIN_DOSING_RATE) rate = MIN_DOSING_RATE;
         if (rate > MAX_DOSING_RATE) rate = MAX_DOSING_RATE;
         _pendingConfig[channel].dosing_rate = rate;
+    }
+
+    if (update.has_enabled) {
+        _pendingConfig[channel].enabled = update.enabled ? 1 : 0;
     }
 
     // Single FRAM write with all changes
@@ -552,8 +556,9 @@ uint8_t ChannelManager::getNextEventHour(uint8_t channel, uint8_t currentHour) c
     
     const ChannelConfig& cfg = _activeConfig[channel];
     
-    // Search from current hour to 23
-    for (uint8_t h = currentHour; h <= LAST_EVENT_HOUR; h++) {
+    // Szukaj tylko parzystych godzin eventów
+    uint8_t startH = (currentHour % 2 == 0) ? currentHour : currentHour + 1;
+    for (uint8_t h = startH; h <= LAST_EVENT_HOUR; h += 2) {
         if (cfg.isEventEnabled(h)) {
             return h;
         }

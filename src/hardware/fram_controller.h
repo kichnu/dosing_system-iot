@@ -94,7 +94,11 @@ public:
     bool resetDosedTracker(uint8_t channel);
     bool initializeDosedTrackers();
 
-    // bool clearErrorState();
+    // --- Channel Labels & Params ---
+    bool readChannelLabel(uint8_t channel, ChannelLabel* label);
+    bool writeChannelLabel(uint8_t channel, const ChannelLabel* label);
+    bool readChannelParams(uint8_t channel, ChannelParams* params);
+    bool writeChannelParams(uint8_t channel, const ChannelParams* params);
     
     // --- Utility ---
     
