@@ -11,29 +11,29 @@
 //
 //  Top edge: GND ─ USB_D- ─ USB_D+ ─ GPIO 0 (BOOT strapping) ─ GPIO 3 (strapping) ─ GPIO 21 (FREE)
 //
-//                                                      ┌─────────────────────┐
-//                                                      │       USB-C         │
-//                                    FREE  GPIO 11 ────┤                     ├──── VBUS (5V)
-//                                    FREE  GPIO 12 ────┤                     ├──── VSYS (5V)
-//                                           GND   ────┤                     ├──── GND
-//                           PUMP_0   GPIO 13 ────┤  ULN2003AN          ├──── EN   (3V3_EN)
-//                           PUMP_1   GPIO 14 ────┤  ULN2003AN          ├──── 3V3  (OUT)
-//                           PUMP_2   GPIO 15 ────┤  ULN2003AN          ├──── GPIO 10  FREE
-//                           PUMP_3   GPIO 16 ────┤  ULN2003AN          ├──── GPIO  9  FREE
-//                                           GND   ────┤                     ├──── GND
-//                           PUMP_4   GPIO 17 ────┤  ULN2003AN          ├──── GPIO  8  [RGB LED!]
-//                           PUMP_5   GPIO 18 ────┤  ULN2003AN          ├──── GPIO  7  I2C_SCL
-//                           PUMP_6   GPIO 33 ────┤  ULN2003AN          ├──── RUN  (hw reset)
-//                           PUMP_7   GPIO 34 ────┤  ULN2003AN          ├──── GPIO  6  I2C_SDA
-//                                           GND   ────┤                     ├──── GND
-//              PUMP_MONITOR_RX  GPIO 35 ────┤  UART2 ← Edge Impulse  ├──── GPIO  5  BUZZER
-//              PUMP_MONITOR_TX  GPIO 36 ────┤  UART2 → Edge Impulse  ├──── GPIO  4  RESET_BUTTON
-//                          FREE GPIO 37 ────┤                         ├──── GPIO  2  FREE
-//                  MASTER_RELAY GPIO 38 ────┤  safety cutoff          ├──── GPIO  1  FREE
-//                                           GND   ────┤                     ├──── GND
-//                   JTAG(MTCK)  GPIO 39 ────┤                         ├──── GPIO 41  JTAG(MTDI)
-//                   JTAG(MTDO)  GPIO 40 ────┤                         ├──── GPIO 42  JTAG(MTMS)
-//                                                      └─────────────────────┘
+//                                                      ┌───────────────────   ──┐
+//                                                      │       USB-C            │
+//                                    FREE  GPIO 11 ────┤                        ├──── VBUS (5V)
+//                                    FREE  GPIO 12 ────┤                        ├──── VSYS (5V)
+//                                            GND   ────┤                        ├──── GND
+//                                 PUMP_0   GPIO 13 ────┤  ULN2003AN             ├──── EN   (3V3_EN)
+//                                 PUMP_1   GPIO 14 ────┤  ULN2003AN             ├──── 3V3  (OUT)
+//                                 PUMP_2   GPIO 15 ────┤  ULN2003AN             ├──── GPIO 10  FREE
+//                                 PUMP_3   GPIO 16 ────┤  ULN2003AN             ├──── GPIO  9  FREE
+//                                            GND   ────┤                        ├──── GND
+//                                 PUMP_4   GPIO 17 ────┤  ULN2003AN             ├──── GPIO  8  [RGB LED!]
+//                                 PUMP_5   GPIO 18 ────┤  ULN2003AN             ├──── GPIO  7  I2C_SCL
+//                                 PUMP_6   GPIO 33 ────┤  ULN2003AN             ├──── RUN  (hw reset)
+//                                 PUMP_7   GPIO 34 ────┤  ULN2003AN             ├──── GPIO  6  I2C_SDA
+//                                            GND   ────┤                        ├──── GND
+//                         PUMP_MONITOR_RX  GPIO 35 ────┤  UART2 ← Edge Impulse  ├──── GPIO  5  BUZZER
+//                         PUMP_MONITOR_TX  GPIO 36 ────┤  UART2 → Edge Impulse  ├──── GPIO  4  RESET_BUTTON
+//                                     FREE GPIO 37 ────┤                        ├──── GPIO  2  FREE
+//                             MASTER_RELAY GPIO 38 ────┤  safety cutoff         ├──── GPIO  1  FREE
+//                                            GND   ────┤                        ├──── GND
+//                              JTAG(MTCK)  GPIO 39 ────┤                        ├──── GPIO 41  JTAG(MTDI)
+//                              JTAG(MTDO)  GPIO 40 ────┤                        ├──── GPIO 42  JTAG(MTMS)
+//                                                      └───────────────   ──────┘
 //
 // Etykiety kanałów konfigurowane w GUI (domyślne):
 //   CH0=Ca  CH1=kH  CH2=Jod  CH3=phyto  CH4=Food_1  CH5=Food_2  CH6=--  CH7=--

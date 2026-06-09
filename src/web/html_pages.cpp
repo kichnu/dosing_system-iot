@@ -98,17 +98,19 @@ html,body{height:100%;touch-action:pan-y}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.4}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(34,211,213,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
 
-.app-container{display:flex;width:100vw;min-height:100dvh;z-index:1}
-.vertical-slider{display:flex;width:1000px;margin:0 auto;align-items:center;height:100dvh;flex-direction:row;transform:none}
-
-.header-screen{display:flex;background-color:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);flex-direction:column;justify-content:start;margin:10px;width:320px;position:absolute;left:0;top:0;z-index:20;transition:transform var(--transition-slow)}
-.header-screen.hidden{transform:translateX(calc(-100% - 10px))}
-.header-wraper{padding:12px}
-.header-bar{display:flex;align-items:center;justify-content:space-between;padding:10px var(--card-padding);margin-top:36px;background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
-.header-toggle{position:absolute;right:-50px;top:0;width:50px;height:100px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:25;transition:left var(--transition-slow)}
-.header-toggle svg{width:50px;height:100px;color:var(--text-secondary);transition:transform var(--transition-fast);transform:rotate(180deg)}
-.header-toggle.shifted{left:320px}
-.header-toggle.shifted svg{transform:rotate(0deg)}
+.app-container{display:flex;flex-direction:column;width:100vw;height:100dvh;overflow:hidden;z-index:1}
+.card-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
+.card-time{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--text-secondary)}
+.channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:8px var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
+.ch-nav-btn{height:32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast)}
+.ch-nav-btn:hover{border-color:var(--border-light);color:var(--text-primary)}
+.ch-nav-btn.configured{background:rgba(34,197,94,0.15)}
+.ch-nav-btn.pending{background:rgba(56,189,248,0.12);animation:pulse 1.5s infinite}
+.ch-nav-btn.invalid{background:rgba(239,68,68,0.12)}
+.ch-nav-btn.incomplete{background:rgba(234,179,8,0.12)}
+.ch-nav-btn.active{background:rgba(34,211,213,0.15);border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.channels-wrapper{flex:1;min-height:0;overflow:hidden;position:relative}
+.channels-screen{width:100%;height:100%;position:relative}
 
 .logo{display:flex;align-items:center;gap:8px}
 .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center}
@@ -119,54 +121,16 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-icon:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 .btn-icon svg{width:16px;height:16px}
 
-.system-status{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-bottom:12px;flex-shrink:0}
-.status-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:var(--font-sm);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary)}
-.status-header svg{width:12px;height:12px}
-.status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.status-item{background:var(--bg-input);border-radius:var(--radius-sm);padding:8px;text-align:center}
-.status-item .label{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:2px}
-.status-item .value{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600}
-.status-item.ok .value{color:var(--accent-green)}
-.status-item.warning .value{color:var(--accent-yellow)}
-.status-item.error .value{color:var(--accent-red)}
-
-.channels-overview{flex:1;overflow-y:auto}
-.overview-title{font-size:var(--font-sm);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary);margin-bottom:10px}
-.overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.channel-preview{background:var(--bg-card);border:2px solid var(--border);border-radius:var(--radius-md);padding:12px;cursor:pointer;transition:all var(--transition-fast);position:relative}
-.channel-preview.active{background:rgba(56,189,248,0.1)}
-.channel-preview:hover{border-color:var(--border-light);transform:translateY(-2px)}
-.channel-preview:active{transform:translateY(0)}
-.channel-preview.inactive{opacity:0.5;border-color:var(--state-inactive)}
-.channel-preview.incomplete{border-color:var(--state-incomplete)}
-.channel-preview.invalid{border-color:var(--state-invalid)}
-.channel-preview.configured{border-color:var(--state-configured)}
-.channel-preview.pending{border-color:var(--state-pending)}
-.channel-preview .ch-num{font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:4px}
-.channel-preview .ch-dose{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-lg);font-weight:700;color:var(--text-primary);margin-bottom:2px}
-.channel-preview.inactive .ch-dose{color:var(--text-muted)}
-.channel-preview .ch-info{font-size:var(--font-xs);color:var(--text-muted)}
-.channel-preview .state-dot{position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--state-inactive)}
-.channel-preview.incomplete .state-dot{background:var(--state-incomplete)}
-.channel-preview.invalid .state-dot{background:var(--state-invalid)}
-.channel-preview.configured .state-dot{background:var(--state-configured);animation:pulse 2s infinite}
-.channel-preview.pending .state-dot{background:var(--state-pending);animation:pulse 1.5s infinite}
-
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 
-.channels-screen{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-.channel-dots{display:flex;justify-content:center;gap:6px;z-index:10;padding:10px 0;width:100%}
-.channel-dot{width:26px;height:10px;background:var(--border);cursor:pointer;transition:all var(--transition-fast);border-radius:3px}
-.channel-dot:hover{background:var(--text-muted)}
-.channel-dot.active{background:var(--accent-cyan)}
-
-.channel-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);position:absolute;top:0;left:50%;transform:translateX(-50%);width:var(--card-width);max-height:calc(100% - 20px);overflow-y:auto;opacity:0;margin:10px;pointer-events:none;transition:opacity 0.3s ease,transform 0.3s ease;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
-.channel-card::-webkit-scrollbar{width:16px}
-.channel-card::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
+.channel-card{background:var(--bg-primary);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;opacity:0;display:flex;justify-content:center;pointer-events:none;transition:opacity 0.3s ease}
 .channel-card.active{opacity:1;pointer-events:auto}
+.card-inner{width:100%;max-width:var(--card-width);height:100%;display:flex;flex-direction:column;background:var(--bg-card);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.card-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
+.card-body::-webkit-scrollbar{width:8px}
+.card-body::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
 
-.card-header{display:flex;align-items:center;justify-content:space-between;padding:10px var(--card-padding);margin-top:36px;background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:10px var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
 .channel-title{display:flex;align-items:center;gap:8px}
 .channel-number{margin-left:40px;margin-right:10px;font-size:22px;font-weight:700}
 .state-badge{padding:3px 8px;border-radius:10px;font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
@@ -176,7 +140,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .state-badge.configured{background:rgba(34,197,94,0.15);color:var(--state-configured)}
 .state-badge.pending{background:rgba(56,189,248,0.15);color:var(--state-pending)}
 
-.card-content{flex:1;padding:var(--card-padding);overflow-y:auto;display:flex;flex-direction:column;gap:var(--section-gap)}
+.card-content{padding:var(--card-padding);display:flex;flex-direction:column;gap:var(--section-gap)}
 .section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
 .section-header{display:flex;align-items:center;justify-content:space-between;padding:8px var(--section-padding);background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)}
 .section-title{display:flex;align-items:center;gap:6px;font-size:var(--font-sm);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary)}
@@ -262,18 +226,14 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-secondary{background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary)}
 .btn-secondary:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
-.pending-banner{display:flex;position:absolute;top:0;left:0;align-items:center;border-top-left-radius:var(--radius-lg);border-top-right-radius:var(--radius-lg);gap:6px;height:32px;width:100%;padding:8px var(--card-padding);background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.3);font-size:var(--font-sm);color:var(--accent-blue);flex-shrink:0}
+.pending-banner{display:flex;align-items:center;border-top-left-radius:var(--radius-lg);border-top-right-radius:var(--radius-lg);gap:6px;height:32px;width:100%;padding:8px var(--card-padding);background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.3);font-size:var(--font-sm);color:var(--accent-blue);flex-shrink:0}
 .pending-banner svg{width:14px;height:14px}
-.footer-info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-size:var(--font-xs);color:var(--text-muted);letter-spacing:0.05em;opacity:0.6;z-index:5}
 
 @media (max-width:768px) and (hover:none){
-.channel-card{left:0;transform:none;width:100%;max-height:100dvh;margin:0;border:none;border-radius:0}
-.header-screen{width:100vw;border:none;border-radius:0;margin:0;height:100dvh;justify-items:start}
 .channel-number{margin-left:10px}
 .card-header{height:auto}
-.channel-title{margin-left:40px}
-.header-toggle{top:10px}
-.header-toggle.shifted{left:150px;top:6px}
+.channel-nav{grid-template-columns:repeat(4,1fr)}
+.card-inner{border-left:none;border-right:none}
 }
 
 /* Volume group full width */
@@ -328,40 +288,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 </head>
 <body>
     <div class="app-container">
-        <div class="header-screen">
-            <button class="header-toggle shifted" id="headerToggle">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
-            </button>
-            <div class="header-bar">
-                <div class="footer-info">DOZOWNIK • v1.5.0</div>
-                <div class="logo">
-                    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-                    <div class="logo-text">DOZOWNIK</div>
-                </div>
-                <div class="header-actions">
-                    <button class="btn-icon" title="Logout" onclick="logout()">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    </button>
-                </div>
-            </div>
-            <div class="header-wraper">
-                <div class="system-status">
-                    <div class="status-header">
-                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                        System Status
-                    </div>
-                    <div class="status-grid">
-                        <div class="status-item ok" id="sysStatus"><div class="label">System</div><div class="value">OK</div></div>
-                        <div class="status-item"><div class="label">Time (UTC)</div><div class="value" id="sysTime">--:--</div></div>
-                    </div>
-                </div>
-                <div class="channels-overview">
-                    <div class="overview-title">Channels</div>
-                    <div class="overview-grid" id="overviewGrid"></div>
-                </div>
-            </div>
-        </div>
-        <div class="vertical-slider" id="verticalSlider">
+        <div class="channels-wrapper">
             <div class="channels-screen" id="channelScreen"></div>
         </div>
         <div class="modal-overlay" id="refillModal">
@@ -409,8 +336,6 @@ function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
         channels.push({id:i,events:0,days:0,dailyDose:0,dosingRate:0.33,enabled:true,name:'CH'+i,eventsCompleted:0,eventsFailed:0,state:'inactive',containerMl:1000,remainingMl:1000,remainingPct:100,lowVolume:false,daysRemaining:999,totalDosedMl:0});
     }
-    setupHeaderToggle();
-    renderOverview();
     renderChannels();
     goToChannel(0);
     setupTouch();
@@ -420,15 +345,6 @@ function init(){
     setInterval(loadStatus,5000);
 }
 
-function renderOverview(){
-    const grid=document.getElementById('overviewGrid');
-    grid.innerHTML=channels.map((ch,i)=>{
-        const evCnt=popcount(ch.events);
-        const single=evCnt>0?(ch.dailyDose/evCnt).toFixed(1):'0.0';
-        const activeClass=(i===currentCh)?'active':'';
-        return `<div class="channel-preview ${ch.state} ${activeClass}" onclick="goToChannel(${i})"><div class="state-dot"></div><div class="ch-num">CH ${i+1}</div><div class="ch-dose">${ch.dailyDose>0?ch.dailyDose.toFixed(1)+' ml':'Off'}</div><div class="ch-info">${evCnt>0?evCnt+'× '+single+'ml':'Tap to setup'}</div></div>`;
-    }).join('');
-}
 
 function renderChannels(){
     const slider=document.getElementById('channelScreen');
@@ -499,9 +415,14 @@ function renderChannelCard(ch,idx){
     });
 
     const enabledClass=ch.enabled?'':'channel-disabled';
+    const navBtns=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===idx?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
+<div class="card-inner">
+<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div></div><span class="card-time">--:--:--</span><div class="header-actions"><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
+<div class="channel-nav">${navBtns}</div>
 ${ch.state==='pending'?`<div class="pending-banner"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Changes pending – active from tomorrow</div>`:''}
 <div class="card-header"><div class="channel-title"><span class="channel-number">${ch.name||('CH'+idx)}</span><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><button class="btn-toggle-enable ${ch.enabled?'on':'off'}" onclick="toggleChannelEnabled(${idx})" title="${ch.enabled?'Disable channel':'Enable channel'}">${ch.enabled?'ON':'OFF'}</button></div>
+<div class="card-body">
 <div class="card-content">
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
@@ -510,7 +431,8 @@ ${ch.state==='pending'?`<div class="pending-banner"><svg fill="none" stroke="cur
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Calibration</div></div><div class="section-body"><div class="calib-row"><button class="calib-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21 5,3"/></svg>Run Pump (30s)</button><div class="calib-input-group"><label class="calib-label">Measured</label><input type="number" class="calib-input" id="calibMl_${idx}" placeholder="ml" step="0.1" data-ch="${idx}"></div></div></div></div>
 <div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div>
 </div>
-</div>`;
+</div>
+</div></div>`;
 }
 
 function attachCardEvents(idx){
@@ -563,7 +485,7 @@ function updateChannel(idx){
     validMsg.querySelector('svg').innerHTML=icon;
     const badge=document.querySelector(`.channel-card[data-ch="${idx}"] .state-badge`);
     if(badge){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
-    renderOverview();
+    document.querySelectorAll(`.ch-nav-btn[data-ch="${idx}"]`).forEach(btn=>{btn.className=`ch-nav-btn ${ch.state}${currentCh===idx?' active':''}`;});
 }
 
 function runCalib(idx){
@@ -583,16 +505,10 @@ function calcCalibration(idx){const ml=parseFloat(document.getElementById(`calib
 
 function cancelChanges(idx){editingChannel=-1;loadStatus();}
 
-function setupHeaderToggle(){
-    const toggle=document.getElementById('headerToggle');
-    const header=document.querySelector('.header-screen');
-    toggle.addEventListener('click',()=>{header.classList.toggle('hidden');toggle.classList.toggle('shifted');});
-}
-
 function goToChannel(idx){
     document.querySelectorAll('.channel-card').forEach(card=>{card.classList.remove('active');});
     currentCh=idx;
-    renderOverview();
+    document.querySelectorAll('.ch-nav-btn').forEach(btn=>{btn.classList.toggle('active',parseInt(btn.dataset.ch)===idx);});
     const newCard=document.querySelector(`.channel-card[data-ch="${idx}"]`);
     if(newCard)newCard.classList.add('active');
 }
@@ -635,12 +551,6 @@ function loadStatus(){
                 }
             });
             if(editingChannel===-1)renderChannels();
-            renderOverview();
-        }
-        if(data.systemOk!==undefined){
-            const sysEl=document.getElementById('sysStatus');
-            sysEl.className='status-item '+(data.systemOk?'ok':'error');
-            sysEl.querySelector('.value').textContent=data.systemOk?'OK':'ERROR';
         }
         if(data.activeChannel!==undefined){
             const wasActive=activeChannel>=0;
@@ -653,7 +563,7 @@ function loadStatus(){
 
 function popcount(n){let count=0;while(n){count+=n&1;n>>>=1;}return count;}
 function getStateLabel(state){return{inactive:'Inactive',incomplete:'Setup',invalid:'Invalid',configured:'Active',pending:'Pending'}[state]||state;}
-function updateClock(){const now=new Date();document.getElementById('sysTime').textContent=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');}
+function updateClock(){const now=new Date();const t=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0')+':'+String(now.getUTCSeconds()).padStart(2,'0');document.querySelectorAll('.card-time').forEach(el=>el.textContent=t);}
 function logout(){showConfirm('Logout','End current session?','logout',()=>{fetch('api/logout',{method:'POST'}).then(()=>{if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';}else{window.location.href='login';}});});}
 
 function saveContainerSize(idx){
