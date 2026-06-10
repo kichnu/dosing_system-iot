@@ -89,9 +89,8 @@ const char* DASHBOARD_HTML = R"rawliteral(
 --radius-sm:6px;--radius-md:10px;--radius-lg:14px;
 --transition-fast:0.15s ease;--transition-normal:0.25s ease;--transition-slow:0.4s cubic-bezier(0.25,0.46,0.45,0.94);
 --card-width:800px;--card-padding:12px;--section-gap:10px;--section-padding:10px;
---event-slot-height:38px;--day-slot-height:36px;--input-height:38px;--btn-height:40px;--header-height:44px;--footer-height:56px;
+--event-slot-height:38px;--day-slot-height:36px;--input-height:38px;--btn-height:40px;--header-height:44px;
 --font-xs:0.6rem;--font-sm:0.7rem;--font-md:0.8rem;--font-lg:0.95rem;
---swipe-threshold:50px
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;touch-action:pan-y}
@@ -130,9 +129,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .card-body::-webkit-scrollbar{width:8px}
 .card-body::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
 
-.card-header{display:flex;align-items:center;justify-content:space-between;padding:10px var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
-.channel-title{display:flex;align-items:center;gap:8px}
-.channel-number{margin-left:40px;margin-right:10px;font-size:22px;font-weight:700}
 .state-badge{padding:3px 8px;border-radius:10px;font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
 .state-badge.inactive{background:rgba(75,85,99,0.2);color:var(--state-inactive)}
 .state-badge.incomplete{background:rgba(234,179,8,0.15);color:var(--state-incomplete)}
@@ -191,15 +187,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .param-lbl{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
 .param-lbl.low{color:var(--accent-red)}
 .param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:700;letter-spacing:0.03em;color:var(--text-secondary);display:flex;align-items:center;justify-content:center}
+.param-val.hl{color:var(--accent-cyan)}
 .param-bar-box{min-height:var(--input-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;gap:4px}
 .param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--text-secondary)}
 .param-bar-val.low{color:var(--accent-red)}
-.calib-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;height:var(--btn-height);background:rgba(34,211,213,0.1);border:1px solid var(--accent-cyan);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast)}
-.calib-btn:hover{background:rgba(34,211,213,0.2)}
-.calib-btn:active{transform:scale(0.98)}
-.calib-btn.running{background:rgba(234,179,8,0.15);border-color:var(--accent-yellow);color:var(--accent-yellow);pointer-events:none}
-.calib-btn svg{width:14px;height:14px}
-
 .valid-msg{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:500;flex-shrink:0}
 .valid-msg svg{width:14px;height:14px;flex-shrink:0}
 .valid-msg.err{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--accent-red)}
@@ -207,7 +198,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .valid-msg.info{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:var(--accent-blue)}
 .valid-msg.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--accent-green);margin-top:8px}
 
-.card-footer{padding:10px var(--card-padding);background:var(--bg-card);border-top:1px solid var(--border);display:flex;margin-bottom:6px;gap:8px;height:var(--footer-height);flex-shrink:0}
 .btn{flex:1;height:var(--btn-height);border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast);display:flex;align-items:center;justify-content:center;gap:5px}
 .btn svg{width:14px;height:14px}
 .btn-primary{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue));border:none;color:var(--bg-primary)}
@@ -220,8 +210,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .pending-banner svg{width:14px;height:14px}
 
 @media (max-width:768px) and (hover:none){
-.channel-number{margin-left:10px}
-.card-header{height:auto}
 .channel-nav{grid-template-columns:repeat(4,1fr)}
 .card-inner{border-left:none;border-right:none}
 .config-groups{flex-direction:column}
@@ -234,7 +222,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .container-bar-fill.dosed{background:linear-gradient(90deg,var(--accent-blue),var(--accent-cyan))}
 .params-actions{display:flex;gap:8px;margin-top:4px}
 .params-actions .btn{flex:1}
-.refill-btn svg,.reset-btn svg{width:14px;height:14px}
 .config-groups{display:flex;gap:8px;margin-bottom:8px}
 .config-group{flex:1;padding:8px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)}
 .dose-group{border-top:2px solid rgba(34,211,213,0.25)}
@@ -307,7 +294,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 <script>
 const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,CALIB_SEC:30,SWIPE_THRESHOLD:50};
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 let channels=[];
 let currentCh=0;
@@ -350,7 +336,6 @@ function getNextEventHour(ch,chIdx){
     const now=new Date();
     const utcHour=now.getUTCHours();
     const utcMinute=now.getUTCMinutes();
-    const channelOffset=chIdx*CFG.CHANNEL_OFFSET_MIN;
     for(let h=CFG.FIRST_EVENT_HOUR;h<=CFG.LAST_EVENT_HOUR;h+=2){
         if(!(ch.events&(1<<h)))continue;
         if(ch.eventsCompleted&(1<<h))continue;
@@ -369,7 +354,6 @@ function renderChannelCard(ch,idx){
     const single=evCnt>0?ch.dailyDose/evCnt:0;
     const pumpTime=ch.dosingRate>0?single/ch.dosingRate:0;
     const weekly=ch.dailyDose*dayCnt;
-    const completedCnt=popcount(ch.eventsCompleted);
     const nextEvent=getNextEventHour(ch,idx);
     const todayIdx=(now.getDay()+6)%7;
     
@@ -447,9 +431,6 @@ function updateChannel(idx){
     const single=evCnt>0?ch.dailyDose/evCnt:0;
     const pumpTime=ch.dosingRate>0?single/ch.dosingRate:0;
     const weekly=ch.dailyDose*dayCnt;
-    const completedCnt=popcount(ch.eventsCompleted);
-    const failedCnt=popcount(ch.eventsFailed||0);
-    
     document.getElementById(`evInfo_${idx}`).textContent=`${evCnt} of 23`;
     document.getElementById(`dayInfo_${idx}`).textContent=`${dayCnt} of 7`;
     document.getElementById(`single_${idx}`).textContent=`${single.toFixed(1)} ml`;
@@ -489,8 +470,6 @@ function runCalib(idx){
 }
 
 function calcCalibration(idx){const ml=parseFloat(document.getElementById(`calibMl_${idx}`).value)||0;if(ml>0){channels[idx].dosingRate=ml/CFG.CALIB_SEC;updateChannel(idx);}}
-
-function cancelChanges(idx){editingChannel=-1;loadStatus();}
 
 function goToChannel(idx){
     document.querySelectorAll('.channel-card').forEach(card=>{card.classList.remove('active');});
@@ -606,22 +585,6 @@ function confirmSave(){
     .then(r=>r.json())
     .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';renderChannels();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
     .catch(()=>showAlert('Error','Connection error','err'));
-}
-
-function toggleChannelEnabled(idx){
-    const ch=channels[idx];
-    const newEnabled=!ch.enabled;
-    fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({channel:idx,enabled:newEnabled})})
-    .then(r=>r.json()).then(data=>{
-        if(data.success||data.hasPending){
-            ch.enabled=newEnabled;
-            // Odśwież kartę kanału
-            const card=document.querySelector(`.channel-card[data-ch="${idx}"]`);
-            if(card){card.outerHTML=renderChannelCard(ch,idx);}
-            bindChannelEvents(idx);
-        }
-    }).catch(err=>console.error('Toggle enabled error:',err));
 }
 
 function resetDosed(idx){
