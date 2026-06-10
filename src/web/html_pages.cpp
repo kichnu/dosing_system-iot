@@ -88,7 +88,7 @@ const char* DASHBOARD_HTML = R"rawliteral(
 --state-inactive:#4b5563;--state-incomplete:#eab308;--state-invalid:#ef4444;--state-configured:#22c55e;--state-pending:#38bdf8;
 --radius-sm:6px;--radius-md:10px;--radius-lg:14px;
 --transition-fast:0.15s ease;--transition-normal:0.25s ease;--transition-slow:0.4s cubic-bezier(0.25,0.46,0.45,0.94);
---card-width:600px;--card-padding:12px;--section-gap:10px;--section-padding:10px;
+--card-width:800px;--card-padding:12px;--section-gap:10px;--section-padding:10px;
 --event-slot-height:38px;--day-slot-height:36px;--input-height:38px;--btn-height:40px;--header-height:44px;--footer-height:56px;
 --font-xs:0.6rem;--font-sm:0.7rem;--font-md:0.8rem;--font-lg:0.95rem;
 --swipe-threshold:50px
@@ -125,7 +125,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
 .channel-card{background:var(--bg-primary);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;opacity:0;display:flex;justify-content:center;pointer-events:none;transition:opacity 0.3s ease}
 .channel-card.active{opacity:1;pointer-events:auto}
-.card-inner{width:100%;max-width:var(--card-width);height:100%;display:flex;flex-direction:column;background:var(--bg-card);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.card-inner{width:100%;max-width:var(--card-width);height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border);border-right:1px solid var(--border)}
 .card-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
 .card-body::-webkit-scrollbar{width:8px}
 .card-body::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
@@ -184,14 +184,13 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .day-slot.today .day-lbl{border-width:2px}
 .day-slot.today .day-name::after{content:'';display:inline-block;width:4px;height:4px;background:var(--accent-yellow);border-radius:50%;margin-left:3px;vertical-align:middle}
 
-.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-lg);font-weight:600;color:var(--text-primary);text-align:center}
+.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--text-secondary);text-align:center}
 .volume-input:focus{outline:none;border-color:var(--accent-cyan);box-shadow:0 0 0 2px rgba(34,211,213,0.15)}
-.params-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.params-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0}
 .param-item{display:flex;flex-direction:column;gap:4px}
 .param-lbl{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
 .param-lbl.low{color:var(--accent-red)}
-.param-val{height:var(--input-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-lg);font-weight:700;color:var(--text-primary);display:flex;align-items:center;justify-content:center}
-.param-val.hl{color:var(--accent-cyan)}
+.param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:700;letter-spacing:0.03em;color:var(--text-secondary);display:flex;align-items:center;justify-content:center}
 .param-bar-box{min-height:var(--input-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;gap:4px}
 .param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--text-secondary)}
 .param-bar-val.low{color:var(--accent-red)}
@@ -206,7 +205,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .valid-msg.err{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--accent-red)}
 .valid-msg.warn{background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:var(--accent-yellow)}
 .valid-msg.info{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:var(--accent-blue)}
-.valid-msg.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--accent-green)}
+.valid-msg.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--accent-green);margin-top:8px}
 
 .card-footer{padding:10px var(--card-padding);background:var(--bg-card);border-top:1px solid var(--border);display:flex;margin-bottom:6px;gap:8px;height:var(--footer-height);flex-shrink:0}
 .btn{flex:1;height:var(--btn-height);border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast);display:flex;align-items:center;justify-content:center;gap:5px}
@@ -217,7 +216,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-secondary{background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary)}
 .btn-secondary:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
-.pending-banner{display:flex;align-items:center;border-top-left-radius:var(--radius-lg);border-top-right-radius:var(--radius-lg);gap:6px;height:32px;width:100%;padding:8px var(--card-padding);background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.3);font-size:var(--font-sm);color:var(--accent-blue);flex-shrink:0}
+.pending-banner{display:flex;align-items:center;gap:6px;height:32px;width:100%;padding:8px var(--card-padding);background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.3);font-size:var(--font-sm);color:var(--accent-blue);flex-shrink:0}
 .pending-banner svg{width:14px;height:14px}
 
 @media (max-width:768px) and (hover:none){
@@ -225,7 +224,8 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .card-header{height:auto}
 .channel-nav{grid-template-columns:repeat(4,1fr)}
 .card-inner{border-left:none;border-right:none}
-.params-grid{grid-template-columns:repeat(2,1fr)}
+.config-groups{flex-direction:column}
+.params-grid{grid-template-columns:1fr}
 }
 
 .container-bar{width:100%;height:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
@@ -235,6 +235,20 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .params-actions{display:flex;gap:8px;margin-top:4px}
 .params-actions .btn{flex:1}
 .refill-btn svg,.reset-btn svg{width:14px;height:14px}
+.config-groups{display:flex;gap:8px;margin-bottom:8px}
+.config-group{flex:1;padding:8px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)}
+.dose-group{border-top:2px solid rgba(34,211,213,0.25)}
+.container-group{border-top:2px solid rgba(56,189,248,0.25)}
+.param-lbl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.param-unit{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
+.calib-section{margin-bottom:8px}
+.calib-inner{display:flex;height:var(--btn-height);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.calib-input-field{flex:1;background:var(--bg-input);border:none;padding:0 12px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--text-secondary);text-align:center;min-width:0}
+.calib-input-field:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(34,211,213,0.3)}
+.calib-input-field::placeholder{color:var(--text-muted);font-size:var(--font-sm);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.calib-run-btn{background:rgba(34,211,213,0.1);border:none;border-left:1px solid var(--border);padding:0 16px;color:var(--accent-cyan);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast);white-space:nowrap;flex-shrink:0}
+.calib-run-btn:hover{background:rgba(34,211,213,0.2)}
+.calib-run-btn.running{background:rgba(234,179,8,0.15);border-left-color:rgba(234,179,8,0.3);color:var(--accent-yellow);pointer-events:none}
 
 /* Modal */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;visibility:hidden;transition:all 0.2s ease}
@@ -319,12 +333,17 @@ function init(){
 
 function renderChannels(){
     const slider=document.getElementById('channelScreen');
-    const activeCard=document.querySelector('.channel-card.active');
-    const scrollTop=activeCard?activeCard.scrollTop:0;
+    const activeCardBody=document.querySelector(`.channel-card[data-ch="${currentCh}"] .card-body`);
+    const scrollTop=activeCardBody?activeCardBody.scrollTop:0;
     slider.innerHTML=channels.map((ch,idx)=>renderChannelCard(ch,idx)).join('');
     channels.forEach((ch,idx)=>{attachCardEvents(idx);});
     const newActiveCard=document.querySelector(`.channel-card[data-ch="${currentCh}"]`);
-    if(newActiveCard){newActiveCard.classList.add('active');newActiveCard.scrollTop=scrollTop;}
+    if(newActiveCard){
+        newActiveCard.classList.add('active');
+        const newCardBody=newActiveCard.querySelector('.card-body');
+        if(newCardBody)newCardBody.scrollTop=scrollTop;
+    }
+    updateClock();
 }
 
 function getNextEventHour(ch,chIdx){
@@ -397,8 +416,7 @@ ${ch.state==='pending'?`<div class="pending-banner"><svg fill="none" stroke="cur
 <div class="card-content">
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val hl" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="50" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl ${ch.lowVolume?'low':''}">Remaining</div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">remaining ${(ch.remainingMl||1000).toFixed(0)} ml</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl">Dosed</div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">dosed ${(ch.totalDosedMl||0).toFixed(1)} ml</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div><div class="param-item"><div class="param-lbl">Pump Calibration</div><button class="calib-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21 5,3"/></svg>Run Pump (30s)</button></div><div class="param-item"><label class="param-lbl">Measured</label><input type="number" class="volume-input" id="calibMl_${idx}" placeholder="ml" step="0.1" data-ch="${idx}"></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-secondary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div></div></div>
-<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val hl" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="50" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-secondary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
 </div>
 </div>
 </div></div>`;
@@ -460,13 +478,13 @@ function updateChannel(idx){
 function runCalib(idx){
     const btn=document.getElementById(`calibBtn_${idx}`);
     btn.classList.add('running');
-    btn.innerHTML=`<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> Running...`;
+    btn.textContent='Running...';
     fetch(`api/calibrate?channel=${idx}`,{method:'POST'}).then(r=>r.json()).catch(()=>({}));
     let remaining=CFG.CALIB_SEC;
     const timer=setInterval(()=>{
         remaining--;
-        btn.innerHTML=`<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> ${remaining}s`;
-        if(remaining<=0){clearInterval(timer);btn.classList.remove('running');btn.innerHTML=`<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21 5,3"/></svg> Run Pump (30s)`;}
+        btn.textContent=`${remaining}s`;
+        if(remaining<=0){clearInterval(timer);btn.classList.remove('running');btn.textContent='Run Pump (30s)';}
     },1000);
 }
 
@@ -586,7 +604,7 @@ function confirmSave(){
     const payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ch.dailyDose,dosingRate:ch.dosingRate,enabled:ch.enabled!==false};
     fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json())
-    .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';renderChannels();renderOverview();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
+    .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';renderChannels();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
     .catch(()=>showAlert('Error','Connection error','err'));
 }
 
@@ -622,14 +640,14 @@ function updateDosedDisplay(idx){
     const dosedBar=document.getElementById(`dosedBar_${idx}`);
     const dosedLabel=document.getElementById(`dosedLabel_${idx}`);
     if(dosedBar)dosedBar.style.width=`${dosedPct}%`;
-    if(dosedLabel)dosedLabel.textContent=`dosed ${ch.totalDosedMl.toFixed(1)} ml`;
+    if(dosedLabel)dosedLabel.textContent=ch.totalDosedMl.toFixed(1);
 }
 
 function updateContainerDisplay(idx,data){
     const bar=document.getElementById(`containerBar_${idx}`);
     const remainingLabel=document.getElementById(`remainingLabel_${idx}`);
     if(bar){const pctVal=data.remaining_pct!==undefined?data.remaining_pct:(data.remaining_ml/data.container_ml*100);bar.style.width=`${pctVal}%`;bar.classList.toggle('low',data.low_warning);}
-    if(remainingLabel){remainingLabel.textContent=`remaining ${data.remaining_ml.toFixed(0)} ml`;remainingLabel.classList.toggle('low',data.low_warning);}
+    if(remainingLabel){remainingLabel.textContent=data.remaining_ml.toFixed(0);remainingLabel.classList.toggle('low',data.low_warning);}
     if(channels[idx]){channels[idx].containerMl=data.container_ml;channels[idx].remainingMl=data.remaining_ml;channels[idx].remainingPct=data.remaining_pct;channels[idx].lowVolume=data.low_warning;}
 }
 
