@@ -144,7 +144,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .section-info{font-size:var(--font-xs);color:var(--text-muted)}
 .section-body{padding:var(--section-padding)}
 
-.events-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.events-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .event-slot{position:relative}
 .event-cb{display:none}
 .event-lbl{display:flex;flex-direction:column;align-items:center;justify-content:center;height:var(--event-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast)}
@@ -206,8 +206,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-secondary{background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary)}
 .btn-secondary:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
-.pending-banner{display:flex;align-items:center;gap:6px;height:32px;width:100%;padding:8px var(--card-padding);background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.3);font-size:var(--font-sm);color:var(--accent-blue);flex-shrink:0}
-.pending-banner svg{width:14px;height:14px}
 
 @media (max-width:768px) and (hover:none){
 .channel-nav{grid-template-columns:repeat(4,1fr)}
@@ -292,7 +290,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
         </div>
     </div>
 <script>
-const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,CALIB_SEC:30,SWIPE_THRESHOLD:50};
+const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,MIN_RATE:1/30,MAX_RATE:5.0,CALIB_SEC:30,SWIPE_THRESHOLD:50};
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 let channels=[];
@@ -394,13 +392,11 @@ function renderChannelCard(ch,idx){
 <div class="card-inner">
 <div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><span class="card-time">--:--:--</span><div class="header-actions"><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
 <div class="channel-nav">${navBtns}</div>
-${ch.state==='pending'?`<div class="pending-banner"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Changes pending – active from tomorrow</div>`:''}
-
 <div class="card-body">
 <div class="card-content">
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val hl" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="50" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-secondary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val hl" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-secondary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
 </div>
 </div>
 </div></div>`;
@@ -414,6 +410,13 @@ function attachCardEvents(idx){
     if(doseInput){doseInput.addEventListener('focus',markEditing);doseInput.addEventListener('input',()=>updateChannel(idx));}
     const calibInput=document.getElementById(`calibMl_${idx}`);
     if(calibInput){calibInput.addEventListener('focus',markEditing);calibInput.addEventListener('change',()=>calcCalibration(idx));}
+    const containerInput=document.getElementById(`container_${idx}`);
+    if(containerInput){
+        containerInput.addEventListener('focus',markEditing);
+        containerInput.addEventListener('blur',()=>{
+            if(document.activeElement!==doseInput&&document.activeElement!==calibInput)editingChannel=-1;
+        });
+    }
 }
 
 function updateChannel(idx){
@@ -469,7 +472,35 @@ function runCalib(idx){
     },1000);
 }
 
-function calcCalibration(idx){const ml=parseFloat(document.getElementById(`calibMl_${idx}`).value)||0;if(ml>0){channels[idx].dosingRate=ml/CFG.CALIB_SEC;updateChannel(idx);}}
+function calcCalibration(idx){
+    const input=document.getElementById(`calibMl_${idx}`);
+    const val=input.value.trim();
+    const validMsg=document.getElementById(`validMsg_${idx}`);
+    const validTxt=document.getElementById(`validTxt_${idx}`);
+    const saveBtn=document.getElementById(`saveBtn_${idx}`);
+    const errIcon='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+    if(val===''){updateChannel(idx);return;}
+    const ml=parseFloat(val);
+    if(isNaN(ml)||ml<=0){
+        validMsg.className='valid-msg err';
+        validTxt.textContent='Calibration: enter a positive value (ml pumped in 30s)';
+        validMsg.querySelector('svg').innerHTML=errIcon;
+        saveBtn.disabled=true;
+        return;
+    }
+    const rate=ml/CFG.CALIB_SEC;
+    if(rate<CFG.MIN_RATE||rate>CFG.MAX_RATE){
+        validMsg.className='valid-msg err';
+        const minMl=(CFG.MIN_RATE*CFG.CALIB_SEC).toFixed(1);
+        const maxMl=(CFG.MAX_RATE*CFG.CALIB_SEC).toFixed(0);
+        validTxt.textContent=`Calibration: ${ml} ml → ${rate.toFixed(3)} ml/s out of range (need ${minMl}–${maxMl} ml)`;
+        validMsg.querySelector('svg').innerHTML=errIcon;
+        saveBtn.disabled=true;
+        return;
+    }
+    channels[idx].dosingRate=rate;
+    updateChannel(idx);
+}
 
 function goToChannel(idx){
     document.querySelectorAll('.channel-card').forEach(card=>{card.classList.remove('active');});
@@ -497,26 +528,35 @@ function loadStatus(){
     fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
         if(data.channels){
             data.channels.forEach((chData,i)=>{
+                if(!channels[i])return;
+                // Pola statusu — aktualizuj zawsze, niezależnie od trybu edycji
+                channels[i].containerMl=chData.containerMl||1000;
+                channels[i].remainingMl=chData.remainingMl!=null?chData.remainingMl:1000;
+                channels[i].remainingPct=chData.remainingPct!=null?chData.remainingPct:100;
+                channels[i].lowVolume=!!chData.lowVolume;
+                channels[i].daysRemaining=chData.daysRemaining||999;
+                channels[i].totalDosedMl=chData.totalDosedMl||0;
+                // Pola konfiguracji — pomijaj kanał aktualnie edytowany
                 if(i===editingChannel)return;
-                if(channels[i]){
-                    channels[i].events=chData.events||0;
-                    channels[i].days=chData.days||0;
-                    channels[i].dailyDose=chData.dailyDose||0;
-                    channels[i].dosingRate=chData.dosingRate||0.33;
-                    channels[i].enabled=chData.enabled!==false;
-                    channels[i].name=chData.name||('CH'+i);
-                    channels[i].eventsCompleted=chData.eventsCompleted||0;
-                    channels[i].eventsFailed=chData.eventsFailed||0;
-                    channels[i].state=chData.state||'inactive';
-                    channels[i].containerMl=chData.containerMl||1000;
-                    channels[i].remainingMl=chData.remainingMl||1000;
-                    channels[i].remainingPct=chData.remainingPct||100;
-                    channels[i].lowVolume=chData.lowVolume||false;
-                    channels[i].daysRemaining=chData.daysRemaining||999;
-                    channels[i].totalDosedMl=chData.totalDosedMl||0;
-                }
+                channels[i].events=chData.events||0;
+                channels[i].days=chData.days||0;
+                channels[i].dailyDose=chData.dailyDose||0;
+                channels[i].dosingRate=chData.dosingRate||0.33;
+                channels[i].enabled=chData.enabled!==false;
+                channels[i].name=chData.name||('CH'+i);
+                channels[i].eventsCompleted=chData.eventsCompleted||0;
+                channels[i].eventsFailed=chData.eventsFailed||0;
+                channels[i].state=chData.state||'inactive';
             });
-            if(editingChannel===-1)renderChannels();
+            if(editingChannel===-1){
+                renderChannels();
+            } else {
+                // Re-render zablokowany (user edytuje) — odśwież tylko kontrolki wolumenu i dozowania
+                channels.forEach((_,i)=>{
+                    updateContainerDisplay(i,{remaining_ml:channels[i].remainingMl,remaining_pct:channels[i].remainingPct,container_ml:channels[i].containerMl,low_warning:channels[i].lowVolume,days_remaining:channels[i].daysRemaining});
+                    updateDosedDisplay(i);
+                });
+            }
         }
         if(data.activeChannel!==undefined){
             const wasActive=activeChannel>=0;
@@ -556,12 +596,7 @@ function confirmRefill(){
     const channel=pendingRefillChannel;
     closeRefillModal();
     fetch(`api/refill?channel=${channel}`,{method:'POST'}).then(r=>r.json()).then(data=>{
-        if(data.success){
-            channels[channel].remainingMl=data.remaining_ml;
-            channels[channel].remainingPct=100;
-            channels[channel].lowVolume=false;
-            updateContainerDisplay(channel,{remaining_ml:data.remaining_ml,remaining_pct:100,container_ml:data.container_ml,low_warning:false});
-        }
+        if(data.success)updateContainerDisplay(channel,data);
     }).catch(err=>console.error('Refill error:',err));
 }
 
@@ -609,9 +644,11 @@ function updateDosedDisplay(idx){
 function updateContainerDisplay(idx,data){
     const bar=document.getElementById(`containerBar_${idx}`);
     const remainingLabel=document.getElementById(`remainingLabel_${idx}`);
+    const daysLeftEl=document.getElementById(`daysLeft_${idx}`);
     if(bar){const pctVal=data.remaining_pct!==undefined?data.remaining_pct:(data.remaining_ml/data.container_ml*100);bar.style.width=`${pctVal}%`;bar.classList.toggle('low',data.low_warning);}
     if(remainingLabel){remainingLabel.textContent=data.remaining_ml.toFixed(0);remainingLabel.classList.toggle('low',data.low_warning);}
-    if(channels[idx]){channels[idx].containerMl=data.container_ml;channels[idx].remainingMl=data.remaining_ml;channels[idx].remainingPct=data.remaining_pct;channels[idx].lowVolume=data.low_warning;}
+    if(daysLeftEl&&data.days_remaining!==undefined){daysLeftEl.textContent=data.days_remaining>900?'∞':data.days_remaining.toFixed(1);}
+    if(channels[idx]){channels[idx].containerMl=data.container_ml;channels[idx].remainingMl=data.remaining_ml;channels[idx].remainingPct=data.remaining_pct;channels[idx].lowVolume=data.low_warning;if(data.days_remaining!==undefined)channels[idx].daysRemaining=data.days_remaining;}
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='refillModal')closeRefillModal();if(e.target.id==='alertModal')closeAlert();if(e.target.id==='saveModal')closeSaveModal();});
