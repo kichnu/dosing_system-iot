@@ -180,10 +180,33 @@ void processSerialCommand() {
             printMenu();
             break;
 
-        case 'y':
-        case 'Y':
-            Serial.println(F("[CMD] GPIO validation removed (ULN2003AN mode)"));
+        case 'n':
+        case 'N': {
+            Serial.println(F("[CMD] Apply pending + reset daily states (= midnight)? (y/n): "));
+            while (!Serial.available()) delay(10);
+            char confirm = Serial.read();
+            while (Serial.available()) Serial.read();
+
+            if (confirm == 'y' || confirm == 'Y') {
+                if (channelManager.hasAnyPendingChanges()) {
+                    if (channelManager.applyAllPendingChanges()) {
+                        Serial.println(F("[CMD] Pending changes applied"));
+                    } else {
+                        Serial.println(F("[CMD] Apply FAILED (FRAM write error?)"));
+                    }
+                } else {
+                    Serial.println(F("[CMD] No pending changes"));
+                }
+                if (channelManager.resetDailyStates()) {
+                    Serial.println(F("[CMD] Daily states reset"));
+                } else {
+                    Serial.println(F("[CMD] Daily states reset FAILED"));
+                }
+            } else {
+                Serial.println(F("[CMD] Cancelled"));
+            }
             break;
+        }
 
         case 'z':
         case 'Z': {

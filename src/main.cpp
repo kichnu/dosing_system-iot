@@ -1,10 +1,6 @@
 /**
  * DOZOWNIK - Main Entry Point
- * 
- * Firmware testowy - FAZA 2
- * Testowanie RelayController i GpioValidator przez Serial.
  */
-// #include "gpio_validator.h"
 
 #include <Arduino.h>
 #include <Wire.h>

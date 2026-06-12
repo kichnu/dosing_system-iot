@@ -249,9 +249,9 @@ bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdat
         _pendingConfig[channel].dosing_rate = rate;
     }
 
-    if (update.has_enabled) {
-        _pendingConfig[channel].enabled = update.enabled ? 1 : 0;
-    }
+    // enabled zawsze wynika z events_bitmask — ignorujemy has_enabled z GUI
+    // (brak UI-toggle dla enabled; zapobiega pętli propagacji enabled=0 z FRAM)
+    _pendingConfig[channel].enabled = (_pendingConfig[channel].events_bitmask > 0) ? 1 : 0;
 
     // Single FRAM write with all changes
     return _savePendingConfig(channel);
@@ -440,19 +440,15 @@ bool ChannelManager::markEventCompleted(uint8_t channel, uint8_t hour, float dos
 
     _updateDailyStateCRC(&_dailyState[channel]);
 
-    if (!framController.writeDailyState(channel, &_dailyState[channel])) {
-        return false;
-    }
+    // Zapisz do FRAM — ale nie przerywaj trackingu wolumenu nawet przy błędzie zapisu
+    bool framOk = framController.writeDailyState(channel, &_dailyState[channel]);
 
     // Note: deductVolume and addDosedVolume have their own locks,
     // but we hold this lock to ensure daily state consistency
-    // Deduct from container volume
     deductVolume(channel, dosed_ml);
-
-    // Add to dosed tracker (total since reset)
     addDosedVolume(channel, dosed_ml);
 
-    return true;
+    return framOk;
 }
 
 bool ChannelManager::markEventFailed(uint8_t channel, uint8_t hour) {
@@ -530,8 +526,9 @@ bool ChannelManager::shouldExecuteEvent(uint8_t channel, uint8_t hour, uint8_t d
     const ChannelDailyState& state = _dailyState[channel];
     const ChannelCalculated& calc = _calculated[channel];
     
-    // Check if channel is valid and enabled
-    if (!calc.is_valid || !cfg.enabled) return false;
+    // Waliduj na podstawie active config (calc pochodzi z pending i może być niespójny)
+    if (!cfg.enabled) return false;
+    if (cfg.daily_dose_ml <= 0 || cfg.dosing_rate <= 0) return false;
     
     // Check if day is active
     if (!cfg.isDayEnabled(dayOfWeek)) return false;

@@ -380,8 +380,11 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
     if (doc["dailyDose"].is<float>()) {
         float dose = doc["dailyDose"].as<float>();
         if (dose < MIN_SINGLE_DOSE_ML || dose > MAX_DAILY_DOSE_ML) {
-            request->send(400, "application/json",
-                "{\"success\":false,\"error\":\"Invalid dailyDose (valid: 1.0-500.0 ml)\"}");
+            char errMsg[80];
+            snprintf(errMsg, sizeof(errMsg),
+                "{\"success\":false,\"error\":\"Invalid dailyDose (valid: %.1f-%.0f ml)\"}",
+                (float)MIN_SINGLE_DOSE_ML, (float)MAX_DAILY_DOSE_ML);
+            request->send(400, "application/json", errMsg);
             return;
         }
     }
@@ -390,8 +393,11 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
     if (doc["dosingRate"].is<float>()) {
         float rate = doc["dosingRate"].as<float>();
         if (rate < MIN_DOSING_RATE || rate > MAX_DOSING_RATE) {
-            request->send(400, "application/json",
-                "{\"success\":false,\"error\":\"Invalid dosingRate (valid: 0.1-5.0 ml/s)\"}");
+            char errMsg[80];
+            snprintf(errMsg, sizeof(errMsg),
+                "{\"success\":false,\"error\":\"Invalid dosingRate (valid: %.4f-%.1f ml/s)\"}",
+                (float)MIN_DOSING_RATE, (float)MAX_DOSING_RATE);
+            request->send(400, "application/json", errMsg);
             return;
         }
     }
@@ -421,12 +427,6 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         update.has_rate = true;
         update.rate = doc["dosingRate"].as<float>();
         Serial.printf("  Rate: %.3f ml/s\n", update.rate);
-    }
-
-    if (doc["enabled"].is<bool>()) {
-        update.has_enabled = true;
-        update.enabled = doc["enabled"].as<bool>();
-        Serial.printf("  Enabled: %s\n", update.enabled ? "true" : "false");
     }
 
     // Apply all changes atomically
@@ -759,7 +759,9 @@ void handleApiContainerVolumeSet(AsyncWebServerRequest* request, uint8_t* data, 
     resp["container_ml"] = vol.getContainerMl();
     resp["remaining_ml"] = vol.getRemainingMl();
     resp["remaining_pct"] = vol.getRemainingPercent();
-    
+    resp["low_warning"] = vol.isLowVolume();
+    resp["days_remaining"] = channelManager.getDaysRemaining(channel);
+
     String response;
     serializeJson(resp, response);
     request->send(200, "application/json", response);
@@ -798,6 +800,9 @@ void handleApiRefill(AsyncWebServerRequest* request) {
     resp["channel"] = channel;
     resp["remaining_ml"] = vol.getRemainingMl();
     resp["container_ml"] = vol.getContainerMl();
+    resp["remaining_pct"] = vol.getRemainingPercent();
+    resp["low_warning"] = vol.isLowVolume();
+    resp["days_remaining"] = channelManager.getDaysRemaining(channel);
     resp["message"] = success ? "Container refilled" : "Refill failed";
     
     String response;

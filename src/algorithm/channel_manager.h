@@ -113,8 +113,6 @@ public:
         float dose = 0;
         bool has_rate = false;
         float rate = 0;
-        bool has_enabled = false;
-        bool enabled = true;
     };
     bool updatePendingConfigBatch(uint8_t channel, const ConfigUpdate& update);
 
