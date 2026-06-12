@@ -660,15 +660,20 @@ warn:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24
 info:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
 logout:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
 };
-let alertCallback=null;
+let alertCallback=null;let alertTimeout=null;
 
 function showAlert(title,msg,type,callback){
     document.getElementById('alertIcon').className='modal-icon '+type;
     document.getElementById('alertIcon').innerHTML=MODAL_ICONS[type]||MODAL_ICONS.info;
     document.getElementById('alertTitle').textContent=title;
     document.getElementById('alertText').textContent=msg;
-    document.getElementById('alertActions').innerHTML='<button class="btn btn-primary" onclick="closeAlert()">OK</button>';
     alertCallback=callback||null;
+    if(type==='ok'){
+        document.getElementById('alertActions').innerHTML='';
+        alertTimeout=setTimeout(closeAlert,1000);
+    }else{
+        document.getElementById('alertActions').innerHTML='<button class="btn btn-primary" onclick="closeAlert()">OK</button>';
+    }
     document.getElementById('alertModal').classList.add('show');
 }
 
@@ -683,6 +688,7 @@ function showConfirm(title,msg,type,onConfirm){
 }
 
 function closeAlert(confirmed){
+    if(alertTimeout){clearTimeout(alertTimeout);alertTimeout=null;}
     document.getElementById('alertModal').classList.remove('show');
     if(confirmed&&alertCallback)alertCallback();
     alertCallback=null;
