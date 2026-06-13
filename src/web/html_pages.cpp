@@ -292,8 +292,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .tmpl-icon-btn svg{width:100%;height:100%}
 .tmpl-icon-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
 .tmpl-icon-btn.active{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.12)}
-.tmpl-icon-btn.csv{cursor:not-allowed;opacity:0.4}
-.tmpl-icon-btn.csv:hover{border-color:var(--border);color:var(--text-muted);background:none}
 .tmpl-add-btn{height:22px;padding:0 8px;background:rgba(34,211,213,0.08);border:1px solid rgba(34,211,213,0.25);border-radius:4px;color:var(--accent-cyan);font-size:var(--font-xs);font-weight:600;cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
 .tmpl-add-btn:hover{background:rgba(34,211,213,0.18)}
 .tmpl-remove-btn{height:22px;width:22px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
@@ -897,6 +895,20 @@ function createTmpl(ch){
     hideNewTmplForm(ch);
     saveParamLog(()=>refreshParams(ch));
 }
+function exportCsv(ch,tmplId){
+    if(!paramLog) return;
+    const t=paramLog.templates[tmplId];
+    const name=t?t.name:'param'+tmplId;
+    const unit=t?t.unit:'';
+    const recs=getChartRecs(ch,tmplId);
+    let csv='timestamp,value'+(unit?',unit':'')+'\n';
+    recs.forEach(r=>{csv+=fmtTs(r.timestamp)+','+r.value+(unit?','+unit:'')+'\n';});
+    const a=document.createElement('a');
+    a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+    a.download='ch'+(ch+1)+'_'+name.replace(/[^a-z0-9]/gi,'_')+'.csv';
+    a.click();
+}
+
 // ── Chart ─────────────────────────────────────────────────────────────────
 function niceNum(x,round){
     const exp=Math.floor(Math.log10(x));const f=x/Math.pow(10,exp);
@@ -1053,7 +1065,7 @@ function renderParamsSection(idx){
                 +'<span class="tmpl-name">'+escAttr(t.name)+'</span>'
                 +'<span class="tmpl-unit">'+escAttr(ud)+'</span>'
                 +'<button class="tmpl-icon-btn'+(cs.open?' active':'')+'" id="chartBtn_'+idx+'_'+tmplId+'" onclick="toggleChart('+idx+','+tmplId+')" title="Toggle chart">'+svgWave+'</button>'
-                +'<button class="tmpl-icon-btn csv" title="Export CSV">'+svgDown+'</button>'
+                +'<button class="tmpl-icon-btn" onclick="exportCsv('+idx+','+tmplId+')" title="Export CSV">'+svgDown+'</button>'
                 +'<button class="tmpl-add-btn" onclick="showAddRec('+idx+','+tmplId+')">+ Add</button>'
                 +'<button class="tmpl-remove-btn" onclick="removeTmpl('+idx+','+tmplId+')" title="Remove">\xd7</button>'
                 +'</div>'
