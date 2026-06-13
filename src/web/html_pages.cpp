@@ -811,7 +811,7 @@ function loadParamLog(){
 }
 function saveParamLog(cb){
     fetch('api/paramlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(paramLog)})
-    .then(r=>r.json()).then(d=>{if(cb)cb(!!d.ok);}).catch(()=>{if(cb)cb(false);});
+    .then(r=>r.json()).then(d=>{if(cb)cb(!!d.success);}).catch(()=>{if(cb)cb(false);});
 }
 function showAddRec(ch,tmplId){
     const f=document.getElementById('addForm_'+ch+'_'+tmplId);
@@ -1001,7 +1001,7 @@ function getChartState(ch,tmplId){
 }
 function chartWindow(){return window.matchMedia('(max-width:600px)').matches?20:80;}
 function getValidRecs(){
-    if(!paramLog) return [];
+    if(!paramLog||!Array.isArray(paramLog.ring)) return [];
     return paramLog.ring.map((r,i)=>Object.assign({},r,{_ri:i})).filter(r=>r.flags&1).sort((a,b)=>a.timestamp-b.timestamp);
 }
 function getChartRecs(ch,tmplId){return getValidRecs().filter(r=>r.tmpl_idx===tmplId&&r.channel===ch);}

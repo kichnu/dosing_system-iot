@@ -987,7 +987,7 @@ void handleApiParamLogGet(AsyncWebServerRequest* request) {
         t["flags"] = log->templates[i].flags;
     }
 
-    JsonArray rArr = doc["records"].to<JsonArray>();
+    JsonArray rArr = doc["ring"].to<JsonArray>();
     for (int i = 0; i < 100; i++) {
         JsonObject r = rArr.add<JsonObject>();
         r["tmpl_idx"]  = log->ring[i].tmpl_idx;
@@ -1055,7 +1055,7 @@ void handleApiParamLogPost(AsyncWebServerRequest* request, uint8_t* data, size_t
         log->templates[i].flags    = (uint8_t)(t["flags"] | 0);
     }
 
-    JsonArray rArr = doc["records"].as<JsonArray>();
+    JsonArray rArr = doc["ring"].as<JsonArray>();
     for (int i = 0; i < 100 && i < (int)rArr.size(); i++) {
         JsonObject r = rArr[i];
         log->ring[i].tmpl_idx  = (uint8_t)(r["tmpl_idx"]  | 0);
