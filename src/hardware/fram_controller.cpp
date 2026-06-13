@@ -616,3 +616,30 @@ bool FramController::writeSharedNotes(const SharedNotes* notes) {
     tmp.crc32 = calculateCRC32(&tmp, sizeof(SharedNotes) - sizeof(uint32_t));
     return writeBytes(FRAM_ADDR_SHARED_NOTES, &tmp, sizeof(SharedNotes));
 }
+
+// ============================================================================
+// PARAM LOG (szablony parametrów + ring buffer pomiarów)
+// ParamLog jest duży (1852B) — zapis przez malloc żeby nie obciążać stosu
+// ============================================================================
+
+bool FramController::readParamLog(ParamLog* log) {
+    if (!log) return false;
+    if (!readBytes(FRAM_ADDR_PARAM_LOG, log, sizeof(ParamLog))) return false;
+    uint32_t crc = calculateCRC32(log, sizeof(ParamLog) - sizeof(uint32_t));
+    if (log->crc32 != crc) {
+        memset(log, 0, sizeof(ParamLog));
+        return false;
+    }
+    return true;
+}
+
+bool FramController::writeParamLog(const ParamLog* log) {
+    if (!log) return false;
+    ParamLog* tmp = (ParamLog*)malloc(sizeof(ParamLog));
+    if (!tmp) return false;
+    memcpy(tmp, log, sizeof(ParamLog));
+    tmp->crc32 = calculateCRC32(tmp, sizeof(ParamLog) - sizeof(uint32_t));
+    bool ok = writeBytes(FRAM_ADDR_PARAM_LOG, tmp, sizeof(ParamLog));
+    free(tmp);
+    return ok;
+}

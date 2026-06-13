@@ -345,6 +345,44 @@ struct SharedNotes {
 static_assert(sizeof(SharedNotes) == 400, "SharedNotes must be 400 bytes");
 
 // ============================================================================
+// PARAM LOG — szablony parametrów + ring buffer pomiarów
+// Przechowywane w FRAM @ FRAM_ADDR_PARAM_LOG
+// ============================================================================
+
+#pragma pack(push, 1)
+
+struct ParamTemplate {          // 32B
+    char    name[20];           // nazwa parametru, null-terminated
+    char    unit[8];            // jednostka, null-terminated
+    uint8_t flags;              // bit0: slot zajęty
+    uint8_t _pad[3];
+};
+static_assert(sizeof(ParamTemplate) == 32, "ParamTemplate must be 32 bytes");
+
+struct ParamRecord {            // 12B
+    float    value;             // wartość pomiaru
+    uint32_t timestamp;         // Unix UTC (sekundy)
+    uint8_t  tmpl_idx;          // indeks szablonu (0–19)
+    uint8_t  channel;           // kanał (0–7)
+    uint8_t  flags;             // bit0: slot ważny
+    uint8_t  _pad;
+};
+static_assert(sizeof(ParamRecord) == 12, "ParamRecord must be 12 bytes");
+
+struct ParamLog {               // 1852B łącznie
+    ParamTemplate templates[20];    // 20 × 32B = 640B
+    ParamRecord   ring[100];        // 100 × 12B = 1200B  — SHARED ring (nie per-template)
+    uint8_t  head;              // wskaźnik zapisu ring (0–99)
+    uint8_t  count;             // liczba ważnych rekordów (0–100)
+    uint8_t  tmpl_count;        // liczba zdefiniowanych szablonów (0–20)
+    uint8_t  _pad[5];
+    uint32_t crc32;             // OSTATNIE pole — obejmuje 1848B przed
+};
+static_assert(sizeof(ParamLog) == 1852, "ParamLog must be 1852 bytes");
+
+#pragma pack(pop)
+
+// ============================================================================
 // PUMP MONITOR STATUS (tylko RAM — dane z Edge Impulse ESP32 przez UART)
 // ============================================================================
 

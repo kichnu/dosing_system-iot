@@ -47,7 +47,8 @@
 // PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
 // FREE               | 0x0A80   | 128 B     | Rezerva
 // SHARED_NOTES       | 0x0B00   | 400 B     | Notes pool + ch_note_idx (12 × 32B + meta)
-// RESERVED           | 0x0C90   | ~28.5 KB  | Przyszłe użycie
+// PARAM_LOG          | 0x0C90   | 1852 B    | ParamLog: 20 tmpl × 32B + ring 100 × 12B
+// RESERVED           | 0x13CC   | ~26.7 KB  | Przyszłe użycie
 // ============================================================================
 
 // ----------------------------------------------------------------------------
@@ -185,9 +186,17 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 #define FRAM_SIZE_SHARED_NOTES      sizeof(SharedNotes)   // 400B
 
 // ----------------------------------------------------------------------------
-// RESERVED (0x0C90 - 0x7FFF)  ~28.5 KB
+// PARAM LOG (0x0C90 - 0x134B)  1852B
+// Szablony parametrów (20 × 32B) + ring buffer pomiarów (100 × 12B)
+// Ring jest SHARED — wspólny dla wszystkich szablonów i kanałów
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_RESERVED          0x0C90
+#define FRAM_ADDR_PARAM_LOG         0x0C90
+#define FRAM_SIZE_PARAM_LOG         sizeof(ParamLog)   // 1852B
+
+// ----------------------------------------------------------------------------
+// RESERVED (0x13CC - 0x7FFF)  ~26.7 KB
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_RESERVED          0x13CC
 #define FRAM_SIZE_RESERVED          (FRAM_SIZE_BYTES - FRAM_ADDR_RESERVED)
 
 // ============================================================================
@@ -202,6 +211,12 @@ static_assert(FRAM_ADDR_ACTIVE_CONFIG + FRAM_SIZE_ACTIVE_CONFIG <= FRAM_ADDR_PEN
 
 static_assert(FRAM_ADDR_PENDING_CONFIG + FRAM_SIZE_PENDING_CONFIG <= FRAM_ADDR_DAILY_STATE,
               "PENDING_CONFIG overlaps DAILY_STATE!");
+
+static_assert(FRAM_ADDR_SHARED_NOTES + FRAM_SIZE_SHARED_NOTES <= FRAM_ADDR_PARAM_LOG,
+              "SHARED_NOTES overlaps PARAM_LOG!");
+
+static_assert(FRAM_ADDR_PARAM_LOG + FRAM_SIZE_PARAM_LOG <= FRAM_ADDR_RESERVED,
+              "PARAM_LOG overlaps RESERVED!");
 
 // ============================================================================
 // FRAM OPERATIONS (deklaracje)

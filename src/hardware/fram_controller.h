@@ -103,6 +103,10 @@ public:
     // --- Shared Notes ---
     bool readSharedNotes(SharedNotes* notes);
     bool writeSharedNotes(const SharedNotes* notes);
+
+    // --- Param Log ---
+    bool readParamLog(ParamLog* log);
+    bool writeParamLog(const ParamLog* log);
     
     // --- Utility ---
     
