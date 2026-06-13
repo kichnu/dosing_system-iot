@@ -144,7 +144,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .section-info{font-size:var(--font-xs);color:var(--text-muted)}
 .section-body{padding:var(--section-padding)}
 .notes-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
-.notes-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:pointer;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
+.notes-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:default;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
 .notes-section.expanded .notes-header{border-bottom-color:var(--border)}
 .notes-icon{flex-shrink:0;width:12px;height:12px;color:var(--accent-cyan)}
 .notes-preview{flex:1;font-size:1rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.01em}
@@ -273,6 +273,73 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .modal-icon.err{background:rgba(239,68,68,0.15)}.modal-icon.err svg{color:var(--accent-red)}
 .modal-icon.warn{background:rgba(234,179,8,0.15)}.modal-icon.warn svg{color:var(--accent-yellow)}
 .modal-icon.info{background:rgba(56,189,248,0.15)}.modal-icon.info svg{color:var(--accent-blue)}
+.params-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
+.params-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:default;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
+.params-section.expanded .params-header{border-bottom-color:var(--border)}
+.params-icon{flex-shrink:0;width:12px;height:12px;color:var(--accent-cyan)}
+.params-preview{flex:1;font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.params-preview.empty{font-style:italic;font-weight:400;color:var(--text-muted)}
+.params-toggle-btn{flex-shrink:0;width:24px;height:24px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);font-size:10px;line-height:1}
+.params-toggle-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
+.params-body{display:none;flex-direction:column;gap:8px;padding:8px var(--section-padding)}
+.params-section.expanded .params-body{display:flex}
+.tmpl-block{background:rgba(0,0,0,0.18);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.tmpl-header{display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(255,255,255,0.025);border-bottom:1px solid var(--border)}
+.tmpl-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);flex-shrink:0}
+.tmpl-name{flex:1;font-size:var(--font-sm);font-weight:600;color:var(--text-primary)}
+.tmpl-unit{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-xs);color:var(--text-muted);background:var(--bg-input);padding:1px 5px;border-radius:3px;flex-shrink:0}
+.tmpl-icon-btn{height:22px;width:22px;padding:3px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
+.tmpl-icon-btn svg{width:100%;height:100%}
+.tmpl-icon-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
+.tmpl-icon-btn.active{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.12)}
+.tmpl-icon-btn.csv{cursor:not-allowed;opacity:0.4}
+.tmpl-icon-btn.csv:hover{border-color:var(--border);color:var(--text-muted);background:none}
+.tmpl-add-btn{height:22px;padding:0 8px;background:rgba(34,211,213,0.08);border:1px solid rgba(34,211,213,0.25);border-radius:4px;color:var(--accent-cyan);font-size:var(--font-xs);font-weight:600;cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
+.tmpl-add-btn:hover{background:rgba(34,211,213,0.18)}
+.tmpl-remove-btn{height:22px;width:22px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
+.tmpl-remove-btn:hover{border-color:var(--accent-red);color:var(--accent-red);background:rgba(239,68,68,0.06)}
+.chart-container{border-bottom:1px solid var(--border);background:rgba(0,0,0,0.25)}
+.chart-wrap{display:flex;align-items:stretch}
+.chart-scroll-btn{flex-shrink:0;width:26px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:color var(--transition-fast)}
+.chart-scroll-btn:hover:not(:disabled){color:var(--accent-cyan)}
+.chart-scroll-btn:disabled{opacity:0.2;cursor:default}
+.chart-canvas{flex:1;height:140px;display:block;min-width:0}
+.chart-footer{padding:3px 8px 5px;text-align:center;font-size:var(--font-xs);color:var(--text-muted);font-style:italic}
+.tmpl-records{max-height:196px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent}
+.add-record-form{display:none;align-items:center;gap:6px;padding:5px 8px;background:rgba(34,211,213,0.04);border-bottom:1px solid rgba(34,211,213,0.12)}
+.add-record-form.visible{display:flex}
+.add-rec-input{width:88px;height:26px;padding:0 6px;background:var(--bg-input);border:1px solid var(--accent-cyan);border-radius:4px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--accent-cyan);outline:none}
+.add-rec-unit{font-size:var(--font-xs);color:var(--text-muted);flex-shrink:0;min-width:28px}
+.add-rec-save{height:26px;padding:0 10px;background:var(--accent-cyan);border:none;border-radius:4px;color:var(--bg-primary);font-size:var(--font-xs);font-weight:700;cursor:pointer}
+.add-rec-cancel{height:26px;width:26px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.record-row{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background var(--transition-fast)}
+.record-row:last-child{border-bottom:none}
+.record-row:hover{background:rgba(255,255,255,0.02)}
+.rec-value{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--accent-cyan);flex:0 0 80px}
+.rec-value-input{width:76px;height:22px;padding:0 4px;background:var(--bg-input);border:1px solid var(--accent-cyan);border-radius:3px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--accent-cyan);outline:none;flex:0 0 76px}
+.rec-ts{flex:1;font-size:var(--font-xs);color:var(--text-muted)}
+.rec-actions{flex-shrink:0;display:flex;gap:2px}
+.rec-btn{width:20px;height:20px;border:none;background:none;color:var(--text-muted);font-size:11px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
+.rec-btn:hover{background:var(--bg-input);color:var(--text-primary)}
+.rec-btn.del:hover{color:var(--accent-red)}
+.records-empty{padding:10px 8px;text-align:center;font-size:var(--font-xs);color:var(--text-muted);font-style:italic}
+.params-bottom{display:flex;flex-direction:column;gap:5px}
+.assign-row{display:flex;gap:6px;align-items:center}
+.assign-select{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);outline:none;appearance:none;cursor:pointer}
+.assign-select:focus{border-color:var(--accent-cyan)}
+.assign-btn{height:30px;padding:0 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
+.assign-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.new-tmpl-btn{width:100%;height:28px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:var(--font-xs);cursor:pointer;transition:all var(--transition-fast)}
+.new-tmpl-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.new-tmpl-form{display:none;align-items:center;gap:6px}
+.new-tmpl-form.visible{display:flex}
+.new-tmpl-name{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-sm);outline:none}
+.new-tmpl-name:focus{border-color:var(--accent-cyan)}
+.new-tmpl-unit{width:62px;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-sm);outline:none;flex-shrink:0}
+.new-tmpl-unit:focus{border-color:var(--accent-cyan)}
+.new-tmpl-create{height:30px;padding:0 10px;background:var(--accent-cyan);border:none;border-radius:var(--radius-sm);color:var(--bg-primary);font-size:var(--font-xs);font-weight:700;cursor:pointer;flex-shrink:0}
+.new-tmpl-cancel{height:30px;width:30px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.params-empty{padding:18px 8px;text-align:center;font-size:var(--font-sm);color:var(--text-muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -323,6 +390,10 @@ let sharedNotes=Array(12).fill('');
 let chNoteIdx=Array(8).fill(0);
 let notesExpanded=Array(8).fill(false);
 let editingNotes=false;
+let paramLog=null;
+const paramsExpanded=Array(8).fill(false);
+const chartState={};
+const chTmplAssign=Array.from({length:8},()=>[]);
 
 function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
@@ -336,6 +407,7 @@ function init(){
     loadStatus();
     setInterval(loadStatus,5000);
     loadNotes();
+    loadParamLog();
 }
 
 
@@ -419,6 +491,7 @@ function renderChannelCard(ch,idx){
 <div class="card-body">
 <div class="card-content">
 ${renderNotesSection(idx)}
+${renderParamsSection(idx)}
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-primary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
@@ -453,7 +526,7 @@ function onNoteBlur(ch,ni,val){editingNotes=false;const t=val.slice(0,30);if(sha
 function refreshNotesPreview(ch){const p=document.getElementById('notesPreview_'+ch);if(!p)return;const t=sharedNotes[chNoteIdx[ch]]||'';const empty=!t.trim();p.textContent=empty?'— no note —':t;p.classList.toggle('empty',empty);}
 function selSvg(f){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"'+(f?' fill="currentColor"':'')+'/></svg>';}
 function escAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="30" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+')">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header" onclick="toggleNotes('+idx+')"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="event.stopPropagation();toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
+function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="30" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+')">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
 
 function updateChannel(idx){
     const ch=channels[idx];
@@ -729,6 +802,219 @@ function closeAlert(confirmed){
     if(confirmed&&alertCallback)alertCallback();
     alertCallback=null;
 }
+// ── ParamLog CRUD ────────────────────────────────────────────────────────
+function loadParamLog(){
+    fetch('api/paramlog').then(r=>r.json()).then(data=>{
+        paramLog=data;
+        for(let c=0;c<8;c++) chTmplAssign[c]=[];
+        getValidRecs().forEach(r=>{if(!chTmplAssign[r.channel].includes(r.tmpl_idx))chTmplAssign[r.channel].push(r.tmpl_idx);});
+        for(let c=0;c<CFG.CHANNEL_COUNT;c++) refreshParams(c);
+    }).catch(()=>{});
+}
+function saveParamLog(cb){
+    fetch('api/paramlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(paramLog)})
+    .then(r=>r.json()).then(d=>{if(cb)cb(!!d.ok);}).catch(()=>{if(cb)cb(false);});
+}
+function showAddRec(ch,tmplId){
+    const f=document.getElementById('addForm_'+ch+'_'+tmplId);
+    if(f){f.classList.add('visible');const inp=f.querySelector('.add-rec-input');if(inp)inp.focus();}
+}
+function hideAddRec(ch,tmplId){
+    const f=document.getElementById('addForm_'+ch+'_'+tmplId);
+    if(f){f.classList.remove('visible');const inp=f.querySelector('.add-rec-input');if(inp)inp.value='';}
+}
+function saveRec(ch,tmplId){
+    if(!paramLog) return;
+    const inp=document.getElementById('addVal_'+ch+'_'+tmplId);
+    if(!inp) return;
+    const val=parseFloat(inp.value);
+    if(isNaN(val)){inp.focus();return;}
+    const now=Math.floor(Date.now()/1000);
+    paramLog.ring[paramLog.head]={value:val,timestamp:now,tmpl_idx:tmplId,channel:ch,flags:1};
+    paramLog.head=(paramLog.head+1)%100;
+    if(paramLog.count<100) paramLog.count++;
+    hideAddRec(ch,tmplId);
+    saveParamLog(()=>refreshParams(ch));
+}
+function editRec(ri,ch){
+    if(!paramLog||!paramLog.ring[ri]) return;
+    const span=document.getElementById('rv_'+ri);if(!span) return;
+    const r=paramLog.ring[ri];
+    const inp=document.createElement('input');
+    inp.type='number';inp.step='any';inp.className='rec-value-input';inp.value=r.value;
+    span.replaceWith(inp);inp.focus();inp.select();
+    const commit=()=>{
+        const v=parseFloat(inp.value);
+        if(!isNaN(v)){r.value=v;r.timestamp=Math.floor(Date.now()/1000);saveParamLog(()=>refreshParams(ch));}
+        else refreshParams(ch);
+    };
+    inp.addEventListener('blur',commit);
+    inp.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){inp.removeEventListener('blur',commit);commit();e.preventDefault();}
+        if(e.key==='Escape'){inp.removeEventListener('blur',commit);refreshParams(ch);}
+    });
+}
+function deleteRec(ri,ch){
+    if(!paramLog||!paramLog.ring[ri]) return;
+    paramLog.ring[ri].flags=0;
+    saveParamLog(()=>refreshParams(ch));
+}
+function assignTmpl(ch){
+    const sel=document.getElementById('assignSel_'+ch);
+    if(!sel||!sel.value) return;
+    const id=parseInt(sel.value);
+    if(!chTmplAssign[ch].includes(id)) chTmplAssign[ch].push(id);
+    refreshParams(ch);
+}
+function removeTmpl(ch,tmplId){
+    chTmplAssign[ch]=chTmplAssign[ch].filter(id=>id!==tmplId);
+    const cs=getChartState(ch,tmplId);cs.open=false;
+    refreshParams(ch);
+}
+function showNewTmplForm(ch){
+    const btn=document.getElementById('newTmplBtn_'+ch);if(btn)btn.style.display='none';
+    const f=document.getElementById('newTmplForm_'+ch);
+    if(f){f.classList.add('visible');const n=f.querySelector('.new-tmpl-name');if(n)n.focus();}
+}
+function hideNewTmplForm(ch){
+    const btn=document.getElementById('newTmplBtn_'+ch);if(btn)btn.style.display='';
+    const f=document.getElementById('newTmplForm_'+ch);
+    if(f){f.classList.remove('visible');const n=f.querySelector('.new-tmpl-name');if(n)n.value='';const u=f.querySelector('.new-tmpl-unit');if(u)u.value='';}
+}
+function createTmpl(ch){
+    if(!paramLog) return;
+    const nameEl=document.getElementById('newTmplName_'+ch);
+    const unitEl=document.getElementById('newTmplUnit_'+ch);
+    const name=(nameEl?nameEl.value:'').trim();
+    if(!name){if(nameEl)nameEl.focus();return;}
+    if(paramLog.tmpl_count>=20){showAlert('Limit','Max 20 templates reached','warn');return;}
+    let slot=-1;
+    for(let i=0;i<20;i++){if(!(paramLog.templates[i].flags&1)){slot=i;break;}}
+    if(slot<0){showAlert('Full','No free template slots','warn');return;}
+    paramLog.templates[slot]={name:name,unit:(unitEl?unitEl.value:'').trim(),flags:1};
+    paramLog.tmpl_count++;
+    if(!chTmplAssign[ch].includes(slot)) chTmplAssign[ch].push(slot);
+    hideNewTmplForm(ch);
+    saveParamLog(()=>refreshParams(ch));
+}
+// ── ParamLog helpers ─────────────────────────────────────────────────────
+function getChartState(ch,tmplId){
+    const k=ch+'-'+tmplId;
+    if(!chartState[k]) chartState[k]={open:false,offset:0};
+    return chartState[k];
+}
+function chartWindow(){return window.matchMedia('(max-width:600px)').matches?20:80;}
+function getValidRecs(){
+    if(!paramLog) return [];
+    return paramLog.ring.map((r,i)=>Object.assign({},r,{_ri:i})).filter(r=>r.flags&1).sort((a,b)=>a.timestamp-b.timestamp);
+}
+function getChartRecs(ch,tmplId){return getValidRecs().filter(r=>r.tmpl_idx===tmplId&&r.channel===ch);}
+function fmtTs(ts){return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
+
+function toggleParams(idx){
+    paramsExpanded[idx]=!paramsExpanded[idx];
+    const s=document.getElementById('paramsSec_'+idx);
+    const b=document.getElementById('paramsToggleBtn_'+idx);
+    if(s) s.classList.toggle('expanded',paramsExpanded[idx]);
+    if(b) b.textContent=paramsExpanded[idx]?'▴':'▾';
+}
+function refreshParams(idx){
+    const old=document.getElementById('paramsSec_'+idx);
+    if(!old) return;
+    const tmp=document.createElement('div');
+    tmp.innerHTML=renderParamsSection(idx);
+    old.parentNode.replaceChild(tmp.firstElementChild,old);
+    chTmplAssign[idx].forEach(tmplId=>{
+        if(getChartState(idx,tmplId).open) requestAnimationFrame(()=>drawChart(idx,tmplId));
+    });
+}
+function renderParamsSection(idx){
+    const exp=paramsExpanded[idx];
+    const svgBar='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+    const svgWave='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,20 9,4 6,12 2,12"/></svg>';
+    const svgDown='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    const hdr='<div class="params-header"><svg class="params-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+    if(!paramLog){
+        return '<div class="params-section" id="paramsSec_'+idx+'">'+hdr+'<span class="params-preview empty">Loading parameters…</span></div></div>';
+    }
+    const ids=chTmplAssign[idx];
+    const chRecs=getValidRecs().filter(r=>r.channel===idx);
+    const empty=ids.length===0;
+    const summary=empty?'— no templates assigned':ids.length+' template'+(ids.length!==1?'s':'')+' \xb7 '+chRecs.length+' record'+(chRecs.length!==1?'s':'');
+    let tmplHtml=empty
+        ?'<div class="params-empty">No templates assigned — use controls below</div>'
+        :ids.map(function(tmplId){
+            const t=paramLog.templates[tmplId];
+            if(!t||(t.flags&1)===0) return '';
+            const ud=t.unit||'—';
+            const cs=getChartState(idx,tmplId);
+            const win=chartWindow();
+            const allRecs=getChartRecs(idx,tmplId);
+            const prevDis=!cs.open||cs.offset===0;
+            const nextDis=!cs.open||cs.offset+win>=allRecs.length;
+            const recRows=allRecs.length===0
+                ?'<div class="records-empty">No measurements yet — click + Add</div>'
+                :allRecs.slice().reverse().map(function(r){
+                    return '<div class="record-row">'
+                        +'<span class="rec-value" id="rv_'+r._ri+'">'+r.value+'</span>'
+                        +'<span class="rec-ts">'+fmtTs(r.timestamp)+' UTC</span>'
+                        +'<div class="rec-actions">'
+                        +'<button class="rec-btn" onclick="editRec('+r._ri+','+idx+')" title="Edit">✎</button>'
+                        +'<button class="rec-btn del" onclick="deleteRec('+r._ri+','+idx+')" title="Delete">\xd7</button>'
+                        +'</div></div>';
+                }).join('');
+            return '<div class="tmpl-block">'
+                +'<div class="tmpl-header">'
+                +'<span class="tmpl-dot"></span>'
+                +'<span class="tmpl-name">'+escAttr(t.name)+'</span>'
+                +'<span class="tmpl-unit">'+escAttr(ud)+'</span>'
+                +'<button class="tmpl-icon-btn'+(cs.open?' active':'')+'" id="chartBtn_'+idx+'_'+tmplId+'" onclick="toggleChart('+idx+','+tmplId+')" title="Toggle chart">'+svgWave+'</button>'
+                +'<button class="tmpl-icon-btn csv" title="Export CSV">'+svgDown+'</button>'
+                +'<button class="tmpl-add-btn" onclick="showAddRec('+idx+','+tmplId+')">+ Add</button>'
+                +'<button class="tmpl-remove-btn" onclick="removeTmpl('+idx+','+tmplId+')" title="Remove">\xd7</button>'
+                +'</div>'
+                +'<div class="chart-container" id="chart_'+idx+'_'+tmplId+'" style="display:'+(cs.open?'block':'none')+'">'
+                +'<div class="chart-wrap">'
+                +'<button class="chart-scroll-btn" id="chartPrev_'+idx+'_'+tmplId+'" onclick="scrollChart('+idx+','+tmplId+',-1)"'+(prevDis?' disabled':'')+'>&#9668;</button>'
+                +'<canvas class="chart-canvas" id="canvas_'+idx+'_'+tmplId+'"></canvas>'
+                +'<button class="chart-scroll-btn" id="chartNext_'+idx+'_'+tmplId+'" onclick="scrollChart('+idx+','+tmplId+',1)"'+(nextDis?' disabled':'')+'>&#9658;</button>'
+                +'</div><div class="chart-footer" id="chartFoot_'+idx+'_'+tmplId+'"></div></div>'
+                +'<div class="tmpl-records">'
+                +'<div class="add-record-form" id="addForm_'+idx+'_'+tmplId+'">'
+                +'<input class="add-rec-input" id="addVal_'+idx+'_'+tmplId+'" type="number" step="any" placeholder="value"'
+                +' onkeydown="if(event.key===\'Enter\')saveRec('+idx+','+tmplId+');if(event.key===\'Escape\')hideAddRec('+idx+','+tmplId+')">'
+                +'<span class="add-rec-unit">'+escAttr(ud)+'</span>'
+                +'<button class="add-rec-save" onclick="saveRec('+idx+','+tmplId+')">Save</button>'
+                +'<button class="add-rec-cancel" onclick="hideAddRec('+idx+','+tmplId+')">\xd7</button>'
+                +'</div>'+recRows+'</div></div>';
+        }).join('');
+    const available=paramLog.templates.map(function(t,i){return Object.assign({},t,{_i:i});}).filter(function(t){return (t.flags&1)&&!ids.includes(t._i);});
+    const assignHtml=available.length
+        ?'<div class="assign-row"><select class="assign-select" id="assignSel_'+idx+'"><option value="">— assign template —</option>'
+          +available.map(function(t){return '<option value="'+t._i+'">'+escAttr(t.name)+(t.unit?' ('+escAttr(t.unit)+')':'')+'</option>';}).join('')
+          +'</select><button class="assign-btn" onclick="assignTmpl('+idx+')">Assign</button></div>'
+        :'';
+    return '<div class="params-section'+(exp?' expanded':'')+'" id="paramsSec_'+idx+'">'
+        +hdr
+        +'<span class="params-preview'+(empty?' empty':'')+'" id="paramsPreview_'+idx+'">'+summary+'</span>'
+        +'<button class="params-toggle-btn" id="paramsToggleBtn_'+idx+'" onclick="toggleParams('+idx+')">'+(exp?'▴':'▾')+'</button>'
+        +'</div>'
+        +'<div class="params-body" id="paramsBody_'+idx+'">'
+        +tmplHtml
+        +'<div class="params-bottom">'
+        +assignHtml
+        +'<button class="new-tmpl-btn" id="newTmplBtn_'+idx+'" onclick="showNewTmplForm('+idx+')">'
+        +'+ New Template \xb7 ('+paramLog.tmpl_count+'/20 \xb7 ring: '+paramLog.count+'/100)</button>'
+        +'<div class="new-tmpl-form" id="newTmplForm_'+idx+'">'
+        +'<input class="new-tmpl-name" id="newTmplName_'+idx+'" type="text" placeholder="Parameter name" maxlength="20"'
+        +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
+        +'<input class="new-tmpl-unit" id="newTmplUnit_'+idx+'" type="text" placeholder="unit" maxlength="8"'
+        +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
+        +'<button class="new-tmpl-create" onclick="createTmpl('+idx+')">Create</button>'
+        +'<button class="new-tmpl-cancel" onclick="hideNewTmplForm('+idx+')">\xd7</button>'
+        +'</div></div></div></div>';
+}
+
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
