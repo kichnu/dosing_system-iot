@@ -953,6 +953,128 @@ void handleApiNotesPost(AsyncWebServerRequest* request, uint8_t* data, size_t le
 }
 
 // ============================================================================
+// API: PARAM LOG — GET
+// Zwraca pełny stan ParamLog: 20 slotów szablonów + 100 slotów ring buffer
+// ============================================================================
+
+void handleApiParamLogGet(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+        return;
+    }
+    if (framBusy) {
+        request->send(503, "application/json", "{\"error\":\"FRAM busy\"}");
+        return;
+    }
+
+    ParamLog* log = (ParamLog*)malloc(sizeof(ParamLog));
+    if (!log) {
+        request->send(503, "application/json", "{\"error\":\"Out of memory\"}");
+        return;
+    }
+    framController.readParamLog(log);  // zerowy blok jeśli CRC fail — OK
+
+    JsonDocument doc;
+    doc["head"]       = log->head;
+    doc["count"]      = log->count;
+    doc["tmpl_count"] = log->tmpl_count;
+
+    JsonArray tArr = doc["templates"].to<JsonArray>();
+    for (int i = 0; i < 20; i++) {
+        JsonObject t = tArr.add<JsonObject>();
+        t["name"]  = log->templates[i].name;
+        t["unit"]  = log->templates[i].unit;
+        t["flags"] = log->templates[i].flags;
+    }
+
+    JsonArray rArr = doc["records"].to<JsonArray>();
+    for (int i = 0; i < 100; i++) {
+        JsonObject r = rArr.add<JsonObject>();
+        r["tmpl_idx"]  = log->ring[i].tmpl_idx;
+        r["channel"]   = log->ring[i].channel;
+        r["value"]     = log->ring[i].value;
+        r["timestamp"] = log->ring[i].timestamp;
+        r["flags"]     = log->ring[i].flags;
+    }
+
+    free(log);
+
+    String response;
+    serializeJson(doc, response);
+    request->send(200, "application/json", response);
+}
+
+// ============================================================================
+// API: PARAM LOG — POST
+// Przyjmuje pełny stan ParamLog i zapisuje do FRAM
+// ============================================================================
+
+void handleApiParamLogPost(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+    static String plBodyBuffer;
+    if (index == 0) plBodyBuffer = "";
+    plBodyBuffer += String((char*)data).substring(0, len);
+    if (index + len < total) return;
+
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
+        plBodyBuffer = "";
+        return;
+    }
+
+    JsonDocument doc;
+    if (deserializeJson(doc, plBodyBuffer) != DeserializationError::Ok) {
+        request->send(400, "application/json", "{\"success\":false,\"error\":\"Invalid JSON\"}");
+        plBodyBuffer = "";
+        return;
+    }
+    plBodyBuffer = "";
+
+    ParamLog* log = (ParamLog*)malloc(sizeof(ParamLog));
+    if (!log) {
+        request->send(503, "application/json", "{\"success\":false,\"error\":\"Out of memory\"}");
+        return;
+    }
+    memset(log, 0, sizeof(ParamLog));
+
+    log->head       = (uint8_t)(doc["head"]       | 0);
+    log->count      = (uint8_t)(doc["count"]       | 0);
+    log->tmpl_count = (uint8_t)(doc["tmpl_count"]  | 0);
+    if (log->head >= 100)    log->head = 0;
+    if (log->count > 100)    log->count = 100;
+    if (log->tmpl_count > 20) log->tmpl_count = 20;
+
+    JsonArray tArr = doc["templates"].as<JsonArray>();
+    for (int i = 0; i < 20 && i < (int)tArr.size(); i++) {
+        JsonObject t = tArr[i];
+        const char* name = t["name"] | "";
+        const char* unit = t["unit"] | "";
+        strncpy(log->templates[i].name, name, 19);
+        log->templates[i].name[19] = '\0';
+        strncpy(log->templates[i].unit, unit, 7);
+        log->templates[i].unit[7]  = '\0';
+        log->templates[i].flags    = (uint8_t)(t["flags"] | 0);
+    }
+
+    JsonArray rArr = doc["records"].as<JsonArray>();
+    for (int i = 0; i < 100 && i < (int)rArr.size(); i++) {
+        JsonObject r = rArr[i];
+        log->ring[i].tmpl_idx  = (uint8_t)(r["tmpl_idx"]  | 0);
+        log->ring[i].channel   = (uint8_t)(r["channel"]   | 0);
+        log->ring[i].value     = r["value"]     | 0.0f;
+        log->ring[i].timestamp = (uint32_t)(r["timestamp"] | 0);
+        log->ring[i].flags     = (uint8_t)(r["flags"]     | 0);
+        if (log->ring[i].tmpl_idx >= 20) log->ring[i].tmpl_idx = 0;
+        if (log->ring[i].channel  >= 8)  log->ring[i].channel  = 0;
+    }
+
+    bool ok = framController.writeParamLog(log);
+    free(log);
+
+    request->send(200, "application/json",
+        ok ? "{\"success\":true}" : "{\"success\":false,\"error\":\"FRAM write failed\"}");
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -988,6 +1110,10 @@ void initWebServer() {
     // === SHARED NOTES API ===
     server.on("/api/notes", HTTP_GET, handleApiNotesGet);
     server.on("/api/notes", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiNotesPost);
+
+    // === PARAM LOG API ===
+    server.on("/api/paramlog", HTTP_GET, handleApiParamLogGet);
+    server.on("/api/paramlog", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiParamLogPost);
 
     // === PUMP MONITOR (Edge Impulse — stub, future implementation) ===
     server.on("/api/pump-monitor-status", HTTP_GET, [](AsyncWebServerRequest* request) {
