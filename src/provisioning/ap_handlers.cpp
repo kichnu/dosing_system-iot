@@ -16,6 +16,7 @@ void handleConfigureSubmit(AsyncWebServerRequest *request, JsonVariant &json) {
     String wifiSSID = jsonObj["wifi_ssid"] | "";
     String wifiPassword = jsonObj["wifi_password"] | "";
     String adminPassword = jsonObj["admin_password"] | "";
+    String lockPin = jsonObj["lock_pin"] | "1234";
 
     LOG_INFO("Received credentials:");
     LOG_INFO("  Device Name: %s", deviceName.c_str());
@@ -101,7 +102,19 @@ void handleConfigureSubmit(AsyncWebServerRequest *request, JsonVariant &json) {
     }
     
     LOG_INFO("✓ FRAM verification passed");
-    
+
+    // Zapisz Lock PIN (walidacja: 4-8 cyfr, domyślnie "1234")
+    {
+        bool pinValid = lockPin.length() >= 4 && lockPin.length() <= 8;
+        for (char c : lockPin) { if (!isdigit(c)) { pinValid = false; break; } }
+        if (!pinValid) lockPin = "1234";
+        LockPin lp;
+        memset(&lp, 0, sizeof(lp));
+        strncpy(lp.pin, lockPin.c_str(), sizeof(lp.pin) - 1);
+        framController.writeLockPin(&lp);
+        LOG_INFO("✓ Lock PIN saved: %s", lockPin.c_str());
+    }
+
     // SUCCESS!
     LOG_INFO("=== CONFIGURATION SAVED SUCCESSFULLY ===");
     LOG_INFO("Device configured as: %s", deviceName.c_str());

@@ -3,67 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOZOWNIK – Notes Prototype</title>
+<title>DOZOWNIK – Notes + Parameters Prototype</title>
 <style>
 /* ── Variables ─────────────────────────────────────────────────────── */
 :root {
-  --bg-primary:   #0a0f1a;
-  --bg-card:      #111827;
-  --bg-card-hover:#1a2332;
-  --bg-input:     #1e293b;
-  --border:       #2d3a4f;
-  --border-light: #3d4f6a;
-  --text-primary: #f1f5f9;
+  --bg-primary:    #0a0f1a;
+  --bg-card:       #111827;
+  --bg-input:      #1e293b;
+  --border:        #2d3a4f;
+  --border-light:  #3d4f6a;
+  --text-primary:  #f1f5f9;
   --text-secondary:#94a3b8;
-  --text-muted:   #64748b;
-  --accent-blue:  #38bdf8;
-  --accent-cyan:  #22d3d5;
-  --accent-green: #22c55e;
-  --accent-red:   #ef4444;
-  --radius:       12px;
-  --radius-md:    10px;
-  --radius-sm:    8px;
-  --font-xs:      0.6rem;
-  --font-sm:      0.7rem;
-  --font-md:      0.8rem;
-  --font-lg:      0.95rem;
-  --card-width:   800px;
-  --card-padding: 12px;
-  --section-gap:  10px;
+  --text-muted:    #64748b;
+  --accent-cyan:   #22d3d5;
+  --accent-green:  #22c55e;
+  --accent-red:    #ef4444;
+  --radius:        12px;
+  --radius-md:     10px;
+  --radius-sm:     8px;
+  --font-xs:       0.6rem;
+  --font-sm:       0.7rem;
+  --font-md:       0.8rem;
+  --card-width:    800px;
+  --card-padding:  12px;
+  --section-gap:   10px;
   --section-padding: 10px;
   --header-height: 44px;
-  --btn-height:   40px;
-  --input-height: 38px;
   --transition-fast: 0.15s ease;
 }
-
-/* ── Reset & base ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
 }
 
 /* ── Topbar ─────────────────────────────────────────────────────────── */
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background: var(--bg-card);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; background: var(--bg-card);
   border-bottom: 1px solid var(--border);
-  height: var(--header-height);
-  flex-shrink: 0;
+  height: var(--header-height); flex-shrink: 0;
 }
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo-icon {
   width: 32px; height: 32px;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  background: linear-gradient(135deg, var(--accent-cyan), #38bdf8);
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
 }
@@ -78,254 +65,184 @@ body {
 
 /* ── Channel nav ────────────────────────────────────────────────────── */
 .channel-nav {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 4px;
-  padding: 8px var(--card-padding);
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  max-width: var(--card-width);
-  margin: 0 auto;
-  width: 100%;
+  display: grid; grid-template-columns: repeat(8, 1fr);
+  gap: 4px; padding: 8px var(--card-padding);
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; max-width: var(--card-width); margin: 0 auto; width: 100%;
 }
 .ch-nav-btn {
-  height: 32px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: var(--font-sm); font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  height: 32px; background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-secondary); font-size: var(--font-sm); font-weight: 600;
+  cursor: pointer; transition: all var(--transition-fast);
 }
 .ch-nav-btn:hover { border-color: var(--border-light); color: var(--text-primary); }
 .ch-nav-btn.active {
   background: rgba(34,211,213,0.15);
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
+  border-color: var(--accent-cyan); color: var(--accent-cyan);
 }
 
-/* ── Card layout ────────────────────────────────────────────────────── */
-.cards-viewport {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
+/* ── Cards ──────────────────────────────────────────────────────────── */
+.cards-viewport { flex: 1; overflow: hidden; position: relative; }
 .channel-card {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   overflow: hidden; opacity: 0; pointer-events: none;
-  transition: opacity 0.25s ease;
-  display: flex; justify-content: center;
+  transition: opacity 0.25s ease; display: flex; justify-content: center;
 }
 .channel-card.active { opacity: 1; pointer-events: auto; }
 .card-inner {
   width: 100%; max-width: var(--card-width); height: 100%;
   display: flex; flex-direction: column;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border); border-right: 1px solid var(--border);
 }
-.card-body {
-  flex: 1; overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.2) transparent;
-}
-.card-content {
-  padding: var(--card-padding);
-  display: flex; flex-direction: column;
-  gap: var(--section-gap);
-}
+.card-body { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+.card-content { padding: var(--card-padding); display: flex; flex-direction: column; gap: var(--section-gap); }
 
-/* ── Section (generic) ──────────────────────────────────────────────── */
-.section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px var(--section-padding);
-  background: rgba(0,0,0,0.2);
-  border-bottom: 1px solid var(--border);
-}
-.section-title {
-  display: flex; align-items: center; gap: 6px;
-  font-size: var(--font-sm); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--text-secondary);
-}
+/* ── Section stub ───────────────────────────────────────────────────── */
+.section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; }
+.section-header { display: flex; align-items: center; justify-content: space-between; padding: 8px var(--section-padding); background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); }
+.section-title { display: flex; align-items: center; gap: 6px; font-size: var(--font-sm); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
 .section-title svg { width: 12px; height: 12px; color: var(--accent-cyan); }
-.section-body { padding: var(--section-padding); }
+.section-stub .section-body { display: flex; align-items: center; justify-content: center; height: 54px; color: var(--text-muted); font-size: var(--font-sm); font-style: italic; }
 
-/* ── NOTES SECTION ──────────────────────────────────────────────────── */
-.notes-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* Collapsed header — the single visible line */
-.notes-header {
-  display: flex; align-items: center;
-  padding: 9px var(--section-padding);
-  background: rgba(0,0,0,0.2);
-  cursor: default;
-  gap: 8px;
-  transition: border-bottom-color var(--transition-fast);
-  border-bottom: 1px solid transparent; /* hidden when collapsed */
-  min-height: 40px;
-}
-.notes-section.expanded .notes-header {
-  border-bottom-color: var(--border);
-}
-.notes-icon {
-  flex-shrink: 0;
-  width: 12px; height: 12px;
-  color: var(--accent-cyan);
-}
-/* The note text — font like DOZOWNIK logo (1rem / 700) */
-.notes-preview {
-  flex: 1;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.01em;
-}
-.notes-preview.empty {
-  font-style: italic;
-  font-weight: 400;
-  font-size: var(--font-sm);
-  color: var(--text-muted);
-}
-.notes-counter {
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  flex-shrink: 0;
-  margin-right: 6px;
-}
-.notes-toggle-btn {
-  flex-shrink: 0;
-  width: 24px; height: 24px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-muted);
-  cursor: pointer;
+/* ── Shared: toggle button ──────────────────────────────────────────── */
+.toggle-btn {
+  flex-shrink: 0; width: 24px; height: 24px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-muted); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition-fast);
-  font-size: 10px;
-  line-height: 1;
+  transition: all var(--transition-fast); font-size: 10px; line-height: 1;
 }
-.notes-toggle-btn:hover {
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-  background: rgba(34,211,213,0.08);
-}
+.toggle-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(34,211,213,0.08); }
 
-/* Expanded list */
-.notes-list {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px var(--section-padding);
+/* ── Shared: collapsible section ────────────────────────────────────── */
+.collapsible-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0;
 }
-.notes-section.expanded .notes-list { display: flex; }
+.collapsible-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px var(--section-padding); background: rgba(0,0,0,0.2);
+  cursor: default; min-height: 40px; border-bottom: 1px solid transparent;
+  transition: border-bottom-color var(--transition-fast);
+}
+.collapsible-section.expanded .collapsible-header { border-bottom-color: var(--border); }
+.collapsible-icon { flex-shrink: 0; width: 12px; height: 12px; color: var(--accent-cyan); }
+.collapsible-title { font-size: 1rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.01em; flex-shrink: 0; }
+.collapsible-summary { flex: 1; font-size: var(--font-xs); color: var(--text-muted); padding-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.collapsible-body { display: none; }
+.collapsible-section.expanded .collapsible-body { display: block; }
 
-.note-entry {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.note-index {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  width: 18px;
-  text-align: right;
-  flex-shrink: 0;
-}
+/* ── NOTES ──────────────────────────────────────────────────────────── */
+.notes-body { display: flex; flex-direction: column; gap: 4px; padding: 8px var(--section-padding); }
+.note-entry { display: flex; align-items: center; gap: 6px; }
+.note-idx { font-family: 'SF Mono','Fira Code',monospace; font-size: var(--font-xs); color: var(--text-muted); width: 18px; text-align: right; flex-shrink: 0; }
 .note-input {
-  flex: 1;
-  height: 30px;
-  padding: 0 8px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: var(--font-md);
-  color: var(--accent-cyan);
-  outline: none;
+  flex: 1; height: 30px; padding: 0 8px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 6px; font-size: var(--font-md); color: var(--accent-cyan); outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.note-input::placeholder { color: var(--text-muted); font-style: italic; font-size: var(--font-sm); }
-.note-input:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 2px rgba(34,211,213,0.12);
-  color: var(--text-primary);
-}
-.note-input.selected-for-ch {
-  border-color: rgba(34,211,213,0.4);
-  background: rgba(34,211,213,0.04);
-}
-.note-sel-btn {
-  flex-shrink: 0;
-  width: 20px; height: 20px;
-  border: none; background: none;
-  color: var(--text-muted);
-  cursor: pointer;
+.note-input::placeholder { color: var(--text-muted); font-style: italic; font-size: var(--font-xs); }
+.note-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(34,211,213,0.12); color: var(--text-primary); }
+.note-input.sel { border-color: rgba(34,211,213,0.35); background: rgba(34,211,213,0.03); }
+.note-sel-btn { flex-shrink: 0; width: 18px; height: 18px; border: none; background: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: color var(--transition-fast); padding: 0; }
+.note-sel-btn:hover, .note-sel-btn.active { color: var(--accent-cyan); }
+.note-sel-btn svg { width: 10px; height: 10px; }
+.notes-hint { font-size: var(--font-xs); color: var(--text-muted); text-align: center; padding: 2px 0; font-style: italic; }
+
+/* ── PARAMETERS ─────────────────────────────────────────────────────── */
+.params-body { padding: 8px var(--section-padding); display: flex; flex-direction: column; gap: 8px; }
+
+.tmpl-block { background: rgba(0,0,0,0.18); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.tmpl-header { display: flex; align-items: center; gap: 5px; padding: 5px 8px; background: rgba(255,255,255,0.025); border-bottom: 1px solid var(--border); }
+.tmpl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); flex-shrink: 0; }
+.tmpl-name { flex: 1; font-size: var(--font-sm); font-weight: 600; color: var(--text-primary); }
+.tmpl-unit { font-family: 'SF Mono','Fira Code',monospace; font-size: var(--font-xs); color: var(--text-muted); background: var(--bg-input); padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+
+/* icon buttons in tmpl-header */
+.tmpl-icon-btn {
+  height: 22px; width: 22px; padding: 3px;
+  background: none; border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text-muted); cursor: pointer; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+.tmpl-icon-btn svg { width: 100%; height: 100%; }
+.tmpl-icon-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(34,211,213,0.08); }
+.tmpl-icon-btn.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(34,211,213,0.12); }
+.tmpl-icon-btn.csv { cursor: not-allowed; opacity: 0.4; }
+.tmpl-icon-btn.csv:hover { border-color: var(--border); color: var(--text-muted); background: none; }
+
+.tmpl-add-btn { height: 22px; padding: 0 8px; background: rgba(34,211,213,0.08); border: 1px solid rgba(34,211,213,0.25); border-radius: 4px; color: var(--accent-cyan); font-size: var(--font-xs); font-weight: 600; cursor: pointer; transition: all var(--transition-fast); flex-shrink: 0; }
+.tmpl-add-btn:hover { background: rgba(34,211,213,0.18); }
+.tmpl-remove-btn { height: 22px; width: 22px; background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--text-muted); font-size: 12px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+.tmpl-remove-btn:hover { border-color: var(--accent-red); color: var(--accent-red); background: rgba(239,68,68,0.06); }
+
+/* ── CHART ──────────────────────────────────────────────────────────── */
+.chart-container { border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.25); }
+.chart-wrap { display: flex; align-items: stretch; }
+.chart-scroll-btn {
+  flex-shrink: 0; width: 26px; background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
   transition: color var(--transition-fast);
-  padding: 0;
 }
-.note-sel-btn:hover { color: var(--accent-cyan); }
-.note-sel-btn.active { color: var(--accent-cyan); }
-.note-sel-btn svg { width: 12px; height: 12px; }
-
-.notes-hint {
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  text-align: center;
-  padding: 4px 0 2px;
-  font-style: italic;
+.chart-scroll-btn:hover:not(:disabled) { color: var(--accent-cyan); }
+.chart-scroll-btn:disabled { opacity: 0.2; cursor: default; }
+.chart-canvas { flex: 1; height: 140px; display: block; min-width: 0; }
+.chart-footer {
+  padding: 3px 8px 5px; text-align: center;
+  font-size: var(--font-xs); color: var(--text-muted); font-style: italic;
 }
 
-/* ── Simplified TIME SCHEDULE section (stub) ────────────────────────── */
-.section-stub .section-body {
-  display: flex; align-items: center; justify-content: center;
-  height: 60px;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  font-style: italic;
-}
+/* ── Records ────────────────────────────────────────────────────────── */
+.tmpl-records { max-height: 196px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+.add-record-form { display: none; align-items: center; gap: 6px; padding: 5px 8px; background: rgba(34,211,213,0.04); border-bottom: 1px solid rgba(34,211,213,0.12); }
+.add-record-form.visible { display: flex; }
+.add-rec-input { width: 88px; height: 26px; padding: 0 6px; background: var(--bg-input); border: 1px solid var(--accent-cyan); border-radius: 4px; font-family: 'SF Mono','Fira Code',monospace; font-size: var(--font-sm); color: var(--accent-cyan); outline: none; }
+.add-rec-unit { font-size: var(--font-xs); color: var(--text-muted); flex-shrink: 0; min-width: 28px; }
+.add-rec-save { height: 26px; padding: 0 10px; background: var(--accent-cyan); border: none; border-radius: 4px; color: var(--bg-primary); font-size: var(--font-xs); font-weight: 700; cursor: pointer; }
+.add-rec-cancel { height: 26px; width: 26px; background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--text-muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.record-row { display: flex; align-items: center; gap: 8px; padding: 0 8px; height: 32px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background var(--transition-fast); }
+.record-row:last-child { border-bottom: none; }
+.record-row:hover { background: rgba(255,255,255,0.02); }
+.rec-value { font-family: 'SF Mono','Fira Code',monospace; font-size: var(--font-sm); font-weight: 600; color: var(--accent-cyan); flex: 0 0 80px; }
+.rec-value-input { width: 76px; height: 22px; padding: 0 4px; background: var(--bg-input); border: 1px solid var(--accent-cyan); border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: var(--font-sm); color: var(--accent-cyan); outline: none; flex: 0 0 76px; }
+.rec-ts { flex: 1; font-size: var(--font-xs); color: var(--text-muted); }
+.rec-actions { flex-shrink: 0; display: flex; gap: 2px; }
+.rec-btn { width: 20px; height: 20px; border: none; background: none; color: var(--text-muted); font-size: 11px; cursor: pointer; border-radius: 3px; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+.rec-btn:hover { background: var(--bg-input); color: var(--text-primary); }
+.rec-btn.del:hover { color: var(--accent-red); }
+.records-empty { padding: 10px 8px; text-align: center; font-size: var(--font-xs); color: var(--text-muted); font-style: italic; }
 
-/* ── Save indicator ─────────────────────────────────────────────────── */
-.save-toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: rgba(34,211,213,0.15); border: 1px solid rgba(34,211,213,0.3);
-  color: var(--accent-cyan);
-  padding: 8px 18px; border-radius: 20px;
-  font-size: var(--font-sm); font-weight: 600;
-  opacity: 0; pointer-events: none;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  z-index: 100;
-}
-.save-toast.show {
-  opacity: 1; transform: translateX(-50%) translateY(0);
-}
+/* ── Bottom controls ────────────────────────────────────────────────── */
+.params-bottom { display: flex; flex-direction: column; gap: 5px; }
+.assign-row { display: flex; gap: 6px; align-items: center; }
+.assign-select { flex: 1; height: 30px; padding: 0 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: var(--font-sm); outline: none; appearance: none; cursor: pointer; }
+.assign-select:focus { border-color: var(--accent-cyan); }
+.assign-btn { height: 30px; padding: 0 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: var(--font-sm); cursor: pointer; transition: all var(--transition-fast); flex-shrink: 0; }
+.assign-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.new-tmpl-btn { width: 100%; height: 28px; background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted); font-size: var(--font-xs); cursor: pointer; transition: all var(--transition-fast); }
+.new-tmpl-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.new-tmpl-form { display: none; align-items: center; gap: 6px; }
+.new-tmpl-form.visible { display: flex; }
+.new-tmpl-name { flex: 1; height: 30px; padding: 0 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent-cyan); font-size: var(--font-sm); outline: none; }
+.new-tmpl-name:focus { border-color: var(--accent-cyan); }
+.new-tmpl-unit { width: 62px; height: 30px; padding: 0 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent-cyan); font-size: var(--font-sm); outline: none; flex-shrink: 0; }
+.new-tmpl-unit:focus { border-color: var(--accent-cyan); }
+.new-tmpl-create { height: 30px; padding: 0 10px; background: var(--accent-cyan); border: none; border-radius: var(--radius-sm); color: var(--bg-primary); font-size: var(--font-xs); font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.new-tmpl-cancel { height: 30px; width: 30px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); font-size: 13px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.params-empty { padding: 18px 8px; text-align: center; font-size: var(--font-sm); color: var(--text-muted); font-style: italic; }
+
+/* ── Toast ──────────────────────────────────────────────────────────── */
+.save-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(34,211,213,0.15); border: 1px solid rgba(34,211,213,0.3); color: var(--accent-cyan); padding: 8px 18px; border-radius: 20px; font-size: var(--font-sm); font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.2s ease; white-space: nowrap; z-index: 100; }
+.save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.save-toast.warn { background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.3); color: #eab308; }
 </style>
 </head>
 <body>
 
-<!-- Topbar -->
 <div class="topbar">
   <div class="logo">
     <div class="logo-icon">
@@ -333,22 +250,20 @@ body {
     </div>
     <span class="logo-text">DOZOWNIK</span>
   </div>
-  <span class="topbar-badge">NOTES PROTOTYPE</span>
+  <span class="topbar-badge">NOTES + PARAMS PROTOTYPE</span>
 </div>
 
-<!-- Channel nav -->
 <div class="channel-nav" id="channelNav"></div>
-
-<!-- Cards viewport -->
 <div class="cards-viewport" id="cardsViewport"></div>
-
-<!-- Save toast -->
-<div class="save-toast" id="saveToast">Saved</div>
+<div class="save-toast" id="saveToast"></div>
 
 <script>
-// ── Shared notes pool (RAM — 12 × 30 chars max) ──────────────────────
-const MAX_NOTES = 12;
-const MAX_CHARS = 30;
+// ════════════════════════════════════════════════════════════════════════
+// NOTES
+// ════════════════════════════════════════════════════════════════════════
+const MAX_NOTES     = 12;
+const MAX_CHARS     = 30;
+const CHANNEL_COUNT = 8;
 
 const sharedNotes = [
   "Nawóz A – makroelementy NPK",
@@ -358,253 +273,640 @@ const sharedNotes = [
   "Potas siarczan K2SO4",
   "Magnez siarczan MgSO4·7H₂O",
   "Wapń azotan Ca(NO3)2",
-  "Fosfor – mono potasowy",
-  "",
-  "",
-  "",
-  "",
+  "Fosfor mono potasowy",
+  "", "", "", "",
 ];
+const chNoteIdx     = Array.from({length: CHANNEL_COUNT}, (_, i) => Math.min(i, 3));
+const notesExpanded = Array(CHANNEL_COUNT).fill(false);
+let editingNotes = false;
 
-// Per-channel selected note index (default 0 = first note)
-const CHANNEL_COUNT = 8;
-const channelNoteIdx = Array.from({ length: CHANNEL_COUNT }, (_, i) =>
-  i < 4 ? i : 0
-);
-
-let currentChannel = 0;
-
-// ── Toast ────────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg = "Saved") {
-  const t = document.getElementById('saveToast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+function selSvg(f) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"${f?' fill="currentColor"':''}/></svg>`;
+}
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Count filled notes ───────────────────────────────────────────────
-function filledCount() {
-  return sharedNotes.filter(n => n.trim().length > 0).length;
+function toggleNotes(ch) {
+  notesExpanded[ch] = !notesExpanded[ch];
+  const s = document.getElementById('notesSec-'+ch);
+  const b = document.getElementById('notesToggle-'+ch);
+  if(s) s.classList.toggle('expanded', notesExpanded[ch]);
+  if(b) b.textContent = notesExpanded[ch] ? '▴' : '▾';
 }
-
-// ── Render single notes section for a channel ────────────────────────
-function renderNotesSection(chIdx) {
-  const selIdx   = channelNoteIdx[chIdx];
-  const selText  = sharedNotes[selIdx] || '';
-  const isEmpty  = selText.trim().length === 0;
-  const count    = filledCount();
-  const expanded = false; // start collapsed
-
+function selectNote(ch, ni) {
+  const prev = chNoteIdx[ch]; chNoteIdx[ch] = ni;
+  [prev, ni].forEach((i, j) => {
+    const sel = j===1;
+    const inp = document.getElementById(`ni-${ch}-${i}`);
+    const btn = document.getElementById(`nb-${ch}-${i}`);
+    if(inp) inp.classList.toggle('sel', sel);
+    if(btn) { btn.classList.toggle('active', sel); btn.innerHTML = selSvg(sel); }
+  });
+  refreshNotesPreview(ch);
+}
+function onNoteBlur(ch, ni, val) {
+  editingNotes = false;
+  const t = val.slice(0, MAX_CHARS);
+  if(sharedNotes[ni] === t) return;
+  sharedNotes[ni] = t;
+  for(let c=0; c<CHANNEL_COUNT; c++) {
+    const inp = document.getElementById(`ni-${c}-${ni}`);
+    if(inp && inp !== document.activeElement) inp.value = t;
+    refreshNotesPreview(c);
+  }
+  showToast('Note saved');
+}
+function refreshNotesPreview(ch) {
+  const p = document.getElementById('notesPreview-'+ch);
+  if(!p) return;
+  const t = sharedNotes[chNoteIdx[ch]] || '';
+  p.textContent = t.trim() ? t : '— no note selected —';
+}
+function renderNotesSection(ch) {
+  const si  = chNoteIdx[ch];
+  const st  = sharedNotes[si] || '';
+  const exp = notesExpanded[ch];
   const entries = sharedNotes.map((text, i) => {
-    const isSel = (i === channelNoteIdx[chIdx]);
-    return `
-      <div class="note-entry" id="entry-ch${chIdx}-${i}">
-        <span class="note-index">${i + 1}</span>
-        <input
-          class="note-input${isSel ? ' selected-for-ch' : ''}"
-          id="noteInput-ch${chIdx}-${i}"
-          type="text"
-          maxlength="${MAX_CHARS}"
-          value="${escHtml(text)}"
-          placeholder="— empty —"
-          data-ch="${chIdx}"
-          data-idx="${i}"
-        >
-        <button
-          class="note-sel-btn${isSel ? ' active' : ''}"
-          id="noteSelBtn-ch${chIdx}-${i}"
-          title="Ustaw jako aktywną dla ch${chIdx + 1}"
-          onclick="selectNote(${chIdx}, ${i})"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="4" ${isSel ? 'fill="currentColor"' : ''}/>
-          </svg>
-        </button>
-      </div>`;
+    const isSel = i===si;
+    return `<div class="note-entry">
+      <span class="note-idx">${i+1}</span>
+      <input class="note-input${isSel?' sel':''}" id="ni-${ch}-${i}" type="text"
+             maxlength="${MAX_CHARS}" value="${escH(text)}" placeholder="— empty —">
+      <button class="note-sel-btn${isSel?' active':''}" id="nb-${ch}-${i}"
+              onclick="selectNote(${ch},${i})">${selSvg(isSel)}</button>
+    </div>`;
   }).join('');
-
   return `
-    <div class="notes-section" id="notesSec-ch${chIdx}">
-      <div class="notes-header" onclick="toggleNotes(${chIdx})">
-        <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="collapsible-section${exp?' expanded':''}" id="notesSec-${ch}">
+      <div class="collapsible-header">
+        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
           <polyline points="14,2 14,8 20,8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
         </svg>
-        <span class="notes-preview${isEmpty ? ' empty' : ''}" id="notesPreview-ch${chIdx}">
-          ${isEmpty ? '— no note selected —' : escHtml(selText)}
-        </span>
-        <span class="notes-counter" id="notesCounter-ch${chIdx}">${count}/${MAX_NOTES}</span>
-        <button class="notes-toggle-btn" id="notesToggleBtn-ch${chIdx}" onclick="event.stopPropagation(); toggleNotes(${chIdx})">▾</button>
+        <span class="collapsible-title">Notes</span>
+        <span class="collapsible-summary" id="notesPreview-${ch}">${st.trim() ? escH(st) : '— no note selected —'}</span>
+        <button class="toggle-btn" id="notesToggle-${ch}" onclick="toggleNotes(${ch})">${exp?'▴':'▾'}</button>
       </div>
-      <div class="notes-list" id="notesList-ch${chIdx}">
-        ${entries}
-        <div class="notes-hint">blur = auto-save · kliknij ◉ = ustaw dla tego kanału</div>
+      <div class="collapsible-body">
+        <div class="notes-body">
+          ${entries}
+          <div class="notes-hint">blur · Enter = save &nbsp;|&nbsp; ◎ = set for channel</div>
+        </div>
+      </div>
+    </div>`;
+}
+function attachNoteEvents(ch) {
+  for(let ni=0; ni<MAX_NOTES; ni++) {
+    const inp = document.getElementById(`ni-${ch}-${ni}`);
+    if(!inp) continue;
+    inp.addEventListener('focus',   () => { editingNotes=true; if(chNoteIdx[ch]!==ni) selectNote(ch,ni); });
+    inp.addEventListener('blur',    () => onNoteBlur(ch, ni, inp.value));
+    inp.addEventListener('keydown', e => {
+      if(e.key==='Enter')  { inp.blur(); e.preventDefault(); }
+      if(e.key==='Escape') { inp.value=sharedNotes[ni]||''; editingNotes=false; inp.blur(); }
+    });
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PARAMETERS — data
+// FRAM: 20 tmpl×32B + ring 100×12B + header = 1852B, starts @ 0x0C90
+// Ring buffer jest SHARED (nie per-template/channel)
+// ════════════════════════════════════════════════════════════════════════
+const MAX_TEMPLATES = 20;
+const RING_MAX      = 100;
+
+let templates = [
+  {id:0, name:"Iron (Fe)",      unit:"µg/L"},
+  {id:1, name:"Calcium",        unit:"mg/L"},
+  {id:2, name:"KH",             unit:"°dH"},
+  {id:3, name:"GH",             unit:"°dH"},
+  {id:4, name:"Nitrate NO₃",    unit:"mg/L"},
+  {id:5, name:"Phosphate PO₄",  unit:"µg/L"},
+  {id:6, name:"pH",             unit:""},
+  {id:7, name:"CO₂",            unit:"mg/L"},
+];
+let nextTmplId = 8;
+
+// {id, tmplId, channel, value, ts:"YYYY-MM-DD HH:MM"}
+let ringBuffer = [];
+let nextRecId  = 0;
+
+const chTmplAssign  = Array.from({length: CHANNEL_COUNT}, () => []);
+const paramsExpanded = Array(CHANNEL_COUNT).fill(false);
+
+// ── seed ──
+(function seedData() {
+  chTmplAssign[0] = [0, 1, 2];
+  chTmplAssign[1] = [4, 6];
+  chTmplAssign[2] = [1, 5];
+  const rows = [
+    {t:0,c:0,v:0.15,ts:'2026-06-10 08:23'},{t:0,c:0,v:0.18,ts:'2026-06-03 09:11'},{t:0,c:0,v:0.12,ts:'2026-05-27 14:45'},
+    {t:1,c:0,v:320, ts:'2026-06-10 08:24'},{t:1,c:0,v:315, ts:'2026-06-03 09:12'},
+    {t:2,c:0,v:8.2, ts:'2026-06-10 08:25'},{t:2,c:0,v:8.0, ts:'2026-06-07 10:15'},
+    {t:2,c:0,v:8.4, ts:'2026-06-03 09:13'},{t:2,c:0,v:8.1, ts:'2026-05-27 14:46'},
+    {t:2,c:0,v:8.3, ts:'2026-05-20 11:30'},{t:2,c:0,v:8.0, ts:'2026-05-13 08:45'},
+    {t:2,c:0,v:7.9, ts:'2026-05-06 09:00'},{t:2,c:0,v:8.2, ts:'2026-04-29 14:20'},
+    {t:4,c:1,v:12.5,ts:'2026-06-10 09:00'},{t:4,c:1,v:15.0,ts:'2026-06-03 09:00'},
+    {t:6,c:1,v:6.8, ts:'2026-06-10 09:01'},{t:6,c:1,v:6.9, ts:'2026-06-03 09:02'},
+    {t:1,c:2,v:318, ts:'2026-06-09 11:00'},
+    {t:5,c:2,v:0.08,ts:'2026-06-09 11:01'},{t:5,c:2,v:0.12,ts:'2026-06-02 10:30'},
+  ];
+  rows.forEach(r => ringBuffer.push({id:nextRecId++, tmplId:r.t, channel:r.c, value:r.v, ts:r.ts}));
+})();
+
+function utcNow() {
+  const d = new Date();
+  return d.getUTCFullYear()+'-'+
+    String(d.getUTCMonth()+1).padStart(2,'0')+'-'+
+    String(d.getUTCDate()).padStart(2,'0')+' '+
+    String(d.getUTCHours()).padStart(2,'0')+':'+
+    String(d.getUTCMinutes()).padStart(2,'0');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// CHART
+// Desktop: max 80 pts visible, mobile (≤600px): max 20 pts. Rest: scroll ◄►
+// ════════════════════════════════════════════════════════════════════════
+const CHART_PTS_MOBILE  = 20;
+const CHART_PTS_DESKTOP = 80;
+
+const chartState = {}; // "ch-tmplId" → {open, offset}
+
+function chartKey(ch, tmplId) { return `${ch}-${tmplId}`; }
+
+function getChartState(ch, tmplId) {
+  const k = chartKey(ch, tmplId);
+  if(!chartState[k]) chartState[k] = {open: false, offset: 0};
+  return chartState[k];
+}
+
+function chartWindow() {
+  return window.matchMedia('(max-width: 600px)').matches ? CHART_PTS_MOBILE : CHART_PTS_DESKTOP;
+}
+
+function getChartRecs(ch, tmplId) {
+  return ringBuffer.filter(r => r.tmplId===tmplId && r.channel===ch); // oldest → newest
+}
+
+function toggleChart(ch, tmplId) {
+  const s = getChartState(ch, tmplId);
+  s.open = !s.open;
+  if(s.open) {
+    const n = getChartRecs(ch, tmplId).length;
+    s.offset = Math.max(0, n - chartWindow()); // default: show newest
+  }
+  const el  = document.getElementById(`chart-${ch}-${tmplId}`);
+  const btn = document.getElementById(`chartBtn-${ch}-${tmplId}`);
+  if(el)  el.style.display = s.open ? 'block' : 'none';
+  if(btn) btn.classList.toggle('active', s.open);
+  if(s.open) requestAnimationFrame(() => drawChart(ch, tmplId));
+}
+
+function scrollChart(ch, tmplId, dir) {
+  const s    = getChartState(ch, tmplId);
+  const recs = getChartRecs(ch, tmplId);
+  const win  = chartWindow();
+  const step = Math.max(1, Math.floor(win / 4));
+  s.offset   = Math.max(0, Math.min(s.offset + dir * step, Math.max(0, recs.length - win)));
+  drawChart(ch, tmplId);
+}
+
+// "Nice numbers" axis: zaokrąglone tick-i dopasowane do danych
+function niceNum(x, round) {
+  const exp = Math.floor(Math.log10(x));
+  const f   = x / Math.pow(10, exp);
+  let nf;
+  if(round) {
+    nf = f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10;
+  } else {
+    nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+  }
+  return nf * Math.pow(10, exp);
+}
+function niceAxis(dataMin, dataMax) {
+  if(dataMin === dataMax) {
+    const d = Math.max(Math.abs(dataMin) * 0.1, 0.5);
+    return { min: dataMin-d, max: dataMax+d, ticks: [dataMin-d, dataMin, dataMax+d], step: d };
+  }
+  const range   = niceNum(dataMax - dataMin, false);
+  const step    = niceNum(range / 4, true);
+  const axMin   = Math.floor(dataMin / step) * step;
+  const axMax   = Math.ceil(dataMax  / step) * step;
+  const count   = Math.round((axMax - axMin) / step) + 1;
+  const ticks   = Array.from({length: count}, (_, i) => {
+    // avoid fp drift
+    return parseFloat((axMin + i * step).toPrecision(12));
+  });
+  return { min: axMin, max: axMax, ticks, step };
+}
+function fmtTickVal(v, step) {
+  const dec = step >= 1 ? 0 : Math.ceil(-Math.log10(step));
+  return v.toFixed(Math.max(0, dec));
+}
+
+function drawChart(ch, tmplId) {
+  const canvas = document.getElementById(`canvas-${ch}-${tmplId}`);
+  if(!canvas) return;
+
+  // sync pixel dimensions to layout dimensions
+  const W = canvas.offsetWidth || 300;
+  const H = 140;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx   = canvas.getContext('2d');
+  const recs  = getChartRecs(ch, tmplId);
+  const s     = getChartState(ch, tmplId);
+  const win   = chartWindow();
+  const slice = recs.slice(s.offset, s.offset + win);
+
+  // nav button states
+  const prevBtn = document.getElementById(`chartPrev-${ch}-${tmplId}`);
+  const nextBtn = document.getElementById(`chartNext-${ch}-${tmplId}`);
+  if(prevBtn) prevBtn.disabled = s.offset === 0;
+  if(nextBtn) nextBtn.disabled = s.offset + win >= recs.length;
+
+  // footer
+  const foot = document.getElementById(`chartFoot-${ch}-${tmplId}`);
+  if(foot) {
+    if(recs.length === 0) {
+      foot.textContent = 'no data';
+    } else {
+      const isMobile = window.matchMedia('(max-width:600px)').matches;
+      const from = s.offset + 1;
+      const to   = Math.min(s.offset + win, recs.length);
+      foot.textContent = `${from}–${to} / ${recs.length} records  ·  window: ${isMobile?'mobile (20)':'desktop (80)'}`;
+    }
+  }
+
+  ctx.clearRect(0, 0, W, H);
+
+  if(slice.length === 0) {
+    ctx.fillStyle = '#475569'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('No measurements yet', W/2, H/2);
+    return;
+  }
+
+  const PAD_L = 46, PAD_R = 10, PAD_T = 12, PAD_B = 28;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  // nice-number axis range
+  const values = slice.map(r => r.value);
+  const axis   = niceAxis(Math.min(...values), Math.max(...values));
+  const ySpan  = axis.max - axis.min;
+
+  const toX = i => PAD_L + (slice.length > 1 ? i/(slice.length-1) : 0.5) * plotW;
+  const toY = v => PAD_T + (1 - (v - axis.min)/ySpan) * plotH;
+
+  // grid lines + Y-axis labels at nice tick positions
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+  ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'right';
+  axis.ticks.forEach(tv => {
+    const y = toY(tv);
+    if(y < PAD_T - 4 || y > PAD_T + plotH + 4) return; // clip ticks outside plot
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(W-PAD_R, y); ctx.stroke();
+    ctx.fillText(fmtTickVal(tv, axis.step), PAD_L-5, y+3);
+  });
+
+  // X-axis labels: show ≤6, always include first and last
+  const labelStep = Math.max(1, Math.ceil(slice.length/6));
+  ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  slice.forEach((r, i) => {
+    if(i % labelStep !== 0 && i !== slice.length-1) return;
+    ctx.fillText(r.ts.slice(5,10), toX(i), H-6); // MM-DD
+  });
+
+  // area fill
+  if(slice.length > 1) {
+    ctx.fillStyle = 'rgba(34,211,213,0.06)';
+    ctx.beginPath();
+    slice.forEach((r,i) => i===0 ? ctx.moveTo(toX(i),toY(r.value)) : ctx.lineTo(toX(i),toY(r.value)));
+    ctx.lineTo(toX(slice.length-1), PAD_T+plotH);
+    ctx.lineTo(toX(0), PAD_T+plotH);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // line
+  if(slice.length > 1) {
+    ctx.strokeStyle = '#22d3d5'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    slice.forEach((r,i) => i===0 ? ctx.moveTo(toX(i),toY(r.value)) : ctx.lineTo(toX(i),toY(r.value)));
+    ctx.stroke();
+  }
+
+  // dots — smaller when many points
+  const dotR = slice.length > 50 ? 1.8 : 3;
+  slice.forEach((r,i) => {
+    const x=toX(i), y=toY(r.value);
+    ctx.fillStyle='#22d3d5';
+    ctx.beginPath(); ctx.arc(x,y,dotR,0,Math.PI*2); ctx.fill();
+    if(dotR >= 3) { // hollow center for readability
+      ctx.fillStyle='#0a0f1a';
+      ctx.beginPath(); ctx.arc(x,y,1.2,0,Math.PI*2); ctx.fill();
+    }
+  });
+}
+
+// redraw open charts on resize
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    for(const k of Object.keys(chartState)) {
+      if(chartState[k].open) {
+        const [ch, tmplId] = k.split('-').map(Number);
+        drawChart(ch, tmplId);
+      }
+    }
+  }, 150);
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// PARAMETERS — actions
+// ════════════════════════════════════════════════════════════════════════
+function refreshParams(ch) {
+  const old = document.getElementById('paramsSec-'+ch);
+  if(!old) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderParamsSection(ch);
+  old.parentNode.replaceChild(tmp.firstElementChild, old);
+  // re-draw open charts (display restored by renderParamsSection)
+  chTmplAssign[ch].forEach(tmplId => {
+    if(getChartState(ch, tmplId).open) requestAnimationFrame(() => drawChart(ch, tmplId));
+  });
+}
+
+function toggleParams(ch) {
+  paramsExpanded[ch] = !paramsExpanded[ch];
+  const s = document.getElementById('paramsSec-'+ch);
+  const b = document.getElementById('paramsToggle-'+ch);
+  if(s) s.classList.toggle('expanded', paramsExpanded[ch]);
+  if(b) b.textContent = paramsExpanded[ch] ? '▴' : '▾';
+}
+
+function assignTemplate(ch) {
+  const sel = document.getElementById('assignSel-'+ch);
+  if(!sel || !sel.value) return;
+  const id = parseInt(sel.value);
+  if(!chTmplAssign[ch].includes(id)) chTmplAssign[ch].push(id);
+  refreshParams(ch); showToast('Template assigned');
+}
+function removeTemplate(ch, tmplId) {
+  chTmplAssign[ch] = chTmplAssign[ch].filter(id => id!==tmplId);
+  refreshParams(ch); showToast('Template removed');
+}
+function showAddRecord(ch, tmplId) {
+  const f = document.getElementById(`addForm-${ch}-${tmplId}`);
+  if(f) { f.classList.add('visible'); f.querySelector('.add-rec-input').focus(); }
+}
+function hideAddRecord(ch, tmplId) {
+  const f = document.getElementById(`addForm-${ch}-${tmplId}`);
+  if(f) { f.classList.remove('visible'); f.querySelector('.add-rec-input').value=''; }
+}
+function saveRecord(ch, tmplId) {
+  const inp = document.getElementById(`addVal-${ch}-${tmplId}`);
+  if(!inp) return;
+  const val = parseFloat(inp.value);
+  if(isNaN(val)) { inp.focus(); return; }
+  let warn = false;
+  if(ringBuffer.length >= RING_MAX) { ringBuffer.shift(); warn=true; }
+  ringBuffer.push({id:nextRecId++, tmplId, channel:ch, value:val, ts:utcNow()});
+  hideAddRecord(ch, tmplId); refreshParams(ch);
+  warn ? showToast('Ring full — oldest record removed', true) : showToast('Record saved');
+}
+function deleteRecord(recId, ch) {
+  const i = ringBuffer.findIndex(r => r.id===recId);
+  if(i >= 0) ringBuffer.splice(i, 1);
+  refreshParams(ch); showToast('Record deleted');
+}
+function editRecord(recId, ch) {
+  const rec = ringBuffer.find(r => r.id===recId); if(!rec) return;
+  const span = document.getElementById('rv-'+recId); if(!span) return;
+  const inp = document.createElement('input');
+  inp.type='number'; inp.step='any'; inp.className='rec-value-input'; inp.value=rec.value;
+  span.replaceWith(inp); inp.focus(); inp.select();
+  const commit = () => {
+    const v = parseFloat(inp.value);
+    if(!isNaN(v)) { rec.value=v; rec.ts=utcNow(); }
+    refreshParams(ch); showToast('Record updated');
+  };
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e => {
+    if(e.key==='Enter')  { inp.removeEventListener('blur',commit); commit(); e.preventDefault(); }
+    if(e.key==='Escape') { inp.removeEventListener('blur',commit); refreshParams(ch); }
+  });
+}
+function showNewTmplForm(ch) {
+  document.getElementById('newTmplBtn-'+ch).style.display='none';
+  const f=document.getElementById('newTmplForm-'+ch);
+  f.classList.add('visible'); f.querySelector('.new-tmpl-name').focus();
+}
+function hideNewTmplForm(ch) {
+  document.getElementById('newTmplBtn-'+ch).style.display='';
+  const f=document.getElementById('newTmplForm-'+ch);
+  f.classList.remove('visible');
+  f.querySelector('.new-tmpl-name').value=''; f.querySelector('.new-tmpl-unit').value='';
+}
+function createTemplate(ch) {
+  const nameEl=document.getElementById('newTmplName-'+ch);
+  const unitEl=document.getElementById('newTmplUnit-'+ch);
+  const name=(nameEl?.value||'').trim();
+  if(!name) { nameEl?.focus(); return; }
+  if(templates.length>=MAX_TEMPLATES) { showToast('Max '+MAX_TEMPLATES+' templates'); return; }
+  const tmpl={id:nextTmplId++, name, unit:(unitEl?.value||'').trim()};
+  templates.push(tmpl);
+  if(!chTmplAssign[ch].includes(tmpl.id)) chTmplAssign[ch].push(tmpl.id);
+  hideNewTmplForm(ch); refreshParams(ch);
+  showToast('"'+name+'" created & assigned');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════════════════
+function renderParamsSection(ch) {
+  const exp    = paramsExpanded[ch];
+  const ids    = chTmplAssign[ch];
+  const chRecs = ringBuffer.filter(r => r.channel===ch);
+  const summary = ids.length
+    ? `${ids.length} template${ids.length!==1?'s':''} · ${chRecs.length} record${chRecs.length!==1?'s':''}`
+    : 'no templates assigned';
+
+  const svgWave = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,20 9,4 6,12 2,12"/></svg>`;
+  const svgDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+  let tmplHtml = ids.length === 0
+    ? '<div class="params-empty">No templates assigned — use controls below</div>'
+    : ids.map(tmplId => {
+        const tmpl = templates.find(t=>t.id===tmplId); if(!tmpl) return '';
+        const ud   = tmpl.unit || '—';
+        const cs   = getChartState(ch, tmplId);
+        const win  = chartWindow();
+        const allRecs = getChartRecs(ch, tmplId);
+        const prevDis = !cs.open || cs.offset === 0;
+        const nextDis = !cs.open || cs.offset + win >= allRecs.length;
+        const recRows = allRecs.length === 0
+          ? '<div class="records-empty">No measurements yet — click + Add</div>'
+          : allRecs.slice().reverse().map(r=>`
+              <div class="record-row">
+                <span class="rec-value" id="rv-${r.id}">${r.value}</span>
+                <span class="rec-ts">${escH(r.ts)} UTC</span>
+                <div class="rec-actions">
+                  <button class="rec-btn" onclick="editRecord(${r.id},${ch})" title="Edit">✎</button>
+                  <button class="rec-btn del" onclick="deleteRecord(${r.id},${ch})" title="Delete">×</button>
+                </div>
+              </div>`).join('');
+        return `
+          <div class="tmpl-block">
+            <div class="tmpl-header">
+              <span class="tmpl-dot"></span>
+              <span class="tmpl-name">${escH(tmpl.name)}</span>
+              <span class="tmpl-unit">${escH(ud)}</span>
+              <button class="tmpl-icon-btn${cs.open?' active':''}" id="chartBtn-${ch}-${tmplId}"
+                      onclick="toggleChart(${ch},${tmplId})" title="Toggle chart">${svgWave}</button>
+              <button class="tmpl-icon-btn csv" title="Export CSV (not implemented)">${svgDown}</button>
+              <button class="tmpl-add-btn" onclick="showAddRecord(${ch},${tmplId})">+ Add</button>
+              <button class="tmpl-remove-btn" onclick="removeTemplate(${ch},${tmplId})" title="Remove from channel">×</button>
+            </div>
+            <div class="chart-container" id="chart-${ch}-${tmplId}" style="display:${cs.open?'block':'none'}">
+              <div class="chart-wrap">
+                <button class="chart-scroll-btn" id="chartPrev-${ch}-${tmplId}"
+                        onclick="scrollChart(${ch},${tmplId},-1)" title="Older records"
+                        ${prevDis?'disabled':''}>◄</button>
+                <canvas class="chart-canvas" id="canvas-${ch}-${tmplId}"></canvas>
+                <button class="chart-scroll-btn" id="chartNext-${ch}-${tmplId}"
+                        onclick="scrollChart(${ch},${tmplId},1)" title="Newer records"
+                        ${nextDis?'disabled':''}>►</button>
+              </div>
+              <div class="chart-footer" id="chartFoot-${ch}-${tmplId}"></div>
+            </div>
+            <div class="tmpl-records">
+              <div class="add-record-form" id="addForm-${ch}-${tmplId}">
+                <input class="add-rec-input" id="addVal-${ch}-${tmplId}" type="number" step="any"
+                       placeholder="value"
+                       onkeydown="if(event.key==='Enter')saveRecord(${ch},${tmplId});if(event.key==='Escape')hideAddRecord(${ch},${tmplId})">
+                <span class="add-rec-unit">${escH(ud)}</span>
+                <button class="add-rec-save" onclick="saveRecord(${ch},${tmplId})">Save</button>
+                <button class="add-rec-cancel" onclick="hideAddRecord(${ch},${tmplId})">×</button>
+              </div>
+              ${recRows}
+            </div>
+          </div>`;
+      }).join('');
+
+  const available = templates.filter(t=>!ids.includes(t.id));
+  const assignHtml = available.length ? `
+    <div class="assign-row">
+      <select class="assign-select" id="assignSel-${ch}">
+        <option value="">— assign existing template —</option>
+        ${available.map(t=>`<option value="${t.id}">${escH(t.name)}${t.unit?' ('+escH(t.unit)+')':''}</option>`).join('')}
+      </select>
+      <button class="assign-btn" onclick="assignTemplate(${ch})">Assign</button>
+    </div>` : '';
+
+  return `
+    <div class="collapsible-section${exp?' expanded':''}" id="paramsSec-${ch}">
+      <div class="collapsible-header">
+        <svg class="collapsible-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <span class="collapsible-title">Parameters</span>
+        <span class="collapsible-summary">${summary}</span>
+        <button class="toggle-btn" id="paramsToggle-${ch}" onclick="toggleParams(${ch})">${exp?'▴':'▾'}</button>
+      </div>
+      <div class="collapsible-body">
+        <div class="params-body">
+          ${tmplHtml}
+          <div class="params-bottom">
+            ${assignHtml}
+            <button class="new-tmpl-btn" id="newTmplBtn-${ch}" onclick="showNewTmplForm(${ch})">
+              + New Template &nbsp;(${templates.length}/${MAX_TEMPLATES} · ring: ${ringBuffer.length}/${RING_MAX})
+            </button>
+            <div class="new-tmpl-form" id="newTmplForm-${ch}">
+              <input class="new-tmpl-name" id="newTmplName-${ch}" type="text"
+                     placeholder="Parameter name" maxlength="20"
+                     onkeydown="if(event.key==='Enter')createTemplate(${ch});if(event.key==='Escape')hideNewTmplForm(${ch})">
+              <input class="new-tmpl-unit" id="newTmplUnit-${ch}" type="text"
+                     placeholder="unit" maxlength="8"
+                     onkeydown="if(event.key==='Enter')createTemplate(${ch});if(event.key==='Escape')hideNewTmplForm(${ch})">
+              <button class="new-tmpl-create" onclick="createTemplate(${ch})">Create</button>
+              <button class="new-tmpl-cancel" onclick="hideNewTmplForm(${ch})">×</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
 }
 
-// ── Toggle expand/collapse ───────────────────────────────────────────
-function toggleNotes(chIdx) {
-  const sec = document.getElementById(`notesSec-ch${chIdx}`);
-  const btn = document.getElementById(`notesToggleBtn-ch${chIdx}`);
-  const isExp = sec.classList.toggle('expanded');
-  btn.textContent = isExp ? '▴' : '▾';
+// ════════════════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, warn=false) {
+  const t = document.getElementById('saveToast');
+  t.textContent = msg;
+  t.className = 'save-toast show' + (warn?' warn':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className='save-toast', warn ? 3000 : 1600);
 }
 
-// ── Select note for channel ──────────────────────────────────────────
-function selectNote(chIdx, noteIdx) {
-  const prev = channelNoteIdx[chIdx];
-
-  // Deactivate previous
-  const prevInput = document.getElementById(`noteInput-ch${chIdx}-${prev}`);
-  const prevBtn   = document.getElementById(`noteSelBtn-ch${chIdx}-${prev}`);
-  if (prevInput) prevInput.classList.remove('selected-for-ch');
-  if (prevBtn)   { prevBtn.classList.remove('active'); prevBtn.innerHTML = selBtnSvg(false); }
-
-  channelNoteIdx[chIdx] = noteIdx;
-
-  // Activate new
-  const newInput = document.getElementById(`noteInput-ch${chIdx}-${noteIdx}`);
-  const newBtn   = document.getElementById(`noteSelBtn-ch${chIdx}-${noteIdx}`);
-  if (newInput) newInput.classList.add('selected-for-ch');
-  if (newBtn)   { newBtn.classList.add('active'); newBtn.innerHTML = selBtnSvg(true); }
-
-  updatePreview(chIdx);
-  showToast(`Ch${chIdx + 1} → note ${noteIdx + 1}`);
-}
-
-function selBtnSvg(filled) {
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <circle cx="12" cy="12" r="4" ${filled ? 'fill="currentColor"' : ''}/>
-  </svg>`;
-}
-
-// ── Auto-save on blur ────────────────────────────────────────────────
-function onNoteBlur(chIdx, noteIdx, value) {
-  const trimmed = value.slice(0, MAX_CHARS);
-  if (sharedNotes[noteIdx] === trimmed) return;
-
-  sharedNotes[noteIdx] = trimmed;
-
-  // Sync the same note index across all channel cards
-  for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-    const inp = document.getElementById(`noteInput-ch${ch}-${noteIdx}`);
-    if (inp && inp !== document.activeElement) inp.value = trimmed;
-    updatePreview(ch);
-  }
-  updateAllCounters();
-  showToast('Saved');
-}
-
-// ── Update collapsed preview text ────────────────────────────────────
-function updatePreview(chIdx) {
-  const preview = document.getElementById(`notesPreview-ch${chIdx}`);
-  if (!preview) return;
-  const text = sharedNotes[channelNoteIdx[chIdx]] || '';
-  const empty = text.trim().length === 0;
-  preview.textContent = empty ? '— no note selected —' : text;
-  preview.classList.toggle('empty', empty);
-}
-
-// ── Update all counters ──────────────────────────────────────────────
-function updateAllCounters() {
-  const count = filledCount();
-  for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-    const el = document.getElementById(`notesCounter-ch${ch}`);
-    if (el) el.textContent = `${count}/${MAX_NOTES}`;
-  }
-}
-
-// ── Escape HTML ──────────────────────────────────────────────────────
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Build UI ─────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+// BUILD UI
+// ════════════════════════════════════════════════════════════════════════
 function buildUI() {
-  // Nav buttons
-  const nav = document.getElementById('channelNav');
-  nav.innerHTML = Array.from({ length: CHANNEL_COUNT }, (_, i) =>
-    `<button class="ch-nav-btn${i === 0 ? ' active' : ''}" onclick="switchChannel(${i})">CH${i + 1}</button>`
-  ).join('');
+  document.getElementById('channelNav').innerHTML =
+    Array.from({length:CHANNEL_COUNT},(_,i)=>
+      `<button class="ch-nav-btn${i===0?' active':''}" onclick="switchChannel(${i})">CH${i+1}</button>`
+    ).join('');
 
-  // Cards
-  const vp = document.getElementById('cardsViewport');
-  vp.innerHTML = Array.from({ length: CHANNEL_COUNT }, (_, chIdx) => `
-    <div class="channel-card${chIdx === 0 ? ' active' : ''}" id="card-ch${chIdx}">
-      <div class="card-inner">
-        <div class="card-body">
-          <div class="card-content">
-
-            ${renderNotesSection(chIdx)}
-
-            <!-- TIME SCHEDULE stub -->
-            <div class="section section-stub">
-              <div class="section-header">
-                <div class="section-title">
-                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12,6 12,12 16,14"/>
-                  </svg>
-                  Time Schedule
+  document.getElementById('cardsViewport').innerHTML =
+    Array.from({length:CHANNEL_COUNT},(_,ch)=>`
+      <div class="channel-card${ch===0?' active':''}" id="card-${ch}">
+        <div class="card-inner">
+          <div class="card-body">
+            <div class="card-content">
+              ${renderNotesSection(ch)}
+              <div class="section section-stub">
+                <div class="section-header">
+                  <div class="section-title">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                    </svg>Time Schedule
+                  </div>
                 </div>
+                <div class="section-body">[ schedule content ]</div>
               </div>
-              <div class="section-body">[ schedule content ]</div>
-            </div>
-
-            <!-- CONFIGURATION stub -->
-            <div class="section section-stub">
-              <div class="section-header">
-                <div class="section-title">
-                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-                  </svg>
-                  Configuration
+              <div class="section section-stub">
+                <div class="section-header">
+                  <div class="section-title">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>Configuration
+                  </div>
                 </div>
+                <div class="section-body">[ config content ]</div>
               </div>
-              <div class="section-body">[ config content ]</div>
+              ${renderParamsSection(ch)}
             </div>
-
           </div>
         </div>
-      </div>
-    </div>
-  `).join('');
+      </div>`
+    ).join('');
 
-  // Attach blur listeners after DOM is built
-  for (let chIdx = 0; chIdx < CHANNEL_COUNT; chIdx++) {
-    for (let i = 0; i < MAX_NOTES; i++) {
-      const inp = document.getElementById(`noteInput-ch${chIdx}-${i}`);
-      if (inp) {
-        inp.addEventListener('blur', () => onNoteBlur(chIdx, i, inp.value));
-        inp.addEventListener('keydown', e => {
-          if (e.key === 'Enter') { inp.blur(); e.preventDefault(); }
-          if (e.key === 'Escape') {
-            inp.value = sharedNotes[i]; // revert
-            inp.blur();
-          }
-        });
-        // Clicking input also selects it for this channel
-        inp.addEventListener('focus', () => {
-          if (channelNoteIdx[chIdx] !== i) selectNote(chIdx, i);
-        });
-      }
-    }
-  }
+  for(let ch=0; ch<CHANNEL_COUNT; ch++) attachNoteEvents(ch);
 }
 
-// ── Switch channel ────────────────────────────────────────────────────
 function switchChannel(idx) {
-  document.querySelectorAll('.ch-nav-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-  document.querySelectorAll('.channel-card').forEach((c, i) => c.classList.toggle('active', i === idx));
-  currentChannel = idx;
+  document.querySelectorAll('.ch-nav-btn').forEach((b,i)  => b.classList.toggle('active', i===idx));
+  document.querySelectorAll('.channel-card').forEach((c,i) => c.classList.toggle('active', i===idx));
 }
 
-// ── Init ──────────────────────────────────────────────────────────────
 buildUI();
 </script>
 </body>

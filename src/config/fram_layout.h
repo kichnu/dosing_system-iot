@@ -45,7 +45,8 @@
 // CHANNEL_LABELS     | 0x0860   | 256 B     | Channel names  (8 × 32B)
 // CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)
 // PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
-// FREE               | 0x0A80   | 128 B     | Rezerva
+// LOCK_PIN           | 0x0A80   | 16 B      | PIN blokady edycji GUI
+// FREE               | 0x0A90   | 112 B     | Rezerva
 // SHARED_NOTES       | 0x0B00   | 400 B     | Notes pool + ch_note_idx (12 × 32B + meta)
 // PARAM_LOG          | 0x0C90   | 1852 B    | ParamLog: 20 tmpl × 32B + ring 100 × 12B
 // RESERVED           | 0x13CC   | ~26.7 KB  | Przyszłe użycie
@@ -173,10 +174,17 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 #define FRAM_SIZE_PUMP_MON_CONFIG   32
 
 // ----------------------------------------------------------------------------
-// FREE (0x0A80 - 0x0AFF)  128B
+// LOCK PIN (0x0A80 - 0x0A8F)  16B
+// PIN blokady edycji GUI, numeryczny 4-8 cyfr
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_FREE_SPACE        0x0A80
-#define FRAM_SIZE_FREE_SPACE        128
+#define FRAM_ADDR_LOCK_PIN          0x0A80
+#define FRAM_SIZE_LOCK_PIN          16
+
+// ----------------------------------------------------------------------------
+// FREE (0x0A90 - 0x0AFF)  112B
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_FREE_SPACE        0x0A90
+#define FRAM_SIZE_FREE_SPACE        112
 
 // ----------------------------------------------------------------------------
 // SHARED NOTES (0x0B00 - 0x0C8F)  400B

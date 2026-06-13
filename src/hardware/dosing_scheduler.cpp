@@ -257,17 +257,26 @@ bool DosingScheduler::_startDosing(uint8_t channel, uint8_t eventHour) {
         return false;
     }
 
-    const ChannelCalculated& calc = channelManager.getCalculated(channel);
-    if (!calc.is_valid || calc.single_dose_ml <= 0 || calc.pump_duration_ms == 0) {
-        Serial.printf("[SCHED] CH%d invalid config, skipping\n", channel);
+    // Oblicz dawkę z ACTIVE config — pending może mieć inne wartości niż to co faktycznie aktywne
+    const ChannelConfig& activeCfg = channelManager.getActiveConfig(channel);
+    uint8_t eventCount = activeCfg.getActiveEventsCount();
+    if (eventCount == 0 || activeCfg.daily_dose_ml <= 0 || activeCfg.dosing_rate <= 0) {
+        Serial.printf("[SCHED] CH%d active config not ready, skipping\n", channel);
+        return false;
+    }
+    float singleDoseMl  = activeCfg.daily_dose_ml / (float)eventCount;
+    uint32_t pumpDurMs  = (uint32_t)((singleDoseMl / activeCfg.dosing_rate) * 1000.0f);
+    if (singleDoseMl < MIN_SINGLE_DOSE_ML || pumpDurMs == 0 || pumpDurMs > MAX_PUMP_DURATION_MS) {
+        Serial.printf("[SCHED] CH%d active config invalid (%.2f ml, %lu ms), skipping\n",
+                      channel, singleDoseMl, pumpDurMs);
         return false;
     }
 
     portENTER_CRITICAL(&_schedulerMux);
     _currentEvent.channel          = channel;
     _currentEvent.event_hour       = eventHour;
-    _currentEvent.target_ml        = calc.single_dose_ml;
-    _currentEvent.target_duration_ms = calc.pump_duration_ms;
+    _currentEvent.target_ml        = singleDoseMl;
+    _currentEvent.target_duration_ms = pumpDurMs;
     _currentEvent.start_time_ms    = millis();
     _currentEvent.completed        = false;
     _currentEvent.failed           = false;

@@ -104,6 +104,10 @@ public:
     bool readSharedNotes(SharedNotes* notes);
     bool writeSharedNotes(const SharedNotes* notes);
 
+    // --- Lock PIN ---
+    bool readLockPin(LockPin* pin);
+    bool writeLockPin(const LockPin* pin);
+
     // --- Param Log ---
     bool readParamLog(ParamLog* log);
     bool writeParamLog(const ParamLog* log);

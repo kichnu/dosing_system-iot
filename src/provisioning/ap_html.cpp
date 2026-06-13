@@ -240,12 +240,24 @@ const char SETUP_PAGE_HTML[] PROGMEM = R"rawliteral(
                 <!-- Admin Password -->
                 <div class="form-group">
                     <label for="admin_password">Admin Dashboard Password *</label>
-                    <input type="password" id="admin_password" name="admin_password" 
+                    <input type="password" id="admin_password" name="admin_password"
                            placeholder="admin password"
                            minlength="8"
                            required>
                     <small>For accessing device dashboard. Minimum 8 characters.</small>
                     <span class="error">Password must be at least 8 characters</span>
+                </div>
+                <!-- Edit Lock PIN -->
+                <div class="form-group">
+                    <label for="lock_pin">Edit Lock PIN</label>
+                    <input type="text" id="lock_pin" name="lock_pin"
+                           placeholder="e.g. 1234"
+                           inputmode="numeric"
+                           pattern="[0-9]{4,8}"
+                           maxlength="8"
+                           value="1234">
+                    <small>4-8 digit PIN to unlock dashboard editing. Default: 1234</small>
+                    <span class="error">PIN must be 4-8 digits</span>
                 </div>
                 <button type="submit" class="btn" id="submitBtn">
                     <span id="submitBtnText">Save Configuration</span>

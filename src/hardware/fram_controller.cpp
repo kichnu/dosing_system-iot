@@ -618,6 +618,32 @@ bool FramController::writeSharedNotes(const SharedNotes* notes) {
 }
 
 // ============================================================================
+// LOCK PIN (PIN blokady edycji GUI)
+// Lazy init: jeśli CRC nieprawidłowe → zapisz domyślny PIN "1234"
+// ============================================================================
+
+bool FramController::readLockPin(LockPin* pin) {
+    if (!pin) return false;
+    if (!readBytes(FRAM_ADDR_LOCK_PIN, pin, sizeof(LockPin))) return false;
+    uint32_t crc = calculateCRC32(pin, sizeof(LockPin) - sizeof(uint32_t));
+    if (pin->crc32 != crc) {
+        // Lazy init: zapisz domyślny PIN
+        memset(pin, 0, sizeof(LockPin));
+        strncpy(pin->pin, "1234", sizeof(pin->pin) - 1);
+        writeLockPin(pin);
+    }
+    return true;
+}
+
+bool FramController::writeLockPin(const LockPin* pin) {
+    if (!pin) return false;
+    LockPin tmp = *pin;
+    tmp.pin[sizeof(tmp.pin) - 1] = '\0';
+    tmp.crc32 = calculateCRC32(&tmp, sizeof(LockPin) - sizeof(uint32_t));
+    return writeBytes(FRAM_ADDR_LOCK_PIN, &tmp, sizeof(LockPin));
+}
+
+// ============================================================================
 // PARAM LOG (szablony parametrów + ring buffer pomiarów)
 // ParamLog jest duży (1852B) — zapis przez malloc żeby nie obciążać stosu
 // ============================================================================

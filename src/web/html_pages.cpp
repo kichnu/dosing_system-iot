@@ -90,7 +90,7 @@ const char* DASHBOARD_HTML = R"rawliteral(
 --transition-fast:0.15s ease;--transition-normal:0.25s ease;--transition-slow:0.4s cubic-bezier(0.25,0.46,0.45,0.94);
 --card-width:800px;--card-padding:12px;--section-gap:10px;--section-padding:10px;
 --event-slot-height:38px;--day-slot-height:36px;--input-height:38px;--btn-height:40px;--header-height:44px;
---font-xs:0.6rem;--font-sm:0.7rem;--font-md:0.8rem;--font-lg:0.95rem;
+--font-xs:0.6rem;--font-sm:0.7rem;--font-md:0.8rem;--font-lg:0.95rem;--font-xlg:1.2rem;--font-xxlg:1.4rem;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;touch-action:pan-y}
@@ -139,7 +139,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .card-content{padding:var(--card-padding);display:flex;flex-direction:column;gap:var(--section-gap)}
 .section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
 .section-header{display:flex;align-items:center;justify-content:space-between;padding:8px var(--section-padding);background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)}
-.section-title{display:flex;align-items:center;gap:6px;font-size:var(--font-sm);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary)}
+.section-title{display:flex;align-items:center;gap:6px;font-size:var(--font-lg);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary)}
 .section-title svg{width:12px;height:12px;color:var(--accent-cyan)}
 .section-info{font-size:var(--font-xs);color:var(--text-muted)}
 .section-body{padding:var(--section-padding)}
@@ -200,15 +200,15 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .day-slot.today .day-lbl{border-width:2px}
 .day-slot.today .day-name::after{content:'';display:inline-block;width:4px;height:4px;background:var(--accent-yellow);border-radius:50%;margin-left:3px;vertical-align:middle}
 
-.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--accent-cyan);text-align:center}
+.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);color:var(--accent-cyan);text-align:center}
 .volume-input:focus{outline:none;border-color:var(--accent-cyan);box-shadow:0 0 0 2px rgba(34,211,213,0.15)}
 .params-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0}
 .param-item{display:flex;flex-direction:column;gap:4px}
 .param-lbl{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
 .param-lbl.low{color:var(--accent-red)}
-.param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:700;letter-spacing:0.03em;color:var(--accent-cyan);display:flex;align-items:center;justify-content:center}
+.param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:700;letter-spacing:0.03em;color:var(--accent-cyan);display:flex;align-items:center;justify-content:center}
 .param-bar-box{min-height:var(--input-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;gap:4px}
-.param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--accent-cyan)}
+.param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--accent-cyan)}
 .param-bar-val.low{color:var(--accent-red)}
 .valid-msg{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:500;flex-shrink:0}
 .valid-msg svg{width:14px;height:14px;flex-shrink:0}
@@ -247,10 +247,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .param-unit{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
 .calib-section{margin-bottom:8px}
 .calib-inner{display:flex;height:var(--btn-height);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.calib-input-field{flex:1;background:var(--bg-input);border:none;padding:0 12px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--text-secondary);text-align:center;min-width:0}
+.calib-input-field{flex:1;background:var(--bg-input);border:none;padding:0 12px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-lg);font-weight:600;color:var(--text-secondary);text-align:center;min-width:0}
 .calib-input-field:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(34,211,213,0.3)}
 .calib-input-field::placeholder{color:var(--text-muted);font-size:var(--font-sm);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-.calib-run-btn{background:rgba(34,211,213,0.1);border:none;border-left:1px solid var(--border);padding:0 16px;color:var(--accent-cyan);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast);white-space:nowrap;flex-shrink:0}
+.calib-run-btn{background:rgba(34,211,213,0.1);border:none;border-left:1px solid var(--border);width:140px;padding:0 16px;color:var(--accent-cyan);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast);white-space:nowrap;flex-shrink:0}
 .calib-run-btn:hover{background:rgba(34,211,213,0.2)}
 .calib-run-btn.running{background:rgba(234,179,8,0.15);border-left-color:rgba(234,179,8,0.3);color:var(--accent-yellow);pointer-events:none}
 
@@ -277,7 +277,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .params-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:default;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
 .params-section.expanded .params-header{border-bottom-color:var(--border)}
 .params-icon{flex-shrink:0;width:12px;height:12px;color:var(--accent-cyan)}
-.params-preview{flex:1;font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.params-preview{flex:1;font-size:var(--font-lg);font-weight:600;color:var(--text-secondary);text-transform: uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .params-preview.empty{font-style:italic;font-weight:400;color:var(--text-muted)}
 .params-toggle-btn{flex-shrink:0;width:24px;height:24px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);font-size:10px;line-height:1}
 .params-toggle-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
@@ -286,13 +286,13 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .tmpl-block{background:rgba(0,0,0,0.18);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
 .tmpl-header{display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(255,255,255,0.025);border-bottom:1px solid var(--border)}
 .tmpl-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);flex-shrink:0}
-.tmpl-name{flex:1;font-size:var(--font-sm);font-weight:600;color:var(--text-primary)}
+.tmpl-name{flex:1;font-size:var(--font-lg);font-weight:600;color:var(--text-secondary)}
 .tmpl-unit{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-xs);color:var(--text-muted);background:var(--bg-input);padding:1px 5px;border-radius:3px;flex-shrink:0}
 .tmpl-icon-btn{height:22px;width:22px;padding:3px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
 .tmpl-icon-btn svg{width:100%;height:100%}
 .tmpl-icon-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
 .tmpl-icon-btn.active{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.12)}
-.tmpl-add-btn{height:22px;padding:0 8px;background:rgba(34,211,213,0.08);border:1px solid rgba(34,211,213,0.25);border-radius:4px;color:var(--accent-cyan);font-size:var(--font-xs);font-weight:600;cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
+.tmpl-add-btn{height:22px;padding:0 8px;background:rgba(34,211,213,0.08);border:1px solid rgba(34,211,213,0.25);border-radius:4px;color:var(--accent-cyan);font-size:var(--font-md);font-weight:600;cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
 .tmpl-add-btn:hover{background:rgba(34,211,213,0.18)}
 .tmpl-remove-btn{height:22px;width:22px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
 .tmpl-remove-btn:hover{border-color:var(--accent-red);color:var(--accent-red);background:rgba(239,68,68,0.06)}
@@ -313,31 +313,46 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .record-row{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background var(--transition-fast)}
 .record-row:last-child{border-bottom:none}
 .record-row:hover{background:rgba(255,255,255,0.02)}
-.rec-value{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--accent-cyan);flex:0 0 80px}
+.rec-value{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--accent-cyan);flex:0 0 40px}
 .rec-value-input{width:76px;height:22px;padding:0 4px;background:var(--bg-input);border:1px solid var(--accent-cyan);border-radius:3px;font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--accent-cyan);outline:none;flex:0 0 76px}
-.rec-ts{flex:1;font-size:var(--font-xs);color:var(--text-muted)}
+.rec-ts{flex:1;font-size:var(--font-md);color:var(--text-secondary)}
 .rec-actions{flex-shrink:0;display:flex;gap:2px}
-.rec-btn{width:20px;height:20px;border:none;background:none;color:var(--text-muted);font-size:11px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
+.rec-btn{width:20px;height:20px;border:none;background:none;color:var(--text-secondary);font-size:16px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast)}
 .rec-btn:hover{background:var(--bg-input);color:var(--text-primary)}
 .rec-btn.del:hover{color:var(--accent-red)}
 .records-empty{padding:10px 8px;text-align:center;font-size:var(--font-xs);color:var(--text-muted);font-style:italic}
 .params-bottom{display:flex;flex-direction:column;gap:5px}
 .assign-row{display:flex;gap:6px;align-items:center}
-.assign-select{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);outline:none;appearance:none;cursor:pointer}
+.assign-select{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-lg);outline:none;appearance:none;cursor:pointer}
 .assign-select:focus{border-color:var(--accent-cyan)}
-.assign-btn{height:30px;padding:0 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
+.assign-btn{height:30px;padding:0 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-md);cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
 .assign-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
-.new-tmpl-btn{width:100%;height:28px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:var(--font-xs);cursor:pointer;transition:all var(--transition-fast)}
+.new-tmpl-btn{width:100%;height:28px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-lg);cursor:pointer;transition:all var(--transition-fast)}
 .new-tmpl-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
 .new-tmpl-form{display:none;align-items:center;gap:6px}
 .new-tmpl-form.visible{display:flex}
-.new-tmpl-name{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-sm);outline:none}
+.new-tmpl-name{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-lg);outline:none}
 .new-tmpl-name:focus{border-color:var(--accent-cyan)}
 .new-tmpl-unit{width:62px;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-cyan);font-size:var(--font-sm);outline:none;flex-shrink:0}
 .new-tmpl-unit:focus{border-color:var(--accent-cyan)}
 .new-tmpl-create{height:30px;padding:0 10px;background:var(--accent-cyan);border:none;border-radius:var(--radius-sm);color:var(--bg-primary);font-size:var(--font-xs);font-weight:700;cursor:pointer;flex-shrink:0}
 .new-tmpl-cancel{height:30px;width:30px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .params-empty{padding:18px 8px;text-align:center;font-size:var(--font-sm);color:var(--text-muted);font-style:italic}
+.lock-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 4px;margin-left:5px;font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:color var(--transition-fast),border-color var(--transition-fast);white-space:nowrap}
+.lock-btn.locked{color:var(--text-muted)}
+.lock-btn.unlocked{color:var(--accent-green);border-color:var(--accent-green)}
+.lock-form-bar{display:none;position:fixed;top:var(--header-height);left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
+.lock-form-bar.visible{display:flex}
+@keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.shake-inp{animation:lock-shake 0.35s}
+.lock-pwd-input{flex:1;height:34px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--font-md);outline:none;min-width:0}
+.lock-pwd-input:focus{border-color:var(--accent-cyan)}
+.lock-pwd-input.error{border-color:var(--accent-red)}
+.lock-pwd-msg{font-size:var(--font-xs);color:var(--accent-red);flex-shrink:0;min-width:0}
+.lock-submit-btn{height:34px;padding:0 12px;background:var(--accent-cyan);color:#000;border:none;border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:700;cursor:pointer;flex-shrink:0}
+.lock-close-btn{height:34px;width:34px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+body.editing-locked .lockable-btn{pointer-events:none;opacity:0.45}
+body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f1f5f9' stroke-width='2.5'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") no-repeat center/contain;margin-right:4px}
 </style>
 </head>
 <body>
@@ -372,7 +387,22 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
                 <div class="modal-actions"><a class="btn btn-primary" href="login" onclick="if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';return false;}">Login</a></div>
             </div>
         </div>
+        <div class="modal-overlay" id="resetDosedModal">
+            <div class="modal-box">
+                <div class="modal-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
+                <div class="modal-title">Reset Dosed?</div>
+                <div class="modal-text">Reset the dosed tracker to zero for this channel?</div>
+                <div class="modal-info"><div class="modal-info-label">Channel <span id="resetDosedModalCh">1</span></div></div>
+                <div class="modal-actions"><button class="btn btn-secondary" onclick="closeResetDosedModal()">Cancel</button><button class="btn btn-primary" onclick="confirmResetDosed()">Reset</button></div>
+            </div>
+        </div>
     </div>
+    <form id="lockFormBar" class="lock-form-bar" onsubmit="submitUnlock();return false;" autocomplete="off">
+        <input type="password" id="lockPwdInput" name="lock_pin" class="lock-pwd-input" placeholder="PIN…" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*">
+        <span id="lockFormMsg" class="lock-pwd-msg"></span>
+        <button type="submit" class="lock-submit-btn">Unlock</button>
+        <button type="button" class="lock-close-btn" onclick="hideLockForm()">&#215;</button>
+    </form>
 <script>
 const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,MIN_RATE:1/30,MAX_RATE:5.0,CALIB_SEC:30,SWIPE_THRESHOLD:50};
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -388,6 +418,10 @@ let sharedNotes=Array(12).fill('');
 let chNoteIdx=Array(8).fill(0);
 let notesExpanded=Array(8).fill(false);
 let editingNotes=false;
+const LOCK_TIMEOUT_MS=5*60*1000;
+let isLocked=true,lockEnabled=false,lockTimer=null,lockUnlockAt=0;
+let lockFailedAttempts=0,lockThrottleUntil=0;
+let pendingResetDosedChannel=-1;
 let paramLog=null;
 const paramsExpanded=Array(8).fill(false);
 const chartState={};
@@ -406,6 +440,7 @@ function init(){
     setInterval(loadStatus,5000);
     loadNotes();
     loadParamLog();
+    fetch('api/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:''})}).then(r=>r.json()).then(d=>{lockEnabled=!!d.has_pin;updateLockUI();}).catch(()=>{});
 }
 
 
@@ -422,6 +457,8 @@ function renderChannels(){
         if(newCardBody)newCardBody.scrollTop=scrollTop;
     }
     updateClock();
+    updateLockUI();
+    for(let c=0;c<CFG.CHANNEL_COUNT;c++){(chTmplAssign[c]||[]).forEach(tmplId=>{if(getChartState(c,tmplId).open)requestAnimationFrame(()=>drawChart(c,tmplId));});}
 }
 
 function getNextEventHour(ch,chIdx){
@@ -484,15 +521,15 @@ function renderChannelCard(ch,idx){
     const navBtns=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===idx?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
 <div class="card-inner">
-<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><span class="card-time">--:--:--</span><div class="header-actions"><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
+<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="lock-btn locked" onclick="toggleLock()"></button><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
 <div class="channel-nav">${navBtns}</div>
 <div class="card-body">
 <div class="card-content">
 ${renderNotesSection(idx)}
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><span class="card-time">--:--:--</span></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
 ${renderParamsSection(idx)}
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-primary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary lockable-btn" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary lockable-btn" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-primary lockable-btn" onclick="showResetDosedModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
 </div>
 </div>
 </div></div>`;
@@ -570,12 +607,13 @@ function runCalib(idx){
     const btn=document.getElementById(`calibBtn_${idx}`);
     btn.classList.add('running');
     btn.textContent='Running...';
+    editingChannel=idx;
     fetch(`api/calibrate?channel=${idx}`,{method:'POST'}).then(r=>r.json()).catch(()=>({}));
     let remaining=CFG.CALIB_SEC;
     const timer=setInterval(()=>{
         remaining--;
         btn.textContent=`${remaining}s`;
-        if(remaining<=0){clearInterval(timer);btn.classList.remove('running');btn.textContent='Run Pump (30s)';}
+        if(remaining<=0){clearInterval(timer);btn.classList.remove('running');btn.textContent='Run Pump (30s)';editingChannel=-1;}
     },1000);
 }
 
@@ -655,7 +693,7 @@ function loadStatus(){
                 channels[i].eventsFailed=chData.eventsFailed||0;
                 channels[i].state=chData.state||'inactive';
             });
-            if(editingChannel===-1&&!editingNotes){
+            if(editingChannel===-1&&!editingNotes&&!document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input,.assign-select:focus')){
                 renderChannels();
             } else {
                 // Re-render zablokowany (user edytuje) — odśwież tylko kontrolki wolumenu i dozowania
@@ -669,7 +707,7 @@ function loadStatus(){
             const wasActive=activeChannel>=0;
             activeChannel=data.activeChannel;
             activeEventHour=data.activeEventHour!==undefined?data.activeEventHour:-1;
-            if(wasActive!==(activeChannel>=0))renderChannels();
+            if(wasActive!==(activeChannel>=0)&&editingChannel===-1&&!editingNotes)renderChannels();
         }
     }).catch(()=>{});
 }
@@ -703,7 +741,7 @@ function confirmRefill(){
     const channel=pendingRefillChannel;
     closeRefillModal();
     fetch(`api/refill?channel=${channel}`,{method:'POST'}).then(r=>r.json()).then(data=>{
-        if(data.success)updateContainerDisplay(channel,data);
+        if(data.success){updateContainerDisplay(channel,data);resetLockTimer();}
     }).catch(err=>console.error('Refill error:',err));
 }
 
@@ -725,7 +763,7 @@ function confirmSave(){
     const payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ch.dailyDose,dosingRate:ch.dosingRate,enabled:ch.enabled!==false};
     fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json())
-    .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';renderChannels();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
+    .then(data=>{editingChannel=-1;if(data.success){ch.state='pending';resetLockTimer();renderChannels();showAlert('Success','Configuration saved. Changes active from tomorrow.','ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
     .catch(()=>showAlert('Error','Connection error','err'));
 }
 
@@ -800,6 +838,74 @@ function closeAlert(confirmed){
     if(confirmed&&alertCallback)alertCallback();
     alertCallback=null;
 }
+// ── Channel Lock ─────────────────────────────────────────────────────────
+function toggleLock(){if(isLocked)showLockForm();else setLocked(true);}
+function showLockForm(){
+    const f=document.getElementById('lockFormBar');if(!f)return;
+    f.classList.add('visible');
+    const i=document.getElementById('lockPwdInput');if(i){i.value='';i.focus();}
+    document.getElementById('lockFormMsg').textContent='';
+}
+function hideLockForm(){
+    const f=document.getElementById('lockFormBar');if(f)f.classList.remove('visible');
+    const i=document.getElementById('lockPwdInput');if(i)i.value='';
+    document.getElementById('lockFormMsg').textContent='';
+}
+function setLocked(locked){
+    isLocked=locked;
+    if(locked){clearTimeout(lockTimer);lockTimer=null;clearInterval(_lockCdInt);_lockCdInt=null;hideLockForm();}
+    else{lockUnlockAt=Date.now()+LOCK_TIMEOUT_MS;resetLockTimer();_startCd();hideLockForm();}
+    updateLockUI();
+}
+function resetLockTimer(){
+    if(!lockEnabled||isLocked) return;
+    clearTimeout(lockTimer);
+    lockUnlockAt=Date.now()+LOCK_TIMEOUT_MS;
+    lockTimer=setTimeout(()=>setLocked(true),LOCK_TIMEOUT_MS);
+}
+function _lockMinsLeft(){return Math.max(1,Math.ceil((lockUnlockAt-Date.now())/60000));}
+let _lockCdInt=null;
+function _startCd(){clearInterval(_lockCdInt);_lockCdInt=setInterval(()=>{if(isLocked){clearInterval(_lockCdInt);}else{updateLockUI();}},60000);}
+function updateLockUI(){
+    document.querySelectorAll('.lock-btn').forEach(btn=>{
+        if(!lockEnabled){btn.style.display='none';return;}
+        btn.style.display='';
+        if(isLocked){btn.className='lock-btn locked';btn.textContent='LOCKED';}
+        else{btn.className='lock-btn unlocked';btn.textContent='EDITING \xb7 '+_lockMinsLeft()+'m';}
+    });
+    if(isLocked)document.body.classList.add('editing-locked');
+    else document.body.classList.remove('editing-locked');
+}
+function submitUnlock(){
+    if(Date.now()<lockThrottleUntil){
+        const s=Math.ceil((lockThrottleUntil-Date.now())/1000);
+        document.getElementById('lockFormMsg').textContent='Wait '+s+'s…';return;
+    }
+    const inp=document.getElementById('lockPwdInput');
+    const msg=document.getElementById('lockFormMsg');
+    if(!inp||!inp.value){if(inp)inp.focus();return;}
+    fetch('api/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:inp.value})})
+    .then(r=>r.json()).then(d=>{
+        if(d.success){lockFailedAttempts=0;setLocked(false);}
+        else{
+            lockFailedAttempts++;
+            if(inp){inp.value='';inp.focus();inp.classList.add('error','shake-inp');setTimeout(()=>inp.classList.remove('error','shake-inp'),400);}
+            if(lockFailedAttempts>=3){lockThrottleUntil=Date.now()+30000;lockFailedAttempts=0;msg.textContent='Too many attempts. Wait 30s.';}
+            else{msg.textContent='Wrong PIN ('+(3-lockFailedAttempts)+' left)';}
+        }
+    }).catch(()=>{if(msg)msg.textContent='Error';});
+}
+function showResetDosedModal(idx){
+    pendingResetDosedChannel=idx;
+    const el=document.getElementById('resetDosedModalCh');if(el)el.textContent=idx+1;
+    document.getElementById('resetDosedModal').classList.add('show');
+}
+function closeResetDosedModal(){document.getElementById('resetDosedModal').classList.remove('show');pendingResetDosedChannel=-1;}
+function confirmResetDosed(){
+    if(pendingResetDosedChannel<0){closeResetDosedModal();return;}
+    const idx=pendingResetDosedChannel;closeResetDosedModal();
+    resetDosed(idx);resetLockTimer();
+}
 // ── ParamLog CRUD ────────────────────────────────────────────────────────
 function loadParamLog(){
     fetch('api/paramlog').then(r=>r.json()).then(data=>{
@@ -825,7 +931,7 @@ function saveRec(ch,tmplId){
     if(!paramLog) return;
     const inp=document.getElementById('addVal_'+ch+'_'+tmplId);
     if(!inp) return;
-    const val=parseFloat(inp.value);
+    const val=parseFloat(inp.value.replace(',','.'));
     if(isNaN(val)){inp.focus();return;}
     const now=Math.floor(Date.now()/1000);
     paramLog.ring[paramLog.head]={value:val,timestamp:now,tmpl_idx:tmplId,channel:ch,flags:1};
@@ -842,7 +948,7 @@ function editRec(ri,ch){
     inp.type='number';inp.step='any';inp.className='rec-value-input';inp.value=r.value;
     span.replaceWith(inp);inp.focus();inp.select();
     const commit=()=>{
-        const v=parseFloat(inp.value);
+        const v=parseFloat(inp.value.replace(',','.'));
         if(!isNaN(v)){r.value=v;r.timestamp=Math.floor(Date.now()/1000);saveParamLog(()=>refreshParams(ch));}
         else refreshParams(ch);
     };
@@ -940,8 +1046,8 @@ function drawChart(ch,tmplId){
         else{const isMob=window.matchMedia('(max-width:600px)').matches;foot.textContent=(s.offset+1)+'–'+Math.min(s.offset+win,recs.length)+' / '+recs.length+' records  \xb7  window: '+(isMob?'mobile (20)':'desktop (80)');}
     }
     ctx.clearRect(0,0,W,H);
-    if(slice.length===0){ctx.fillStyle='#475569';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('No measurements yet',W/2,H/2);return;}
-    const PAD_L=46,PAD_R=10,PAD_T=12,PAD_B=28;
+    if(slice.length===0){ctx.fillStyle='#475569';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.fillText('No measurements yet',W/2,H/2);return;}
+    const PAD_L=win<80?36:46,PAD_R=win<80?4:10,PAD_T=12,PAD_B=28;
     const plotW=W-PAD_L-PAD_R;const plotH=H-PAD_T-PAD_B;
     const values=slice.map(r=>r.value);
     const axis=niceAxis(Math.min.apply(null,values),Math.max.apply(null,values));
@@ -949,17 +1055,17 @@ function drawChart(ch,tmplId){
     const toX=i=>PAD_L+(slice.length>1?i/(slice.length-1):0.5)*plotW;
     const toY=v=>PAD_T+(1-(v-axis.min)/ySpan)*plotH;
     ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
-    ctx.fillStyle='#475569';ctx.font='9px monospace';ctx.textAlign='right';
+    ctx.fillStyle='#475569';ctx.font='12px monospace';ctx.textAlign='right';
     axis.ticks.forEach(tv=>{
         const y=toY(tv);if(y<PAD_T-4||y>PAD_T+plotH+4) return;
         ctx.beginPath();ctx.moveTo(PAD_L,y);ctx.lineTo(W-PAD_R,y);ctx.stroke();
         ctx.fillText(fmtTickVal(tv,axis.step),PAD_L-5,y+3);
     });
     const labelStep=Math.max(1,Math.ceil(slice.length/6));
-    ctx.fillStyle='#475569';ctx.font='9px monospace';ctx.textAlign='center';
+    ctx.fillStyle='#475569';ctx.font='12px monospace';ctx.textAlign='center';
     slice.forEach((r,i)=>{
         if(i%labelStep!==0&&i!==slice.length-1) return;
-        ctx.fillText(fmtTs(r.timestamp).slice(5,10),toX(i),H-6);
+        ctx.fillText(fmtTs(r.timestamp).slice(0,5),toX(i),H-6);
     });
     if(slice.length>1){
         ctx.fillStyle='rgba(34,211,213,0.06)';ctx.beginPath();
@@ -1005,7 +1111,7 @@ function getValidRecs(){
     return paramLog.ring.map((r,i)=>Object.assign({},r,{_ri:i})).filter(r=>r.flags&1).sort((a,b)=>a.timestamp-b.timestamp);
 }
 function getChartRecs(ch,tmplId){return getValidRecs().filter(r=>r.tmpl_idx===tmplId&&r.channel===ch);}
-function fmtTs(ts){return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
+function fmtTs(ts){const s=new Date(ts*1000).toISOString();return s.slice(8,10)+'-'+s.slice(5,7)+'-'+s.slice(0,4)+' '+s.slice(11,16);}
 
 function toggleParams(idx){
     paramsExpanded[idx]=!paramsExpanded[idx];
@@ -1052,7 +1158,7 @@ function renderParamsSection(idx){
                 ?'<div class="records-empty">No measurements yet — click + Add</div>'
                 :allRecs.slice().reverse().map(function(r){
                     return '<div class="record-row">'
-                        +'<span class="rec-value" id="rv_'+r._ri+'">'+r.value+'</span>'
+                        +'<span class="rec-value" id="rv_'+r._ri+'">'+parseFloat(r.value.toPrecision(6))+'</span>'
                         +'<span class="rec-ts">'+fmtTs(r.timestamp)+' UTC</span>'
                         +'<div class="rec-actions">'
                         +'<button class="rec-btn" onclick="editRec('+r._ri+','+idx+')" title="Edit">✎</button>'
@@ -1092,7 +1198,7 @@ function renderParamsSection(idx){
         :'';
     return '<div class="params-section'+(exp?' expanded':'')+'" id="paramsSec_'+idx+'">'
         +hdr
-        +'<span class="params-preview'+(empty?' empty':'')+'" id="paramsPreview_'+idx+'">'+summary+'</span>'
+        +'<span class="params-preview" id="paramsPreview_'+idx+'">Reef Parameter Tracker</span>'
         +'<button class="params-toggle-btn" id="paramsToggleBtn_'+idx+'" onclick="toggleParams('+idx+')">'+(exp?'▴':'▾')+'</button>'
         +'</div>'
         +'<div class="params-body" id="paramsBody_'+idx+'">'
@@ -1117,5 +1223,5 @@ document.addEventListener('DOMContentLoaded',init);
 </html>
 )rawliteral";
 
-String getLoginHTML(){return String(LOGIN_HTML);}
-String getDashboardHTML(){return String(DASHBOARD_HTML);}
+const char* getLoginHTML(){return LOGIN_HTML;}
+const char* getDashboardHTML(){return DASHBOARD_HTML;}

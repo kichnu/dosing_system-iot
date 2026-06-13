@@ -90,7 +90,8 @@ void handleRoot(AsyncWebServerRequest* request) {
         request->redirect("login");
         return;
     }
-    request->send(200, "text/html", getDashboardHTML());
+    const char* html = getDashboardHTML();
+    request->send(request->beginResponse(200, "text/html", (const uint8_t*)html, strlen(html)));
 }
 
 void handleLogin(AsyncWebServerRequest* request) {
@@ -104,7 +105,8 @@ void handleLogin(AsyncWebServerRequest* request) {
         request->redirect("./");
         return;
     }
-    request->send(200, "text/html", getLoginHTML());
+    const char* html = getLoginHTML();
+    request->send(request->beginResponse(200, "text/html", (const uint8_t*)html, strlen(html)));
 }
 
 void handleApiLogin(AsyncWebServerRequest* request) {
@@ -156,6 +158,44 @@ void handleApiLogin(AsyncWebServerRequest* request) {
         recordFailedLogin(clientIP);
         request->send(401, "application/json", "{\"success\":false,\"error\":\"Invalid password\"}");
         Serial.printf("[WEB] Login FAILED from %s\n", clientIP.toString().c_str());
+    }
+}
+
+void handleApiVerifyPin(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+    IPAddress sourceIP = request->client()->remoteIP();
+    if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
+        request->send(403, "application/json", "{\"error\":\"Forbidden\"}");
+        return;
+    }
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+        return;
+    }
+    // Brak danych = sprawdzenie czy PIN jest skonfigurowany (lazy init zwróci domyślny)
+    if (len == 0) {
+        request->send(200, "application/json", "{\"success\":false}");
+        return;
+    }
+    JsonDocument doc;
+    if (deserializeJson(doc, data, len)) {
+        request->send(400, "application/json", "{\"success\":false}");
+        return;
+    }
+    String pin = doc["pin"] | "";
+    if (pin.isEmpty()) {
+        // Pusty pin = probe: zawsze mamy PIN (lazy init), więc brak "no_password"
+        request->send(200, "application/json", "{\"success\":false,\"has_pin\":true}");
+        return;
+    }
+    LockPin lp;
+    if (!framController.readLockPin(&lp)) {
+        request->send(200, "application/json", "{\"success\":false}");
+        return;
+    }
+    if (strncmp(pin.c_str(), lp.pin, sizeof(lp.pin)) == 0) {
+        request->send(200, "application/json", "{\"success\":true}");
+    } else {
+        request->send(200, "application/json", "{\"success\":false}");
     }
 }
 
@@ -1093,6 +1133,7 @@ void initWebServer() {
     // === API ROUTES ===
     server.on("/api/health", HTTP_GET, handleHealth);
     server.on("/api/login", HTTP_POST, handleApiLogin);
+    server.on("/api/verify-pin", HTTP_POST, [](AsyncWebServerRequest* r){}, NULL, handleApiVerifyPin);
     server.on("/api/logout", HTTP_POST, handleApiLogout);
     server.on("/api/dosing-status", HTTP_GET, handleApiDosingStatus); 
     server.on("/api/dosing-config", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiDosingConfig);

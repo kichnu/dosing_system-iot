@@ -126,7 +126,7 @@ static const uint8_t PUMPS_PINS[CHANNEL_COUNT] = {
 #define MAX_DAILY_DOSE_ML           500.0f
 #define MAX_WEEKLY_DOSE_ML          3500.0f
 #define DEFAULT_DOSING_RATE         0.33f
-#define MIN_DOSING_RATE             0.1f
+#define MIN_DOSING_RATE             (1.0f / CALIBRATION_DURATION_SEC)  // 1 ml/30s ≈ 0.0333 ml/s
 #define MAX_DOSING_RATE             5.0f
 
 // ============================================================================

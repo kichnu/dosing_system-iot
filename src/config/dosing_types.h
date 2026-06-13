@@ -345,6 +345,21 @@ struct SharedNotes {
 static_assert(sizeof(SharedNotes) == 400, "SharedNotes must be 400 bytes");
 
 // ============================================================================
+// LOCK PIN — PIN blokady edycji GUI
+// Przechowywany w FRAM @ FRAM_ADDR_LOCK_PIN (0x0A80), 16B
+// ============================================================================
+
+#pragma pack(push, 1)
+struct LockPin {
+    char     pin[8];        // PIN numeryczny, null-terminated, domyślnie "1234"
+    uint8_t  _reserved[4];
+    uint32_t crc32;
+};
+#pragma pack(pop)
+
+static_assert(sizeof(LockPin) == 16, "LockPin must be 16 bytes");
+
+// ============================================================================
 // PARAM LOG — szablony parametrów + ring buffer pomiarów
 // Przechowywane w FRAM @ FRAM_ADDR_PARAM_LOG
 // ============================================================================
