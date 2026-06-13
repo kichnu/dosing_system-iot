@@ -594,3 +594,25 @@ bool FramController::writeChannelParams(uint8_t channel, const ChannelParams* pa
     tmp.crc32 = calculateCRC32(&tmp, sizeof(ChannelParams) - sizeof(uint32_t));
     return writeBytes(FRAM_ADDR_PARAMS_CH(channel), &tmp, sizeof(ChannelParams));
 }
+
+// ============================================================================
+// SHARED NOTES (pula notatek + per-kanał indeks aktywnej notatki)
+// ============================================================================
+
+bool FramController::readSharedNotes(SharedNotes* notes) {
+    if (!notes) return false;
+    if (!readBytes(FRAM_ADDR_SHARED_NOTES, notes, sizeof(SharedNotes))) return false;
+    uint32_t crc = calculateCRC32(notes, sizeof(SharedNotes) - sizeof(uint32_t));
+    if (notes->crc32 != crc) {
+        memset(notes, 0, sizeof(SharedNotes));
+        return false;
+    }
+    return true;
+}
+
+bool FramController::writeSharedNotes(const SharedNotes* notes) {
+    if (!notes) return false;
+    SharedNotes tmp = *notes;
+    tmp.crc32 = calculateCRC32(&tmp, sizeof(SharedNotes) - sizeof(uint32_t));
+    return writeBytes(FRAM_ADDR_SHARED_NOTES, &tmp, sizeof(SharedNotes));
+}

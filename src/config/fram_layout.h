@@ -42,11 +42,12 @@
 // SESSION_DATA       | 0x0760   | 128 B     | Session persistence
 // CONTAINER_VOLUME   | 0x07E0   | 64 B      | Container vol  (8 × 8B)
 // DOSED_TRACKER      | 0x0820   | 64 B      | Dosed tracker  (8 × 8B)
-// CHANNEL_LABELS     | 0x0860   | 256 B     | Channel names  (8 × 32B)  NEW
-// CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)  NEW
+// CHANNEL_LABELS     | 0x0860   | 256 B     | Channel names  (8 × 32B)
+// CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)
 // PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
 // FREE               | 0x0A80   | 128 B     | Rezerva
-// RESERVED           | 0x0B00   | ~28.9 KB  | Przyszłe użycie
+// SHARED_NOTES       | 0x0B00   | 400 B     | Notes pool + ch_note_idx (12 × 32B + meta)
+// RESERVED           | 0x0C90   | ~28.5 KB  | Przyszłe użycie
 // ============================================================================
 
 // ----------------------------------------------------------------------------
@@ -177,9 +178,16 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 #define FRAM_SIZE_FREE_SPACE        128
 
 // ----------------------------------------------------------------------------
-// RESERVED (0x0B00 - 0x7FFF)  ~28.9 KB
+// SHARED NOTES (0x0B00 - 0x0C8F)  400B
+// Pula 12 notatek shared (12 × 32B) + per-kanał indeks aktywnej notatki
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_RESERVED          0x0B00
+#define FRAM_ADDR_SHARED_NOTES      0x0B00
+#define FRAM_SIZE_SHARED_NOTES      sizeof(SharedNotes)   // 400B
+
+// ----------------------------------------------------------------------------
+// RESERVED (0x0C90 - 0x7FFF)  ~28.5 KB
+// ----------------------------------------------------------------------------
+#define FRAM_ADDR_RESERVED          0x0C90
 #define FRAM_SIZE_RESERVED          (FRAM_SIZE_BYTES - FRAM_ADDR_RESERVED)
 
 // ============================================================================

@@ -143,6 +143,26 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .section-title svg{width:12px;height:12px;color:var(--accent-cyan)}
 .section-info{font-size:var(--font-xs);color:var(--text-muted)}
 .section-body{padding:var(--section-padding)}
+.notes-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
+.notes-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:pointer;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
+.notes-section.expanded .notes-header{border-bottom-color:var(--border)}
+.notes-icon{flex-shrink:0;width:12px;height:12px;color:var(--accent-cyan)}
+.notes-preview{flex:1;font-size:1rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.01em}
+.notes-preview.empty{font-style:italic;font-weight:400;font-size:var(--font-sm);color:var(--text-muted)}
+.notes-toggle-btn{flex-shrink:0;width:24px;height:24px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);font-size:10px;line-height:1}
+.notes-toggle-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
+.notes-list{display:none;flex-direction:column;gap:4px;padding:8px var(--section-padding)}
+.notes-section.expanded .notes-list{display:flex}
+.note-entry{display:flex;align-items:center;gap:6px}
+.note-idx{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-xs);color:var(--text-muted);width:18px;text-align:right;flex-shrink:0}
+.note-input{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;font-size:var(--font-md);color:var(--accent-cyan);outline:none;transition:border-color var(--transition-fast),box-shadow var(--transition-fast)}
+.note-input::placeholder{color:var(--text-muted);font-style:italic;font-size:var(--font-xs)}
+.note-input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 2px rgba(34,211,213,0.12);color:var(--text-primary)}
+.note-input.sel{border-color:rgba(34,211,213,0.35);background:rgba(34,211,213,0.03)}
+.note-sel-btn{flex-shrink:0;width:18px;height:18px;border:none;background:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color var(--transition-fast);padding:0}
+.note-sel-btn:hover,.note-sel-btn.active{color:var(--accent-cyan)}
+.note-sel-btn svg{width:10px;height:10px}
+.notes-hint{font-size:var(--font-xs);color:var(--text-muted);text-align:center;padding:2px 0;font-style:italic}
 
 .events-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .event-slot{position:relative}
@@ -180,16 +200,15 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .day-slot.today .day-lbl{border-width:2px}
 .day-slot.today .day-name::after{content:'';display:inline-block;width:4px;height:4px;background:var(--accent-yellow);border-radius:50%;margin-left:3px;vertical-align:middle}
 
-.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--text-secondary);text-align:center}
+.volume-input{width:100%;height:var(--input-height);padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);color:var(--accent-cyan);text-align:center}
 .volume-input:focus{outline:none;border-color:var(--accent-cyan);box-shadow:0 0 0 2px rgba(34,211,213,0.15)}
 .params-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0}
 .param-item{display:flex;flex-direction:column;gap:4px}
 .param-lbl{font-size:var(--font-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
 .param-lbl.low{color:var(--accent-red)}
-.param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:700;letter-spacing:0.03em;color:var(--text-secondary);display:flex;align-items:center;justify-content:center}
-.param-val.hl{color:var(--accent-cyan)}
+.param-val{height:var(--day-slot-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:700;letter-spacing:0.03em;color:var(--accent-cyan);display:flex;align-items:center;justify-content:center}
 .param-bar-box{min-height:var(--input-height);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;display:flex;flex-direction:column;justify-content:center;gap:4px}
-.param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--text-secondary)}
+.param-bar-val{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-sm);font-weight:600;color:var(--accent-cyan)}
 .param-bar-val.low{color:var(--accent-red)}
 .valid-msg{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:500;flex-shrink:0}
 .valid-msg svg{width:14px;height:14px;flex-shrink:0}
@@ -300,6 +319,10 @@ let activeEventHour=-1;
 let touchStart={x:0,y:0};
 let editingChannel=-1;
 let pendingRefillChannel=-1;
+let sharedNotes=Array(12).fill('');
+let chNoteIdx=Array(8).fill(0);
+let notesExpanded=Array(8).fill(false);
+let editingNotes=false;
 
 function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
@@ -312,6 +335,7 @@ function init(){
     setInterval(updateClock,1000);
     loadStatus();
     setInterval(loadStatus,5000);
+    loadNotes();
 }
 
 
@@ -394,9 +418,10 @@ function renderChannelCard(ch,idx){
 <div class="channel-nav">${navBtns}</div>
 <div class="card-body">
 <div class="card-content">
+${renderNotesSection(idx)}
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="section-info" id="evInfo_${idx}">${evCnt} of ${CFG.EVENTS_PER_DAY}</div></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="section-info" id="dayInfo_${idx}">${dayCnt} of 7</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val hl" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-secondary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
+<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Configuration</div></div><div class="section-body"><div class="config-groups"><div class="config-group dose-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Daily Dose (ml)</label><input type="number" class="volume-input" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></div><div class="param-item"><div class="param-lbl">Single Dose</div><div class="param-val" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="param-item"><div class="param-lbl">Pump Time</div><div class="param-val" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="param-item"><div class="param-lbl">Weekly</div><div class="param-val" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div></div><div class="config-group container-group"><div class="params-grid"><div class="param-item"><label class="param-lbl">Container Size (ml)</label><input type="number" class="volume-input" id="container_${idx}" value="${ch.containerMl||1000}" step="10" min="100" max="5000" onchange="saveContainerSize(${idx})"></div><div class="param-item"><div class="param-lbl">Days Left</div><div class="param-val" id="daysLeft_${idx}">${ch.daysRemaining?ch.daysRemaining.toFixed(1):'∞'}</div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl ${ch.lowVolume?'low':''}">Remaining</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val ${ch.lowVolume?'low':''}" id="remainingLabel_${idx}">${(ch.remainingMl||1000).toFixed(0)}</span><div class="container-bar"><div class="container-bar-fill ${ch.lowVolume?'low':''}" id="containerBar_${idx}" style="width:${ch.remainingPct||100}%"></div></div></div></div><div class="param-item"><div class="param-lbl-row"><span class="param-lbl">Dosed</span><span class="param-unit">ML</span></div><div class="param-bar-box"><span class="param-bar-val" id="dosedLabel_${idx}">${(ch.totalDosedMl||0).toFixed(1)}</span><div class="container-bar"><div class="container-bar-fill dosed" id="dosedBar_${idx}" style="width:${weekly>0?Math.min(100,(ch.totalDosedMl||0)/weekly*100):0}%"></div></div></div></div></div></div></div><div class="calib-section"><div class="param-lbl">Pump Calibration</div><div class="calib-inner"><input type="number" class="calib-input-field" id="calibMl_${idx}" placeholder="— ml" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})">Run Pump (30s)</button></div></div><div class="params-actions"><button class="btn btn-primary" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-primary" onclick="showRefillModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Refill</button><button class="btn btn-primary" onclick="resetDosed(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset Dosed</button></div><div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div></div></div>
 </div>
 </div>
 </div></div>`;
@@ -417,7 +442,18 @@ function attachCardEvents(idx){
             if(document.activeElement!==doseInput&&document.activeElement!==calibInput)editingChannel=-1;
         });
     }
+    for(let ni=0;ni<12;ni++){const inp=document.getElementById('noteInput_'+idx+'_'+ni);if(inp){inp.addEventListener('focus',()=>{editingNotes=true;if(chNoteIdx[idx]!==ni)selectNote(idx,ni);});inp.addEventListener('blur',()=>onNoteBlur(idx,ni,inp.value));inp.addEventListener('keydown',e=>{if(e.key==='Enter'){inp.blur();e.preventDefault();}if(e.key==='Escape'){inp.value=sharedNotes[ni]||'';editingNotes=false;inp.blur();}});}}
 }
+
+function loadNotes(){fetch('api/notes').then(r=>r.json()).then(d=>{if(Array.isArray(d.notes))sharedNotes=d.notes;if(Array.isArray(d.ch_note_idx))chNoteIdx=d.ch_note_idx;for(let i=0;i<CFG.CHANNEL_COUNT;i++)refreshNotesPreview(i);}).catch(()=>{});}
+function saveNotes(){fetch('api/notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({notes:sharedNotes,ch_note_idx:chNoteIdx})}).catch(()=>{});}
+function toggleNotes(idx){notesExpanded[idx]=!notesExpanded[idx];const s=document.getElementById('notesSec_'+idx);const b=document.getElementById('notesToggleBtn_'+idx);if(s)s.classList.toggle('expanded',notesExpanded[idx]);if(b)b.textContent=notesExpanded[idx]?'▴':'▾';}
+function selectNote(ch,ni){const prev=chNoteIdx[ch];chNoteIdx[ch]=ni;[prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+ch+'_'+i);const btn=document.getElementById('noteSelBtn_'+ch+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});refreshNotesPreview(ch);saveNotes();}
+function onNoteBlur(ch,ni,val){editingNotes=false;const t=val.slice(0,30);if(sharedNotes[ni]===t)return;sharedNotes[ni]=t;for(let c=0;c<CFG.CHANNEL_COUNT;c++){const inp=document.getElementById('noteInput_'+c+'_'+ni);if(inp&&inp!==document.activeElement)inp.value=t;refreshNotesPreview(c);}saveNotes();}
+function refreshNotesPreview(ch){const p=document.getElementById('notesPreview_'+ch);if(!p)return;const t=sharedNotes[chNoteIdx[ch]]||'';const empty=!t.trim();p.textContent=empty?'— no note —':t;p.classList.toggle('empty',empty);}
+function selSvg(f){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"'+(f?' fill="currentColor"':'')+'/></svg>';}
+function escAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="30" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+')">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header" onclick="toggleNotes('+idx+')"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="event.stopPropagation();toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
 
 function updateChannel(idx){
     const ch=channels[idx];
@@ -548,7 +584,7 @@ function loadStatus(){
                 channels[i].eventsFailed=chData.eventsFailed||0;
                 channels[i].state=chData.state||'inactive';
             });
-            if(editingChannel===-1){
+            if(editingChannel===-1&&!editingNotes){
                 renderChannels();
             } else {
                 // Re-render zablokowany (user edytuje) — odśwież tylko kontrolki wolumenu i dozowania

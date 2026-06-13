@@ -99,6 +99,10 @@ public:
     bool writeChannelLabel(uint8_t channel, const ChannelLabel* label);
     bool readChannelParams(uint8_t channel, ChannelParams* params);
     bool writeChannelParams(uint8_t channel, const ChannelParams* params);
+
+    // --- Shared Notes ---
+    bool readSharedNotes(SharedNotes* notes);
+    bool writeSharedNotes(const SharedNotes* notes);
     
     // --- Utility ---
     

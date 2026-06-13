@@ -878,6 +878,81 @@ void handleNotFound(AsyncWebServerRequest* request) {
 }
 
 // ============================================================================
+// API: SHARED NOTES — GET
+// ============================================================================
+
+void handleApiNotesGet(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+        return;
+    }
+    if (framBusy) {
+        request->send(503, "application/json", "{\"error\":\"FRAM busy\"}");
+        return;
+    }
+    SharedNotes notes;
+    framController.readSharedNotes(&notes);  // zwraca zerowy blok jeśli CRC fail — OK
+
+    JsonDocument doc;
+    JsonArray notesArr = doc["notes"].to<JsonArray>();
+    for (int i = 0; i < 12; i++) {
+        notesArr.add(notes.notes[i].text);
+    }
+    JsonArray idxArr = doc["ch_note_idx"].to<JsonArray>();
+    for (int i = 0; i < 8; i++) {
+        idxArr.add(notes.ch_note_idx[i]);
+    }
+    String response;
+    serializeJson(doc, response);
+    request->send(200, "application/json", response);
+}
+
+// ============================================================================
+// API: SHARED NOTES — POST
+// ============================================================================
+
+void handleApiNotesPost(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+    static String bodyBuffer;
+    if (index == 0) bodyBuffer = "";
+    bodyBuffer += String((char*)data).substring(0, len);
+    if (index + len < total) return;
+
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
+        bodyBuffer = "";
+        return;
+    }
+
+    JsonDocument doc;
+    if (deserializeJson(doc, bodyBuffer) != DeserializationError::Ok) {
+        request->send(400, "application/json", "{\"success\":false,\"error\":\"Invalid JSON\"}");
+        bodyBuffer = "";
+        return;
+    }
+    bodyBuffer = "";
+
+    SharedNotes notes;
+    memset(&notes, 0, sizeof(notes));
+
+    JsonArray notesArr = doc["notes"].as<JsonArray>();
+    for (int i = 0; i < 12 && i < (int)notesArr.size(); i++) {
+        const char* text = notesArr[i] | "";
+        strncpy(notes.notes[i].text, text, 30);
+        notes.notes[i].text[29] = '\0';
+        notes.notes[i].flags = (strlen(notes.notes[i].text) > 0) ? 1 : 0;
+    }
+
+    JsonArray idxArr = doc["ch_note_idx"].as<JsonArray>();
+    for (int i = 0; i < 8 && i < (int)idxArr.size(); i++) {
+        uint8_t idx = (uint8_t)(idxArr[i] | 0);
+        notes.ch_note_idx[i] = (idx < 12) ? idx : 0;
+    }
+
+    bool ok = framController.writeSharedNotes(&notes);
+    request->send(200, "application/json", ok ? "{\"success\":true}" : "{\"success\":false,\"error\":\"FRAM write failed\"}");
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -909,6 +984,10 @@ void initWebServer() {
     server.on("/api/container-volume", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiContainerVolumeSet);
     server.on("/api/refill", HTTP_POST, handleApiRefill);
     server.on("/api/reset-dosed", HTTP_POST, handleApiResetDosed);
+
+    // === SHARED NOTES API ===
+    server.on("/api/notes", HTTP_GET, handleApiNotesGet);
+    server.on("/api/notes", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiNotesPost);
 
     // === PUMP MONITOR (Edge Impulse — stub, future implementation) ===
     server.on("/api/pump-monitor-status", HTTP_GET, [](AsyncWebServerRequest* request) {

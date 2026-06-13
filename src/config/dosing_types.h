@@ -320,6 +320,31 @@ struct ChannelParams {
 static_assert(sizeof(ChannelParams) == 32, "ChannelParams must be 32 bytes");
 
 // ============================================================================
+// SHARED NOTES (400 bajtów, packed — wspólna pula notatek dla wszystkich kanałów)
+// ============================================================================
+
+#pragma pack(push, 1)
+
+struct NoteEntry {
+    char    text[30];   // treść notatki, null-terminated, max 30 znaków
+    uint8_t flags;      // bit0: slot wypełniony
+    uint8_t _pad;
+};
+
+static_assert(sizeof(NoteEntry) == 32, "NoteEntry must be 32 bytes");
+
+struct SharedNotes {
+    NoteEntry notes[12];        // 12 × 32B = 384B
+    uint8_t   ch_note_idx[8];   // indeks aktywnej notatki per kanał (8B)
+    uint8_t   _pad[4];          // 4B
+    uint32_t  crc32;            // 4B — OSTATNIE POLE, spójnie z resztą
+};
+
+#pragma pack(pop)
+
+static_assert(sizeof(SharedNotes) == 400, "SharedNotes must be 400 bytes");
+
+// ============================================================================
 // PUMP MONITOR STATUS (tylko RAM — dane z Edge Impulse ESP32 przez UART)
 // ============================================================================
 

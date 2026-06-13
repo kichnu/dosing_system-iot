@@ -1,0 +1,110 @@
+DOZOWNIK — FRAM Memory Map
+MB85RC256V  32 kB (0x0000 – 0x7FFF)
+Layout version: 8
+=============================================================
+
+Address  End      Size    Section           Description
+-------- -------- ------- ----------------- ----------------------------
+0x0000   0x001F    32 B   HEADER            Magic "DOZA", version, CRC
+0x0020   0x041F  1024 B   CREDENTIALS       WiFi SSID+pass, AES-enc
+                          *** DOLEWKA compat — nie ruszać ***
+0x0420   0x043F    32 B   SYSTEM_STATE      Global flags, boot count
+0x0440   0x053F   256 B   ACTIVE_CONFIG     8 kanałów × 32B (aktywna)
+0x0540   0x063F   256 B   PENDING_CONFIG    8 kanałów × 32B (pending)
+0x0640   0x06FF   192 B   DAILY_STATE       8 kanałów × 24B
+0x0700   0x071F    32 B   CRITICAL_ERROR    Błąd krytyczny (przetrwa reset)
+0x0720   0x075F    64 B   AUTH_DATA         Hash hasła admina + sól
+0x0760   0x07DF   128 B   SESSION_DATA      Sesje HTTP
+0x07E0   0x081F    64 B   CONTAINER_VOLUME  8 × 8B (pojemność zbiornika)
+0x0820   0x085F    64 B   DOSED_TRACKER     8 × 8B (dozowane sumarycznie)
+0x0860   0x095F   256 B   CHANNEL_LABELS    8 × 32B (nazwy kanałów)
+0x0960   0x0A5F   256 B   CHANNEL_PARAMS    8 × 32B (min/max dawki)
+0x0A60   0x0A7F    32 B   PUMP_MON_CONFIG   Edge Impulse — rezerwacja
+0x0A80   0x0AFF   128 B   FREE              Wolna rezerwa
+0x0B00   0x0C8F   400 B   SHARED_NOTES      12 notatek × 32B + idx[8] + CRC
+0x0C90   0x7FFF  ~28.5 KB RESERVED          Przyszłe użycie
+
+-------------------------------------------------------------
+Zużyte (zdefiniowane):  0x0C90 = 3216 B  (~3.1 KB)
+Dostępne (RESERVED):   0x7370 = 29552 B  (~28.9 KB)
+Łącznie FRAM:          0x8000 = 32768 B  ( 32.0 KB)
+
+=============================================================
+Szczegóły sekcji
+=============================================================
+
+HEADER (0x0000, 32B)
+  uint32  magic           "DOZA" = 0x444F5A41
+  uint16  layout_version  8
+  uint16  channel_count
+  uint32  init_timestamp
+  uint32  last_write
+  uint8   flags
+  uint8   _reserved[11]
+  uint32  header_crc
+
+ACTIVE_CONFIG / PENDING_CONFIG — ChannelConfig (32B × 8)
+  uint32  events_bitmask  bity 2,4,6,...,22 = godziny zdarzeń
+  uint8   days_bitmask    bity 0-6 = Pon-Ndz
+  uint8   _reserved1[3]
+  float   daily_dose_ml
+  float   dosing_rate     ml/s
+  uint8   enabled
+  uint8   has_pending
+  uint8   _reserved2[2]
+  uint32  crc32
+  uint8   _padding[8]
+
+DAILY_STATE — ChannelDailyState (24B × 8)
+  uint32  events_completed  bitmask
+  uint32  events_failed     bitmask
+  float   today_added_ml
+  uint8   last_reset_day
+  uint8   failed_count
+  uint8   _reserved[2]
+  uint32  crc32
+  uint8   _padding[4]
+
+CONTAINER_VOLUME — ContainerVolume (8B × 8)
+  uint16  container_ml    × 10 (0.1 ml precision)
+  uint16  remaining_ml    × 10
+  uint32  crc32
+
+DOSED_TRACKER — DosedTracker (8B × 8)
+  uint16  total_dosed_ml  × 10
+  uint16  _reserved
+  uint32  crc32
+
+CHANNEL_LABELS — ChannelLabel (32B × 8)
+  char    name[20]
+  uint8   _reserved[8]
+  uint32  crc32
+
+CHANNEL_PARAMS — ChannelParams (32B × 8)
+  float   min_single_dose_ml
+  float   max_single_dose_ml
+  float   max_daily_dose_ml
+  float   _reserved_f
+  uint8   _reserved[12]
+  uint32  crc32
+
+SHARED_NOTES (0x0B00, 400B)
+  NoteEntry notes[12]       12 × 32B = 384B
+    char    text[30]          treść, null-terminated
+    uint8   flags             bit0: slot wypełniony
+    uint8   _pad
+  uint8   ch_note_idx[8]    indeks aktywnej notatki per kanał
+  uint8   _pad[4]
+  uint32  crc32             obejmuje wszystkie pola przed sobą (396B)
+
+=============================================================
+Notatki implementacyjne
+=============================================================
+
+- CRC32 liczy się zawsze nad sizeof(Struct) - sizeof(uint32_t) bajtami
+  (uint32_t crc32 jest OSTATNIM polem każdej struktury)
+- Niezgodność header.layout_version → automatyczny factory reset
+- CREDENTIALS (0x0020-0x041F) kompatybilne z projektem DOLEWKA —
+  ten zakres adresów nigdy nie może zostać zmieniony
+- SHARED_NOTES: zapis całego bloku 400B przy każdej edycji notatki
+  (FRAM MB85RC256V: 10^12 cykli zapisu — zużycie nie jest problemem)

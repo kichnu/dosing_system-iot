@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOZOWNIK – Notes Prototype</title>
+<style>
+/* ── Variables ─────────────────────────────────────────────────────── */
+:root {
+  --bg-primary:   #0a0f1a;
+  --bg-card:      #111827;
+  --bg-card-hover:#1a2332;
+  --bg-input:     #1e293b;
+  --border:       #2d3a4f;
+  --border-light: #3d4f6a;
+  --text-primary: #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:   #64748b;
+  --accent-blue:  #38bdf8;
+  --accent-cyan:  #22d3d5;
+  --accent-green: #22c55e;
+  --accent-red:   #ef4444;
+  --radius:       12px;
+  --radius-md:    10px;
+  --radius-sm:    8px;
+  --font-xs:      0.6rem;
+  --font-sm:      0.7rem;
+  --font-md:      0.8rem;
+  --font-lg:      0.95rem;
+  --card-width:   800px;
+  --card-padding: 12px;
+  --section-gap:  10px;
+  --section-padding: 10px;
+  --header-height: 44px;
+  --btn-height:   40px;
+  --input-height: 38px;
+  --transition-fast: 0.15s ease;
+}
+
+/* ── Reset & base ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 18px; height: 18px; fill: var(--bg-primary); }
+.logo-text { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+.topbar-badge {
+  font-size: var(--font-xs); font-weight: 600;
+  color: var(--accent-cyan); background: rgba(34,211,213,0.1);
+  border: 1px solid rgba(34,211,213,0.25);
+  padding: 3px 8px; border-radius: 10px; letter-spacing: 0.05em;
+}
+
+/* ── Channel nav ────────────────────────────────────────────────────── */
+.channel-nav {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  padding: 8px var(--card-padding);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  max-width: var(--card-width);
+  margin: 0 auto;
+  width: 100%;
+}
+.ch-nav-btn {
+  height: 32px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-sm); font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.ch-nav-btn:hover { border-color: var(--border-light); color: var(--text-primary); }
+.ch-nav-btn.active {
+  background: rgba(34,211,213,0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* ── Card layout ────────────────────────────────────────────────────── */
+.cards-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.channel-card {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  overflow: hidden; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+  display: flex; justify-content: center;
+}
+.channel-card.active { opacity: 1; pointer-events: auto; }
+.card-inner {
+  width: 100%; max-width: var(--card-width); height: 100%;
+  display: flex; flex-direction: column;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.card-body {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.card-content {
+  padding: var(--card-padding);
+  display: flex; flex-direction: column;
+  gap: var(--section-gap);
+}
+
+/* ── Section (generic) ──────────────────────────────────────────────── */
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px var(--section-padding);
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid var(--border);
+}
+.section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--font-sm); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.section-title svg { width: 12px; height: 12px; color: var(--accent-cyan); }
+.section-body { padding: var(--section-padding); }
+
+/* ── NOTES SECTION ──────────────────────────────────────────────────── */
+.notes-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Collapsed header — the single visible line */
+.notes-header {
+  display: flex; align-items: center;
+  padding: 9px var(--section-padding);
+  background: rgba(0,0,0,0.2);
+  cursor: default;
+  gap: 8px;
+  transition: border-bottom-color var(--transition-fast);
+  border-bottom: 1px solid transparent; /* hidden when collapsed */
+  min-height: 40px;
+}
+.notes-section.expanded .notes-header {
+  border-bottom-color: var(--border);
+}
+.notes-icon {
+  flex-shrink: 0;
+  width: 12px; height: 12px;
+  color: var(--accent-cyan);
+}
+/* The note text — font like DOZOWNIK logo (1rem / 700) */
+.notes-preview {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+.notes-preview.empty {
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+.notes-counter {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+.notes-toggle-btn {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition-fast);
+  font-size: 10px;
+  line-height: 1;
+}
+.notes-toggle-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(34,211,213,0.08);
+}
+
+/* Expanded list */
+.notes-list {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px var(--section-padding);
+}
+.notes-section.expanded .notes-list { display: flex; }
+
+.note-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.note-index {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.note-input {
+  flex: 1;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--font-md);
+  color: var(--accent-cyan);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.note-input::placeholder { color: var(--text-muted); font-style: italic; font-size: var(--font-sm); }
+.note-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(34,211,213,0.12);
+  color: var(--text-primary);
+}
+.note-input.selected-for-ch {
+  border-color: rgba(34,211,213,0.4);
+  background: rgba(34,211,213,0.04);
+}
+.note-sel-btn {
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  border: none; background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  transition: color var(--transition-fast);
+  padding: 0;
+}
+.note-sel-btn:hover { color: var(--accent-cyan); }
+.note-sel-btn.active { color: var(--accent-cyan); }
+.note-sel-btn svg { width: 12px; height: 12px; }
+
+.notes-hint {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4px 0 2px;
+  font-style: italic;
+}
+
+/* ── Simplified TIME SCHEDULE section (stub) ────────────────────────── */
+.section-stub .section-body {
+  display: flex; align-items: center; justify-content: center;
+  height: 60px;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  font-style: italic;
+}
+
+/* ── Save indicator ─────────────────────────────────────────────────── */
+.save-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(34,211,213,0.15); border: 1px solid rgba(34,211,213,0.3);
+  color: var(--accent-cyan);
+  padding: 8px 18px; border-radius: 20px;
+  font-size: var(--font-sm); font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  z-index: 100;
+}
+.save-toast.show {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8 2 4 5 4 9c0 5 8 13 8 13s8-8 8-13c0-4-4-7-8-7zm0 9a2 2 0 110-4 2 2 0 010 4z"/></svg>
+    </div>
+    <span class="logo-text">DOZOWNIK</span>
+  </div>
+  <span class="topbar-badge">NOTES PROTOTYPE</span>
+</div>
+
+<!-- Channel nav -->
+<div class="channel-nav" id="channelNav"></div>
+
+<!-- Cards viewport -->
+<div class="cards-viewport" id="cardsViewport"></div>
+
+<!-- Save toast -->
+<div class="save-toast" id="saveToast">Saved</div>
+
+<script>
+// ── Shared notes pool (RAM — 12 × 30 chars max) ──────────────────────
+const MAX_NOTES = 12;
+const MAX_CHARS = 30;
+
+const sharedNotes = [
+  "Nawóz A – makroelementy NPK",
+  "Nawóz B – mikroelementy",
+  "Żelazo chelat EDDHA 6%",
+  "pH Down – korekta kwasowości",
+  "Potas siarczan K2SO4",
+  "Magnez siarczan MgSO4·7H₂O",
+  "Wapń azotan Ca(NO3)2",
+  "Fosfor – mono potasowy",
+  "",
+  "",
+  "",
+  "",
+];
+
+// Per-channel selected note index (default 0 = first note)
+const CHANNEL_COUNT = 8;
+const channelNoteIdx = Array.from({ length: CHANNEL_COUNT }, (_, i) =>
+  i < 4 ? i : 0
+);
+
+let currentChannel = 0;
+
+// ── Toast ────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg = "Saved") {
+  const t = document.getElementById('saveToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// ── Count filled notes ───────────────────────────────────────────────
+function filledCount() {
+  return sharedNotes.filter(n => n.trim().length > 0).length;
+}
+
+// ── Render single notes section for a channel ────────────────────────
+function renderNotesSection(chIdx) {
+  const selIdx   = channelNoteIdx[chIdx];
+  const selText  = sharedNotes[selIdx] || '';
+  const isEmpty  = selText.trim().length === 0;
+  const count    = filledCount();
+  const expanded = false; // start collapsed
+
+  const entries = sharedNotes.map((text, i) => {
+    const isSel = (i === channelNoteIdx[chIdx]);
+    return `
+      <div class="note-entry" id="entry-ch${chIdx}-${i}">
+        <span class="note-index">${i + 1}</span>
+        <input
+          class="note-input${isSel ? ' selected-for-ch' : ''}"
+          id="noteInput-ch${chIdx}-${i}"
+          type="text"
+          maxlength="${MAX_CHARS}"
+          value="${escHtml(text)}"
+          placeholder="— empty —"
+          data-ch="${chIdx}"
+          data-idx="${i}"
+        >
+        <button
+          class="note-sel-btn${isSel ? ' active' : ''}"
+          id="noteSelBtn-ch${chIdx}-${i}"
+          title="Ustaw jako aktywną dla ch${chIdx + 1}"
+          onclick="selectNote(${chIdx}, ${i})"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="4" ${isSel ? 'fill="currentColor"' : ''}/>
+          </svg>
+        </button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="notes-section" id="notesSec-ch${chIdx}">
+      <div class="notes-header" onclick="toggleNotes(${chIdx})">
+        <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span class="notes-preview${isEmpty ? ' empty' : ''}" id="notesPreview-ch${chIdx}">
+          ${isEmpty ? '— no note selected —' : escHtml(selText)}
+        </span>
+        <span class="notes-counter" id="notesCounter-ch${chIdx}">${count}/${MAX_NOTES}</span>
+        <button class="notes-toggle-btn" id="notesToggleBtn-ch${chIdx}" onclick="event.stopPropagation(); toggleNotes(${chIdx})">▾</button>
+      </div>
+      <div class="notes-list" id="notesList-ch${chIdx}">
+        ${entries}
+        <div class="notes-hint">blur = auto-save · kliknij ◉ = ustaw dla tego kanału</div>
+      </div>
+    </div>`;
+}
+
+// ── Toggle expand/collapse ───────────────────────────────────────────
+function toggleNotes(chIdx) {
+  const sec = document.getElementById(`notesSec-ch${chIdx}`);
+  const btn = document.getElementById(`notesToggleBtn-ch${chIdx}`);
+  const isExp = sec.classList.toggle('expanded');
+  btn.textContent = isExp ? '▴' : '▾';
+}
+
+// ── Select note for channel ──────────────────────────────────────────
+function selectNote(chIdx, noteIdx) {
+  const prev = channelNoteIdx[chIdx];
+
+  // Deactivate previous
+  const prevInput = document.getElementById(`noteInput-ch${chIdx}-${prev}`);
+  const prevBtn   = document.getElementById(`noteSelBtn-ch${chIdx}-${prev}`);
+  if (prevInput) prevInput.classList.remove('selected-for-ch');
+  if (prevBtn)   { prevBtn.classList.remove('active'); prevBtn.innerHTML = selBtnSvg(false); }
+
+  channelNoteIdx[chIdx] = noteIdx;
+
+  // Activate new
+  const newInput = document.getElementById(`noteInput-ch${chIdx}-${noteIdx}`);
+  const newBtn   = document.getElementById(`noteSelBtn-ch${chIdx}-${noteIdx}`);
+  if (newInput) newInput.classList.add('selected-for-ch');
+  if (newBtn)   { newBtn.classList.add('active'); newBtn.innerHTML = selBtnSvg(true); }
+
+  updatePreview(chIdx);
+  showToast(`Ch${chIdx + 1} → note ${noteIdx + 1}`);
+}
+
+function selBtnSvg(filled) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <circle cx="12" cy="12" r="4" ${filled ? 'fill="currentColor"' : ''}/>
+  </svg>`;
+}
+
+// ── Auto-save on blur ────────────────────────────────────────────────
+function onNoteBlur(chIdx, noteIdx, value) {
+  const trimmed = value.slice(0, MAX_CHARS);
+  if (sharedNotes[noteIdx] === trimmed) return;
+
+  sharedNotes[noteIdx] = trimmed;
+
+  // Sync the same note index across all channel cards
+  for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
+    const inp = document.getElementById(`noteInput-ch${ch}-${noteIdx}`);
+    if (inp && inp !== document.activeElement) inp.value = trimmed;
+    updatePreview(ch);
+  }
+  updateAllCounters();
+  showToast('Saved');
+}
+
+// ── Update collapsed preview text ────────────────────────────────────
+function updatePreview(chIdx) {
+  const preview = document.getElementById(`notesPreview-ch${chIdx}`);
+  if (!preview) return;
+  const text = sharedNotes[channelNoteIdx[chIdx]] || '';
+  const empty = text.trim().length === 0;
+  preview.textContent = empty ? '— no note selected —' : text;
+  preview.classList.toggle('empty', empty);
+}
+
+// ── Update all counters ──────────────────────────────────────────────
+function updateAllCounters() {
+  const count = filledCount();
+  for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
+    const el = document.getElementById(`notesCounter-ch${ch}`);
+    if (el) el.textContent = `${count}/${MAX_NOTES}`;
+  }
+}
+
+// ── Escape HTML ──────────────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Build UI ─────────────────────────────────────────────────────────
+function buildUI() {
+  // Nav buttons
+  const nav = document.getElementById('channelNav');
+  nav.innerHTML = Array.from({ length: CHANNEL_COUNT }, (_, i) =>
+    `<button class="ch-nav-btn${i === 0 ? ' active' : ''}" onclick="switchChannel(${i})">CH${i + 1}</button>`
+  ).join('');
+
+  // Cards
+  const vp = document.getElementById('cardsViewport');
+  vp.innerHTML = Array.from({ length: CHANNEL_COUNT }, (_, chIdx) => `
+    <div class="channel-card${chIdx === 0 ? ' active' : ''}" id="card-ch${chIdx}">
+      <div class="card-inner">
+        <div class="card-body">
+          <div class="card-content">
+
+            ${renderNotesSection(chIdx)}
+
+            <!-- TIME SCHEDULE stub -->
+            <div class="section section-stub">
+              <div class="section-header">
+                <div class="section-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12,6 12,12 16,14"/>
+                  </svg>
+                  Time Schedule
+                </div>
+              </div>
+              <div class="section-body">[ schedule content ]</div>
+            </div>
+
+            <!-- CONFIGURATION stub -->
+            <div class="section section-stub">
+              <div class="section-header">
+                <div class="section-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                  </svg>
+                  Configuration
+                </div>
+              </div>
+              <div class="section-body">[ config content ]</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Attach blur listeners after DOM is built
+  for (let chIdx = 0; chIdx < CHANNEL_COUNT; chIdx++) {
+    for (let i = 0; i < MAX_NOTES; i++) {
+      const inp = document.getElementById(`noteInput-ch${chIdx}-${i}`);
+      if (inp) {
+        inp.addEventListener('blur', () => onNoteBlur(chIdx, i, inp.value));
+        inp.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { inp.blur(); e.preventDefault(); }
+          if (e.key === 'Escape') {
+            inp.value = sharedNotes[i]; // revert
+            inp.blur();
+          }
+        });
+        // Clicking input also selects it for this channel
+        inp.addEventListener('focus', () => {
+          if (channelNoteIdx[chIdx] !== i) selectNote(chIdx, i);
+        });
+      }
+    }
+  }
+}
+
+// ── Switch channel ────────────────────────────────────────────────────
+function switchChannel(idx) {
+  document.querySelectorAll('.ch-nav-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('.channel-card').forEach((c, i) => c.classList.toggle('active', i === idx));
+  currentChannel = idx;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+buildUI();
+</script>
+</body>
+</html>
