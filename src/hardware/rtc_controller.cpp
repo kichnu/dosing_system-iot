@@ -5,6 +5,7 @@
  */
 
 #include "rtc_controller.h"
+#include "hw_health.h"
 #include <WiFi.h>
 #include <time.h>
 
@@ -120,10 +121,9 @@ bool RtcController::begin() {
     uint8_t status = _readRegister(DS3231_REG_STATUS);
     if (status & 0x80) {
         Serial.println(F("[RTC] WARNING: Oscillator was stopped, time invalid"));
+        // OSF stays set until a real time is written (setTime), so the next
+        // boot cannot take this time for a valid one
         _timeValid = false;
-        
-        // Clear OSF flag
-        _writeRegister(DS3231_REG_STATUS, status & ~0x80);
     } else {
         _timeValid = true;
     }
@@ -151,20 +151,14 @@ bool RtcController::begin() {
 // READ TIME
 // ============================================================================
 
-TimeInfo RtcController::getTime() {
-    TimeInfo t;
-    
-    if (!_initialized) {
-        memset(&t, 0, sizeof(t));
-        return t;
-    }
-    
+bool RtcController::readTime(TimeInfo* out) {
     Wire.beginTransmission(RTC_I2C_ADDRESS);
     Wire.write(DS3231_REG_SECONDS);
-    Wire.endTransmission();
-    
-    Wire.requestFrom((uint8_t)RTC_I2C_ADDRESS, (uint8_t)7);
-    
+    if (Wire.endTransmission() != 0) return false;
+
+    if (Wire.requestFrom((uint8_t)RTC_I2C_ADDRESS, (uint8_t)7) != 7) return false;
+
+    TimeInfo t;
     t.second = _bcd2dec(Wire.read() & 0x7F);
     t.minute = _bcd2dec(Wire.read());
     t.hour = _bcd2dec(Wire.read() & 0x3F);  // 24h format
@@ -172,11 +166,50 @@ TimeInfo RtcController::getTime() {
     t.day = _bcd2dec(Wire.read());
     t.month = _bcd2dec(Wire.read() & 0x1F);
     t.year = 2000 + _bcd2dec(Wire.read());
-    
+
+    if (t.year < NTP_MIN_VALID_YEAR || t.month < 1 || t.month > 12 || t.day < 1 || t.day > 31 ||
+        t.hour > 23 || t.minute > 59 || t.second > 59) {
+        return false;
+    }
+
     // Calculate day of week (0=Mon, 6=Sun)
     t.dayOfWeek = _calcDayOfWeek(t.year, t.month, t.day);
-    
-    return t;
+
+    *out = t;
+    return true;
+}
+
+TimeInfo RtcController::getTime() {
+    if (!_initialized) {
+        TimeInfo t;
+        memset(&t, 0, sizeof(t));
+        return t;
+    }
+
+    TimeInfo t;
+    if (readTime(&t)) {
+        _lastGoodTime = t;
+        return t;
+    }
+
+    // Keep the last good time: a garbage value could look like a new day or a due slot
+    noteRtcIoError();
+    return _lastGoodTime;
+}
+
+bool RtcController::recoverTimeFromNtp() {
+    if (!_initialized || WiFi.status() != WL_CONNECTED) return false;
+
+    if (!_ntpRecoveryStarted) {
+        configTime(NTP_GMT_OFFSET_SEC, NTP_DAYLIGHT_OFFSET_SEC,
+                   NTP_SERVER_1, NTP_SERVER_2, NTP_SERVER_3);
+        _ntpRecoveryStarted = true;
+    }
+
+    time_t now = 0;
+    time(&now);
+    if (now <= 1704067200) return false;  // No NTP answer yet (2024-01-01 UTC)
+    return setUnixTime((uint32_t)now);
 }
 
 uint32_t RtcController::getUnixTime() {
@@ -223,6 +256,9 @@ bool RtcController::setTime(const TimeInfo& time) {
         return false;
     }
     
+    // The stored time is real again
+    _writeRegister(DS3231_REG_STATUS, _readRegister(DS3231_REG_STATUS) & ~0x80);
+
     _timeValid = true;
     _lastDay = time.day;
     

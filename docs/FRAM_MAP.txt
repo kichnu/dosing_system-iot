@@ -19,7 +19,9 @@ Address  End      Size    Section           Description
 0x0860   0x095F   256 B   CHANNEL_LABELS    8 × 32B (nazwy kanałów)
 0x0960   0x0A5F   256 B   CHANNEL_PARAMS    8 × 32B (min/max dawki)
 0x0A60   0x0A7F    32 B   PUMP_MON_CONFIG   Edge Impulse — rezerwacja
-0x0A80   0x0AFF   128 B   FREE              Wolna rezerwa
+0x0A80   0x0A8F    16 B   LOCK_PIN          PIN blokady edycji GUI
+0x0A90   0x0AFE   111 B   FREE              Wolna rezerwa
+0x0AFF   0x0AFF     1 B   HEALTH_SCRATCH    Bajt testowy kontroli FRAM (hw_health)
 0x0B00   0x0C8F   400 B   SHARED_NOTES      12 notatek × 32B + idx[8] + CRC
 0x0C90   0x7FFF  ~28.5 KB RESERVED          Przyszłe użycie
 

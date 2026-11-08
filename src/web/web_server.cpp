@@ -14,6 +14,7 @@
 #include "../hardware/dosing_scheduler.h"
 #include "../hardware/rtc_controller.h"
 #include "../hardware/relay_controller.h"
+#include "../hardware/safety_manager.h"
 #include "../hardware/fram_controller.h"
 
 // ============================================================================
@@ -232,7 +233,9 @@ void handleApiDosingStatus(AsyncWebServerRequest* request) {
     JsonDocument doc;
     
     // System status
-    doc["systemOk"] = !systemHalted;
+    doc["systemOk"] = !systemHalted && !safetyManager.isCriticalErrorActive();
+    doc["alarm"] = safetyManager.isCriticalErrorActive();
+    doc["alarmText"] = safetyManager.getAlarmText();
     doc["wifiConnected"] = (WiFi.status() == WL_CONNECTED);
     doc["schedulerEnabled"] = dosingScheduler.isEnabled();
     
@@ -767,6 +770,20 @@ void handleApiDailyReset(AsyncWebServerRequest* request) {
     LOG_INFO("[WEB] Daily reset: %s", success ? "OK" : "FAILED");
 }
 
+// ============================================================================
+// API: ALARM ACKNOWLEDGE
+// ============================================================================
+
+void handleApiAlarmAck(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
+        return;
+    }
+
+    safetyManager.requestAlarmAck();
+    request->send(200, "application/json", "{\"success\":true}");
+}
+
 void handleHealth(AsyncWebServerRequest* request) {
     IPAddress sourceIP = request->client()->remoteIP();
     if (!isIPWhitelisted(sourceIP) && !isTrustedProxy(sourceIP)) {
@@ -777,7 +794,10 @@ void handleHealth(AsyncWebServerRequest* request) {
     String json = "{";
     json += "\"status\":\"ok\",";
     json += "\"device_name\":\"" + String(DEVICE_ID) + "\",";
-    json += "\"uptime\":" + String(millis());
+    json += "\"uptime\":" + String(millis()) + ",";
+    // status stays "ok" (availability contract with the VPS); faults go here
+    json += "\"alarm\":" + String(safetyManager.isCriticalErrorActive() ? "true" : "false") + ",";
+    json += "\"alarm_text\":\"" + safetyManager.getAlarmText() + "\"";
     json += "}";
 
     request->send(200, "application/json", json);
@@ -1104,6 +1124,7 @@ void initWebServer() {
     
     // === API ROUTES ===
     server.on("/api/health", HTTP_GET, handleHealth);
+    server.on("/api/alarm-ack", HTTP_POST, handleApiAlarmAck);
     server.on("/api/login", HTTP_POST, handleApiLogin);
     server.on("/api/verify-pin", HTTP_POST, [](AsyncWebServerRequest* r){}, NULL, handleApiVerifyPin);
     server.on("/api/logout", HTTP_POST, handleApiLogout);

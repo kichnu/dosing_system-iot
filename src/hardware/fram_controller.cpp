@@ -4,6 +4,7 @@
  */
 
 #include "fram_controller.h"
+#include "hw_health.h"
 
 // Global instance
 FramController framController;
@@ -217,6 +218,7 @@ bool FramController::readBytes(uint16_t address, void* buffer, size_t length) {
     Wire.write((uint8_t)(address & 0xFF));  // LSB
     
     if (Wire.endTransmission() != 0) {
+        noteFramIoError();
         return false;
     }
     
@@ -225,9 +227,12 @@ bool FramController::readBytes(uint16_t address, void* buffer, size_t length) {
     while (remaining > 0) {
         size_t chunk = min(remaining, (size_t)32);
         
-        Wire.requestFrom((uint8_t)FRAM_I2C_ADDRESS, (uint8_t)chunk);
-        
-        for (size_t i = 0; i < chunk && Wire.available(); i++) {
+        if (Wire.requestFrom((uint8_t)FRAM_I2C_ADDRESS, (uint8_t)chunk) != chunk) {
+            noteFramIoError();
+            return false;
+        }
+
+        for (size_t i = 0; i < chunk; i++) {
             *buf++ = Wire.read();
         }
         
@@ -239,7 +244,10 @@ bool FramController::readBytes(uint16_t address, void* buffer, size_t length) {
             Wire.beginTransmission(FRAM_I2C_ADDRESS);
             Wire.write((uint8_t)(address >> 8));
             Wire.write((uint8_t)(address & 0xFF));
-            Wire.endTransmission();
+            if (Wire.endTransmission() != 0) {
+                noteFramIoError();
+                return false;
+            }
         }
     }
     
@@ -270,6 +278,7 @@ bool FramController::writeBytes(uint16_t address, const void* data, size_t lengt
 
         if (Wire.endTransmission() != 0) {
             framBusy = false;
+            noteFramIoError();
             return false;
         }
 

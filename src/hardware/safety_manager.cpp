@@ -42,9 +42,16 @@ bool SafetyManager::enableIfSafe() {
         return false;
     }
     
-    // Odczytaj stan błędu z FRAM
-    _loadErrorFromFRAM();
-    
+    // An unreadable error state must not count as "no error"
+    if (!isHwFaultAlarm() && !_loadErrorFromFRAM()) {
+        latchHwFault(HW_FAULT_FRAM);
+    }
+
+    if (isHwFaultAlarm()) {
+        _syncHardwareAlarm();
+        return false;
+    }
+
     if (_currentError.active_flag) {
         // Błąd aktywny w FRAM - pozostań w trybie bezpiecznym
         _errorActive = true;
@@ -56,6 +63,7 @@ bool SafetyManager::enableIfSafe() {
                       _currentError.channel);
         Serial.printf("[SAFETY] Timestamp: %lu\n", _currentError.timestamp);
         Serial.println(F("[SAFETY] Master relay: REMAINS INACTIVE"));
+        setBuzzerMode(BuzzerMode::ALARM);
         Serial.println(F("[SAFETY] Buzzer: ACTIVE"));
         Serial.println(F("[SAFETY] Press RESET button for 5s to clear"));
         
@@ -76,8 +84,55 @@ bool SafetyManager::enableIfSafe() {
 void SafetyManager::update() {
     if (!_initialized) return;
     
-    // Obsługa przycisku reset
     _handleResetButton();
+
+    if (_ackRequested) {
+        _ackRequested = false;
+        acknowledgeAlarm();
+    }
+
+    _syncHardwareAlarm();
+}
+
+void SafetyManager::_syncHardwareAlarm() {
+    bool hwAlarm = isHwFaultAlarm();
+    if (hwAlarm == _hwAlarmOn) return;
+    _hwAlarmOn = hwAlarm;
+
+    if (hwAlarm) {
+        _setMasterRelay(false);
+        setBuzzerMode(BuzzerMode::ALARM);
+        Serial.printf("[SAFETY] *** HARDWARE ALARM: %s ***\n", getHwFaultText().c_str());
+    } else if (!_errorActive) {
+        setBuzzerMode(BuzzerMode::OFF);
+        _setMasterRelay(true);
+        buzzerOK();
+        Serial.println(F("[SAFETY] Hardware alarm cleared - normal operation resumed"));
+    }
+}
+
+bool SafetyManager::acknowledgeAlarm() {
+    bool anything = false;
+    if (_errorActive) {
+        resetCriticalError();
+        anything = true;
+    }
+    if (ackHwFaults()) anything = true;
+    _syncHardwareAlarm();
+    return anything;
+}
+
+String SafetyManager::getAlarmText() const {
+    String text = getHwFaultText();
+    if (_errorActive) {
+        if (text.length()) text += " | ";
+        text += errorTypeToString(_currentError.error_type);
+        if (_currentError.channel < CHANNEL_COUNT) {
+            text += " CH";
+            text += String(_currentError.channel + 1);
+        }
+    }
+    return text;
 }
 
 // ============================================================================
@@ -128,8 +183,8 @@ bool SafetyManager::resetCriticalError() {
     Serial.println(F(""));
     Serial.println(F("[SAFETY] === CRITICAL ERROR RESET ==="));
     
-    // 1. Wyłącz buzzer
-    setBuzzerMode(BuzzerMode::OFF);
+    // 1. Buzzer stays on while a hardware fault is latched
+    if (!isHwFaultAlarm()) setBuzzerMode(BuzzerMode::OFF);
     
     // 2. Aktualizuj strukturę
     _currentError.active_flag = 0;
@@ -144,12 +199,12 @@ bool SafetyManager::resetCriticalError() {
     // 4. Zresetuj stan
     _errorActive = false;
     
-    // 5. Włącz master relay
-    _setMasterRelay(true);
-    Serial.println(F("[SAFETY] Master relay RE-ENABLED"));
-    
-    // 6. Potwierdzenie dźwiękiem (2x krótki beep)
-    buzzerOK();
+    // 5. Enable master relay and confirm, unless a hardware fault is still latched
+    if (!isHwFaultAlarm()) {
+        _setMasterRelay(true);
+        Serial.println(F("[SAFETY] Master relay RE-ENABLED"));
+        buzzerOK();
+    }
     
     Serial.println(F("[SAFETY] System unlocked - normal operation resumed"));
     Serial.println(F(""));
@@ -182,9 +237,8 @@ void SafetyManager::_handleResetButton() {
             if (!_resetInProgress && (now - _buttonPressStart >= RESET_BUTTON_HOLD_MS)) {
                 _resetInProgress = true;
                 
-                if (_errorActive) {
-                    // Reset błędu krytycznego
-                    resetCriticalError();
+                if (isCriticalErrorActive()) {
+                    acknowledgeAlarm();
                 } else {
                     // Brak błędu - może być użyte do provisioning
                     Serial.println(F("[SAFETY] No error active - button may trigger provisioning"));
@@ -226,24 +280,26 @@ void SafetyManager::_saveErrorToFRAM() {
     framController.writeBytes(FRAM_ADDR_CRITICAL_ERROR, &_currentError, sizeof(CriticalErrorState));
 }
 
-void SafetyManager::_loadErrorFromFRAM() {
+bool SafetyManager::_loadErrorFromFRAM() {
     CriticalErrorState loaded;
     
     if (!framController.readBytes(FRAM_ADDR_CRITICAL_ERROR, &loaded, sizeof(CriticalErrorState))) {
         Serial.println(F("[SAFETY] Failed to read error state from FRAM"));
         memset(&_currentError, 0, sizeof(_currentError));
-        return;
+        return false;
     }
     
     // Walidacja CRC
     uint32_t expectedCrc = FramController::calculateCRC32(&loaded, sizeof(CriticalErrorState) - sizeof(uint32_t));
     if (loaded.crc32 != expectedCrc) {
+        // Expected on a freshly formatted FRAM, which holds no error record yet
         Serial.println(F("[SAFETY] Error state CRC mismatch - treating as no error"));
         memset(&_currentError, 0, sizeof(_currentError));
-        return;
+        return true;
     }
     
     _currentError = loaded;
+    return true;
 }
 
 void SafetyManager::_clearErrorInFRAM() {

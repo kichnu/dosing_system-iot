@@ -45,7 +45,8 @@
 // CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)
 // PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
 // LOCK_PIN           | 0x0A80   | 16 B      | PIN blokady edycji GUI
-// FREE               | 0x0A90   | 112 B     | Rezerva
+// FREE               | 0x0A90   | 111 B     | Rezerva
+// HEALTH_SCRATCH     | 0x0AFF   | 1 B       | Hardware check test byte
 // SHARED_NOTES       | 0x0B00   | 400 B     | Notes pool + ch_note_idx (12 × 32B + meta)
 // PARAM_LOG          | 0x0C90   | 1852 B    | ParamLog: 20 tmpl × 32B + ring 100 × 12B
 // (gap)              | 0x13CC   | 1024 B    | Celowy odstęp, rezerwa na przyszłość
@@ -169,10 +170,13 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 #define FRAM_SIZE_LOCK_PIN          16
 
 // ----------------------------------------------------------------------------
-// FREE (0x0A90 - 0x0AFF)  112B
+// FREE (0x0A90 - 0x0AFE)  111B
 // ----------------------------------------------------------------------------
 #define FRAM_ADDR_FREE_SPACE        0x0A90
-#define FRAM_SIZE_FREE_SPACE        112
+#define FRAM_SIZE_FREE_SPACE        111
+
+// HEALTH SCRATCH (0x0AFF)  1B — write/read-back test of the critical hardware check
+#define FRAM_ADDR_HEALTH_SCRATCH    0x0AFF
 
 // ----------------------------------------------------------------------------
 // SHARED NOTES (0x0B00 - 0x0C8F)  400B

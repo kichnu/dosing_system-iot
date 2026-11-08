@@ -64,7 +64,11 @@ pio run -t clean
 **SafetyManager** (`src/hardware/safety_manager.h`)
 - Master relay for global power cutoff
 - Persists critical errors to FRAM (survive power loss)
-- Buzzer alarm pattern, 5-second button hold to reset
+- Buzzer alarm pattern, 5-second button hold or GUI Reset to acknowledge
+
+**Hardware health** (`src/hardware/hw_health.h`)
+- Checks FRAM and RTC at boot, every 60 s and after failed transfers
+- A failure latches the critical alarm and stops dosing until the block works and the alarm is acknowledged
 
 **FramController** (`src/hardware/fram_controller.h`)
 - Low-level FRAM access with CRC32 validation

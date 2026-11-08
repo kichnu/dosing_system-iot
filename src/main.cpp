@@ -25,6 +25,7 @@
 #include "provisioning/ap_server.h"
 #include "config/credentials_manager.h"
 #include "hardware/safety_manager.h"
+#include "hardware/hw_health.h"
 #include "hardware/buzzer_controller.h"
 #include "security/session_manager.h"
 #include "security/rate_limiter.h"
@@ -257,7 +258,16 @@ void initApplication() {
         Serial.println(F("SKIPPED (no FRAM)"));
     }
     
-    // --- Dosing Scheduler (wymaga RTC + ChannelManager) ---
+    // --- RTC answers but lost its time: NTP can restore it before the scheduler starts ---
+    if (!initStatus.rtc_ok && initStatus.wifi_ok && rtcController.isReady()) {
+        Serial.println(F("[INIT] RTC time invalid, trying NTP..."));
+        if (rtcController.syncNTPWithRetry() && rtcController.isTimeValid()) {
+            initStatus.rtc_ok = true;
+            initStatus.critical_ok = initStatus.fram_ok;
+        }
+    }
+
+    // --- Dosing Scheduler (requires RTC + ChannelManager) ---
     Serial.print(F("[INIT] Scheduler... "));
     if (initStatus.rtc_ok && initStatus.channel_manager_ok) {
         if (dosingScheduler.begin()) {
@@ -393,25 +403,18 @@ void setup() {
 
     safetyManager.begin();
 
-    if (!safetyManager.enableIfSafe()) {
-        // Błąd krytyczny aktywny - system zablokowany
-        // Wejdź w pętlę oczekiwania na reset
-        Serial.println(F("[MAIN] System locked due to critical error"));
-        Serial.println(F("[MAIN] Only reset button will be handled"));
-        
-        while (safetyManager.isCriticalErrorActive()) {
-            safetyManager.update();  // Obsługa przycisku reset
-            delay(10);
-        }
-        
-        // Po resecie - restart systemu
-        Serial.println(F("[MAIN] Error cleared - restarting..."));
-        delay(1000);
-        ESP.restart();
-    }
+    // A critical block failing at boot latches the alarm and keeps dosing stopped
+    uint8_t bootFaults = 0;
+    if (!initStatus.fram_ok || !initStatus.channel_manager_ok) bootFaults |= HW_FAULT_FRAM;
+    if (!initStatus.rtc_ok) bootFaults |= HW_FAULT_RTC;
+    initHwHealth(bootFaults);
 
-    // Sygnał dźwiękowy: inicjalizacja zakończona pomyślnie
-    buzzerOK();
+    if (safetyManager.enableIfSafe()) {
+        buzzerOK();
+    } else {
+        // loop() stays in the alarm branch until acknowledged (web, OTA, button keep working)
+        Serial.println(F("[MAIN] System locked: critical alarm active"));
+    }
 
     // === POST-INIT ===
     #if ENABLE_CLI
@@ -457,15 +460,17 @@ void loop() {
     safetyManager.update();
     relayController.update();
 
-    if (safetyManager.isCriticalErrorActive()) {
-        // Zatrzymaj wszelkie operacje
-        // (relay_controller powinien już być zatrzymany przez triggerCriticalError)
-        return;
+    updateHwHealth();
+
+    // A block missing at boot answers again: the application needs a clean start
+    if (isHwRecoveryRestartWanted() && !relayController.isAnyOn()) {
+        noteHwRecoveryRestart();
+        delay(200);
+        ESP.restart();
     }
 
-
- 
     // === FEED WATCHDOG (if subscribed) ===
+    // Before the alarm branch: otherwise a latched alarm ends in a watchdog reset
     static bool wdtSubscribed = false;
     static bool wdtChecked = false;
     if (!wdtChecked) {
@@ -473,12 +478,24 @@ void loop() {
         wdtChecked = true;
     }
     if (wdtSubscribed) {
-        // === FEED WATCHDOG (production only) ===
         #if !ENABLE_CLI
             esp_task_wdt_reset();
         #endif
     }
-    
+
+    static bool alarmStopDone = false;
+    if (safetyManager.isCriticalErrorActive()) {
+        if (!alarmStopDone) {
+            // A dose cut short counts as failed and is not repeated
+            if (initStatus.scheduler_ok) dosingScheduler.stopCurrentDose();
+            relayController.allOff();
+            alarmStopDone = true;
+        }
+        delay(10);
+        return;
+    }
+    alarmStopDone = false;
+
     // === Skip processing if system halted ===
     if (systemHalted) {
         static uint32_t lastHaltMsg = 0;

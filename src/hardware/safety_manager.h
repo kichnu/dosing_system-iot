@@ -14,6 +14,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "dosing_types.h"
+#include "hw_health.h"
 
 class SafetyManager {
 public:
@@ -27,7 +28,14 @@ public:
 
     bool resetCriticalError();
 
-    bool isCriticalErrorActive() const { return _errorActive; }
+    // True while dosing must stay stopped: persisted error or latched hardware fault
+    bool isCriticalErrorActive() const { return _errorActive || isHwFaultAlarm(); }
+
+    // Acknowledge from the button or the main loop; clears only what works again
+    bool acknowledgeAlarm();
+    // Safe from any task: the acknowledgement runs in update()
+    void requestAlarmAck() { _ackRequested = true; }
+    String getAlarmText() const;
     bool isMasterRelayEnabled() const { return _masterRelayEnabled; }
     CriticalErrorType getErrorType() const { return _currentError.error_type; }
     uint8_t getErrorChannel() const { return _currentError.channel; }
@@ -39,6 +47,8 @@ private:
     bool _initialized = false;
     bool _errorActive = false;
     bool _masterRelayEnabled = false;
+    bool _hwAlarmOn = false;
+    volatile bool _ackRequested = false;
     CriticalErrorState _currentError;
 
     unsigned long _buttonPressStart = 0;
@@ -49,7 +59,8 @@ private:
     void _handleResetButton();
     void _takePumpSnapshot();
     void _saveErrorToFRAM();
-    void _loadErrorFromFRAM();
+    bool _loadErrorFromFRAM();
+    void _syncHardwareAlarm();
     void _clearErrorInFRAM();
 };
 

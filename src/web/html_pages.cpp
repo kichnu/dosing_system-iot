@@ -234,6 +234,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .params-actions{flex-wrap:wrap}
 .params-actions .btn{flex:0 0 calc(50% - 4px)}
 }
+.alarm-banner{display:none;align-items:center;gap:10px;padding:10px var(--card-padding);background:var(--accent-red);color:#fff;font-size:var(--font-md);font-weight:600;flex-shrink:0}
+.alarm-banner span{flex:1;min-width:0;overflow-wrap:anywhere}
+.alarm-banner button{flex-shrink:0;padding:6px 14px;border:1px solid #fff;border-radius:var(--radius-sm);background:transparent;color:#fff;font-weight:600;cursor:pointer}
 .settings-row{display:flex;justify-content:flex-end}
 .settings-btn{font-size:0.70rem;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-muted);cursor:pointer}
 .settings-btn:hover{color:var(--text-secondary)}
@@ -367,6 +370,7 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
 </head>
 <body>
     <div class="app-container">
+        <div class="alarm-banner" id="alarmBanner"><span id="alarmText"></span><button onclick="ackAlarm()">Reset</button></div>
         <div class="channels-wrapper">
             <div class="channels-screen" id="channelScreen"></div>
         </div>
@@ -712,9 +716,17 @@ function setupTouch(){
     },{passive:true});
 }
 
+function updateAlarmBanner(data){
+    if(data.alarm===undefined)return;
+    const b=document.getElementById('alarmBanner');
+    b.style.display=data.alarm?'flex':'none';
+    if(data.alarm)document.getElementById('alarmText').textContent='CRITICAL ALARM - dosing stopped: '+data.alarmText;
+}
+function ackAlarm(){fetch('api/alarm-ack',{method:'POST'}).then(()=>setTimeout(loadStatus,500)).catch(()=>showAlert('Error','Connection error','err'));}
 function showSessionExpired(){document.getElementById('sessionExpiredModal').classList.add('show');}
 function loadStatus(){
     fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
+        updateAlarmBanner(data);
         if(data.channels){
             data.channels.forEach((chData,i)=>{
                 if(!channels[i])return;

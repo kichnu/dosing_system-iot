@@ -74,6 +74,18 @@ public:
      * Pobierz aktualny czas UTC
      */
     TimeInfo getTime();
+
+    /**
+     * Read the DS3231 and check the result is a plausible time
+     * @return false on a bus error or implausible values (*out is then undefined)
+     */
+    bool readTime(TimeInfo* out);
+
+    /**
+     * Non-blocking NTP recovery of a lost time: starts SNTP once, then uses its
+     * result as soon as it arrives. For the hardware check, which runs in loop().
+     */
+    bool recoverTimeFromNtp();
     
     /**
      * Pobierz Unix timestamp UTC
@@ -158,7 +170,9 @@ public:
 private:
     bool _initialized;
     bool _timeValid;
-    uint8_t _lastDay;  // Do detekcji północy
+    uint8_t _lastDay;  // Midnight detection
+    TimeInfo _lastGoodTime;  // Returned by getTime() when a read fails
+    bool _ntpRecoveryStarted;
      // NTP sync tracking
     bool _ntpSynced;                // Czy udana sync od startu
     uint32_t _lastNtpSyncTime;      // millis() ostatniej sync
