@@ -47,13 +47,13 @@ pio run -t clean
 
 **ChannelManager** (`src/algorithm/channel_manager.h`)
 - Manages dosing configuration for all channels
-- Active vs Pending config pattern (changes apply at midnight)
+- A saved config takes effect immediately; the rest of the day is planned once at save: (daily dose - dosed today) / slots left
 - Validates dosing parameters, tracks daily state
 - Caches FRAM data in RAM for fast access
 
 **DosingScheduler** (`src/hardware/dosing_scheduler.h`)
 - Time-based event scheduling (hours 1-23, channels offset by 15 min)
-- Daily reset at midnight (applies pending configs)
+- Daily reset at midnight
 - State machine: IDLE → CHECKING → DOSING → WAITING_PUMP
 
 **RelayController** (`src/hardware/relay_controller.h`)
@@ -75,18 +75,16 @@ pio run -t clean
 Key sections (see `src/config/fram_layout.h`):
 - 0x0000: Header (magic, version)
 - 0x0020: Encrypted WiFi credentials (1KB, compatible with DOLEWKA project)
-- 0x0440: Active channel configs (6 × 32B)
-- 0x0500: Pending channel configs
-- 0x05C0: Daily states
-- 0x0650: Critical error state
-- 0x0800: Daily log ring buffer (100 entries)
+- 0x0440: Channel configs (8 × 32B)
+- 0x0640: Daily states (8 × 24B)
+- 0x0700: Critical error state
+- 0x17CC: Event log ring buffer (75 entries)
 
 ### Data Structures
 
 All packed to specific sizes with CRC32 (see `src/config/dosing_types.h`):
 - `ChannelConfig` (32B): events bitmask, days bitmask, daily dose, dosing rate
-- `ChannelDailyState` (24B): completed/failed events, today's total
-- `ContainerVolume` (8B): container capacity and remaining amount
+- `ChannelDailyState` (24B): completed/failed events, today's total, dose planned for the rest of today
 
 ### Build Environments
 

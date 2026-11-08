@@ -10,13 +10,12 @@ Address  End      Size    Section           Description
                           *** DOLEWKA compat — nie ruszać ***
 0x0420   0x043F    32 B   SYSTEM_STATE      Global flags, boot count
 0x0440   0x053F   256 B   ACTIVE_CONFIG     8 kanałów × 32B (aktywna)
-0x0540   0x063F   256 B   PENDING_CONFIG    8 kanałów × 32B (pending)
+0x0540   0x063F   256 B   RESERVED          Nieużywane (dawniej pending config)
 0x0640   0x06FF   192 B   DAILY_STATE       8 kanałów × 24B
 0x0700   0x071F    32 B   CRITICAL_ERROR    Błąd krytyczny (przetrwa reset)
 0x0720   0x075F    64 B   AUTH_DATA         Hash hasła admina + sól
 0x0760   0x07DF   128 B   SESSION_DATA      Sesje HTTP
-0x07E0   0x081F    64 B   CONTAINER_VOLUME  8 × 8B (pojemność zbiornika)
-0x0820   0x085F    64 B   DOSED_TRACKER     8 × 8B (dozowane sumarycznie)
+0x07E0   0x085F   128 B   RESERVED          Nieużywane (dawniej container volume, dosed tracker)
 0x0860   0x095F   256 B   CHANNEL_LABELS    8 × 32B (nazwy kanałów)
 0x0960   0x0A5F   256 B   CHANNEL_PARAMS    8 × 32B (min/max dawki)
 0x0A60   0x0A7F    32 B   PUMP_MON_CONFIG   Edge Impulse — rezerwacja
@@ -43,14 +42,14 @@ HEADER (0x0000, 32B)
   uint8   _reserved[11]
   uint32  header_crc
 
-ACTIVE_CONFIG / PENDING_CONFIG — ChannelConfig (32B × 8)
+ACTIVE_CONFIG — ChannelConfig (32B × 8)
   uint32  events_bitmask  bity 2,4,6,...,22 = godziny zdarzeń
   uint8   days_bitmask    bity 0-6 = Pon-Ndz
   uint8   _reserved1[3]
   float   daily_dose_ml
   float   dosing_rate     ml/s
   uint8   enabled
-  uint8   has_pending
+  uint8   _reserved_flag  (dawniej has_pending)
   uint8   _reserved2[2]
   uint32  crc32
   uint8   _padding[8]
@@ -61,19 +60,10 @@ DAILY_STATE — ChannelDailyState (24B × 8)
   float   today_added_ml
   uint8   last_reset_day
   uint8   failed_count
-  uint8   _reserved[2]
+  uint16  today_dose_cml    dawka na resztę dnia po zapisie configu, ml × 100
+                            (0 = standardowa, 0xFFFF = dziś już nic)
   uint32  crc32
   uint8   _padding[4]
-
-CONTAINER_VOLUME — ContainerVolume (8B × 8)
-  uint16  container_ml    × 10 (0.1 ml precision)
-  uint16  remaining_ml    × 10
-  uint32  crc32
-
-DOSED_TRACKER — DosedTracker (8B × 8)
-  uint16  total_dosed_ml  × 10
-  uint16  _reserved
-  uint32  crc32
 
 CHANNEL_LABELS — ChannelLabel (32B × 8)
   char    name[20]
@@ -103,7 +93,8 @@ Notatki implementacyjne
 
 - CRC32 liczy się zawsze nad sizeof(Struct) - sizeof(uint32_t) bajtami
   (uint32_t crc32 jest OSTATNIM polem każdej struktury)
-- Niezgodność header.layout_version → automatyczny factory reset
+- Niezgodność header.layout_version → automatyczny factory reset, dlatego
+  sekcje zarezerwowane zostają na miejscu (bez zmiany adresów i wersji)
 - CREDENTIALS (0x0020-0x041F) kompatybilne z projektem DOLEWKA —
   ten zakres adresów nigdy nie może zostać zmieniony
 - SHARED_NOTES: zapis całego bloku 400B przy każdej edycji notatki
