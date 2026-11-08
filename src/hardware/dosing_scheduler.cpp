@@ -174,11 +174,6 @@ bool DosingScheduler::_performDailyReset() {
     _lastDay = now.day;
     _todayEventCount = 0;
 
-    if (channelManager.hasAnyPendingChanges()) {
-        LOG_INFO("[SCHED] Applying pending configs...");
-        channelManager.applyAllPendingChanges();
-    }
-
     if (isFirstResetToday) {
         LOG_INFO("[SCHED] Resetting daily states...");
         channelManager.resetDailyStates();
@@ -225,14 +220,14 @@ void DosingScheduler::_checkSchedule() {
             _getActualTime(ch, eventHour, &actualHour, &actualMinute);
 
             if (now.hour != actualHour) continue;
-            if (now.minute < actualMinute || now.minute >= actualMinute + 5) continue;
+            if (now.minute < actualMinute || now.minute >= actualMinute + EVENT_WINDOW_SECONDS / 60) continue;
 
             // Bitmask sprawdzamy wg eventHour (godziny bazowej)
             if (channelManager.shouldExecuteEvent(ch, eventHour, now.dayOfWeek)) {
                 LOG_INFO("[SCHED] Event: CH%d eventH=%02d actual=%02d:%02d now=%02d:%02d",
                               ch, eventHour, actualHour, actualMinute,
                               now.hour, now.minute);
-                if (_startDosing(ch, eventHour)) return;
+                if (_startDosing(ch, eventHour, channelManager.getNextDoseMl(ch))) return;
             }
         }
     }
@@ -251,21 +246,19 @@ void DosingScheduler::syncTimeState() {
 // DOSING EXECUTION
 // ============================================================================
 
-bool DosingScheduler::_startDosing(uint8_t channel, uint8_t eventHour) {
+bool DosingScheduler::_startDosing(uint8_t channel, uint8_t eventHour, float singleDoseMl) {
     if (channel >= CHANNEL_COUNT) return false;
     if (relayController.isAnyOn()) {
         LOG_INFO("[SCHED] Pump busy, skipping");
         return false;
     }
 
-    // Oblicz dawkę z ACTIVE config — pending może mieć inne wartości niż to co faktycznie aktywne
     const ChannelConfig& activeCfg = channelManager.getActiveConfig(channel);
     uint8_t eventCount = activeCfg.getActiveEventsCount();
     if (eventCount == 0 || activeCfg.daily_dose_ml <= 0 || activeCfg.dosing_rate <= 0) {
         LOG_INFO("[SCHED] CH%d active config not ready, skipping", channel);
         return false;
     }
-    float singleDoseMl  = activeCfg.daily_dose_ml / (float)eventCount;
     uint32_t pumpDurMs  = (uint32_t)((singleDoseMl / activeCfg.dosing_rate) * 1000.0f);
     if (singleDoseMl < MIN_SINGLE_DOSE_ML || pumpDurMs == 0 || pumpDurMs > MAX_PUMP_DURATION_MS) {
         LOG_INFO("[SCHED] CH%d active config invalid (%.2f ml, %lu ms), skipping",
@@ -357,7 +350,7 @@ bool DosingScheduler::triggerManualDose(uint8_t channel) {
     }
 
     LOG_INFO("[SCHED] Manual trigger CH%d (eventH=%d)", channel, eventHour);
-    return _startDosing(channel, eventHour);
+    return _startDosing(channel, eventHour, channelManager.getStandardDoseMl(channel));
 }
 
 void DosingScheduler::stopCurrentDose() {

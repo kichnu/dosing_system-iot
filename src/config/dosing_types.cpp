@@ -14,7 +14,6 @@ const char* channelStateToString(ChannelState state) {
         case CH_STATE_INCOMPLETE: return "INCOMPLETE";
         case CH_STATE_INVALID:    return "INVALID";
         case CH_STATE_CONFIGURED: return "CONFIGURED";
-        case CH_STATE_PENDING:    return "PENDING";
         default:                  return "UNKNOWN";
     }
 }

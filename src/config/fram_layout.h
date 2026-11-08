@@ -35,7 +35,7 @@
 // CREDENTIALS        | 0x0020   | 1024 B    | Encrypted WiFi (DOLEWKA compat)
 // SYSTEM_STATE       | 0x0420   | 32 B      | Global system state
 // ACTIVE_CONFIG      | 0x0440   | 256 B     | Active config  (8 × 32B)
-// PENDING_CONFIG     | 0x0540   | 256 B     | Pending config (8 × 32B)
+// RESERVED           | 0x0540   | 256 B     | Unused (formerly pending config)
 // DAILY_STATE        | 0x0640   | 192 B     | Daily state    (8 × 24B)
 // CRITICAL_ERROR     | 0x0700   | 32 B      | Critical error state
 // AUTH_DATA          | 0x0720   | 64 B      | Admin password hash
@@ -95,11 +95,8 @@ static_assert(sizeof(FramHeader) == FRAM_SIZE_HEADER, "FramHeader size mismatch"
 #define FRAM_ADDR_ACTIVE_CH(n)      (FRAM_ADDR_ACTIVE_CONFIG + ((n) * sizeof(ChannelConfig)))
 
 // ----------------------------------------------------------------------------
-// PENDING CONFIG (0x0540 - 0x063F)  8 × 32B = 256B
+// RESERVED (0x0540 - 0x063F)  256B — unused, formerly pending config
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_PENDING_CONFIG    0x0540
-#define FRAM_SIZE_PENDING_CONFIG    (8 * sizeof(ChannelConfig))   // 256B
-#define FRAM_ADDR_PENDING_CH(n)     (FRAM_ADDR_PENDING_CONFIG + ((n) * sizeof(ChannelConfig)))
 
 // ----------------------------------------------------------------------------
 // DAILY STATE (0x0640 - 0x06FF)  8 × 24B = 192B
@@ -227,11 +224,8 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 static_assert(FRAM_ADDR_RESERVED + FRAM_SIZE_RESERVED == FRAM_SIZE_BYTES,
               "FRAM reserved section calculation error!");
 
-static_assert(FRAM_ADDR_ACTIVE_CONFIG + FRAM_SIZE_ACTIVE_CONFIG <= FRAM_ADDR_PENDING_CONFIG,
-              "ACTIVE_CONFIG overlaps PENDING_CONFIG!");
-
-static_assert(FRAM_ADDR_PENDING_CONFIG + FRAM_SIZE_PENDING_CONFIG <= FRAM_ADDR_DAILY_STATE,
-              "PENDING_CONFIG overlaps DAILY_STATE!");
+static_assert(FRAM_ADDR_ACTIVE_CONFIG + FRAM_SIZE_ACTIVE_CONFIG <= FRAM_ADDR_DAILY_STATE,
+              "ACTIVE_CONFIG overlaps DAILY_STATE!");
 
 static_assert(FRAM_ADDR_SHARED_NOTES + FRAM_SIZE_SHARED_NOTES <= FRAM_ADDR_PARAM_LOG,
               "SHARED_NOTES overlaps PARAM_LOG!");
@@ -254,10 +248,6 @@ bool framWriteHeader(const FramHeader* header);
 
 bool framReadActiveConfig(uint8_t channel, ChannelConfig* config);
 bool framWriteActiveConfig(uint8_t channel, const ChannelConfig* config);
-bool framReadPendingConfig(uint8_t channel, ChannelConfig* config);
-bool framWritePendingConfig(uint8_t channel, const ChannelConfig* config);
-bool framApplyPendingConfig(uint8_t channel);
-bool framRevertPendingConfig(uint8_t channel);
 
 bool framReadDailyState(uint8_t channel, ChannelDailyState* state);
 bool framWriteDailyState(uint8_t channel, const ChannelDailyState* state);

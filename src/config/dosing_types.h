@@ -19,8 +19,7 @@ enum ChannelState : uint8_t {
     CH_STATE_INACTIVE   = 0,
     CH_STATE_INCOMPLETE = 1,
     CH_STATE_INVALID    = 2,
-    CH_STATE_CONFIGURED = 3,
-    CH_STATE_PENDING    = 4
+    CH_STATE_CONFIGURED = 3
 };
 
 enum CriticalErrorType : uint8_t {
@@ -29,13 +28,6 @@ enum CriticalErrorType : uint8_t {
     ERROR_FRAM_FAILURE      = 5,
     ERROR_RTC_FAILURE       = 6,
     ERROR_UNKNOWN           = 255
-};
-
-enum EventStatus : uint8_t {
-    EVENT_PENDING   = 0,
-    EVENT_COMPLETED = 1,
-    EVENT_SKIPPED   = 2,
-    EVENT_FAILED    = 3
 };
 
 enum PumpState : uint8_t {
@@ -62,7 +54,7 @@ struct ChannelConfig {
 
     // Flagi (4B)
     uint8_t  enabled;           // 0/1
-    uint8_t  has_pending;       // 0/1
+    uint8_t  _reserved_flag;    // Formerly has_pending; keeps the FRAM layout
     uint8_t  _reserved2[2];
 
     // Checksum (4B)
@@ -109,6 +101,10 @@ static_assert(sizeof(ChannelConfig) == 32, "ChannelConfig must be 32 bytes");
 // DAILY STATE (24 bajtów, packed — resetowana o północy)
 // ============================================================================
 
+// Special values of ChannelDailyState::today_dose_cml
+#define TODAY_DOSE_STANDARD  0        // No override: daily dose / active events
+#define TODAY_DOSE_NONE      0xFFFF   // Nothing left to dose today
+
 #pragma pack(push, 1)
 
 struct ChannelDailyState {
@@ -117,7 +113,7 @@ struct ChannelDailyState {
     float    today_added_ml;
     uint8_t  last_reset_day;
     uint8_t  failed_count;
-    uint8_t  _reserved[2];
+    uint16_t today_dose_cml;    // Dose for the rest of today set by a config save, ml x 100
     uint32_t crc32;
     uint8_t  _padding[4];
 
@@ -151,6 +147,7 @@ struct ChannelDailyState {
         events_failed = 0;
         today_added_ml = 0.0f;
         failed_count = 0;
+        today_dose_cml = TODAY_DOSE_STANDARD;
     }
 };
 
@@ -171,7 +168,7 @@ struct SystemState {
     uint8_t  active_pump_state;
     uint32_t last_daily_reset_day;
     uint32_t boot_count;
-    uint8_t  pending_changes_mask;
+    uint8_t  _reserved_mask;        // Formerly pending_changes_mask; keeps the FRAM layout
     uint8_t  _reserved[3];
     uint32_t last_event_timestamp;
     uint32_t last_auto_restart_day;  // dzień (rok*366+miesiąc*31+dzień) ostatniego 24H AUTO-RESTART

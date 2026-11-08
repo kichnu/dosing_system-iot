@@ -13,6 +13,8 @@
 #include "dosing_types.h"
 #include "fram_controller.h"
 
+struct TimeInfo;
+
 // ============================================================================
 // VALIDATION RESULT
 // ============================================================================
@@ -47,11 +49,6 @@ public:
     const ChannelConfig& getActiveConfig(uint8_t channel) const;
     
     /**
-     * Pobierz pending konfigurację kanału
-     */
-    const ChannelConfig& getPendingConfig(uint8_t channel) const;
-    
-    /**
      * Pobierz stan dzienny kanału
      */
     const ChannelDailyState& getDailyState(uint8_t channel) const;
@@ -71,39 +68,8 @@ public:
      */
     ChannelState getChannelState(uint8_t channel) const;
     
-    // --- Settery konfiguracji (zapisują do pending) ---
-    
-    /**
-     * Ustaw events bitmask (godziny 1-23)
-     */
-    bool setEventsBitmask(uint8_t channel, uint32_t bitmask);
-    
-    /**
-     * Ustaw days bitmask (0=Pon, 6=Ndz)
-     */
-    bool setDaysBitmask(uint8_t channel, uint8_t bitmask);
-    
-    /**
-     * Ustaw dawkę dzienną (ml)
-     */
-    bool setDailyDose(uint8_t channel, float dose_ml);
-    
-    /**
-     * Ustaw dosing rate z kalibracji (ml/s)
-     */
-    bool setDosingRate(uint8_t channel, float rate);
-    
-    /**
-     * Włącz/wyłącz kanał
-     */
-    bool setEnabled(uint8_t channel, bool enabled);
+    // --- Configuration ---
 
-    /**
-     * Atomic batch update of pending config (prevents partial writes race condition)
-     * Use this from web handlers instead of individual setters.
-     * Only updates fields that have has_value = true.
-     * @return true if all updates succeeded
-     */
     struct ConfigUpdate {
         bool has_events = false;
         uint32_t events = 0;
@@ -114,48 +80,54 @@ public:
         bool has_rate = false;
         float rate = 0;
     };
-    bool updatePendingConfigBatch(uint8_t channel, const ConfigUpdate& update);
 
-    // --- Walidacja ---
-    
+    struct ConfigSaveResult {
+        bool  valid = true;               // false: rejected, nothing was stored
+        bool  today_recalculated = false; // The plan for the rest of today changed
+        uint8_t today_slots = 0;          // Slots still to run today
+        float today_dose_ml = 0;          // Dose per slot; 0 = nothing left to dose
+    };
+
     /**
-     * Waliduj konfigurację kanału
-     * @return true jeśli konfiguracja poprawna
+     * Validate and store a config change; it takes effect immediately.
+     * Only fields with has_* = true are changed.
+     * If the dose, the slots or today's activity changed, the rest of today is
+     * planned once: (daily dose - dosed today) / slots left. Missed or failed
+     * slots after that point do not raise later doses.
+     * @param now current time, nullptr to skip planning (e.g. no valid RTC)
+     * @return true if the config was stored
+     */
+    bool updateConfig(uint8_t channel, const ConfigUpdate& update, const TimeInfo* now,
+                      ConfigSaveResult* result = nullptr, ValidationError* error = nullptr);
+
+    /**
+     * Standard dose per event: daily dose / active events
+     */
+    float getStandardDoseMl(uint8_t channel) const;
+
+    /**
+     * Dose for the next scheduled event, including today's plan
+     * @return ml, 0 when nothing is left to dose today
+     */
+    float getNextDoseMl(uint8_t channel) const;
+
+    // --- Validation ---
+
+    /**
+     * Validate the active config of a channel
      */
     bool validateConfig(uint8_t channel, ValidationError* error = nullptr);
-    
+
     /**
-     * Waliduj wszystkie kanały
+     * Validate a candidate config for a channel
+     */
+    bool validateConfig(uint8_t channel, const ChannelConfig& cfg, ValidationError* error = nullptr);
+
+    /**
+     * Validate all channels
      */
     bool validateAll(ValidationError* firstError = nullptr);
-    
-    // --- Pending changes ---
-    
-    /**
-     * Czy kanał ma oczekujące zmiany
-     */
-    bool hasPendingChanges(uint8_t channel) const;
-    
-    /**
-     * Czy którykolwiek kanał ma pending
-     */
-    bool hasAnyPendingChanges() const;
-    
-    /**
-     * Zastosuj pending -> active (wywoływane przy resecie dobowym)
-     */
-    bool applyPendingChanges(uint8_t channel);
-    
-    /**
-     * Zastosuj wszystkie pending
-     */
-    bool applyAllPendingChanges();
-    
-    /**
-     * Anuluj pending (przywróć active)
-     */
-    bool revertPendingChanges(uint8_t channel);
-    
+
     // --- Daily State ---
 
     // --- Container Volume ---
@@ -248,11 +220,6 @@ public:
     bool resetDailyStates();
 
     /**
-     * Reset stanu dziennego jednego kanału (np. przy Apply Pending z GUI)
-     */
-    bool resetDailyState(uint8_t channel);
-    
-    /**
      * Czy event został wykonany
      */
     bool isEventCompleted(uint8_t channel, uint8_t hour) const;
@@ -317,7 +284,6 @@ private:
     
     // Cached data (RAM)
     ChannelConfig     _activeConfig[CHANNEL_COUNT];
-    ChannelConfig     _pendingConfig[CHANNEL_COUNT];
     ChannelDailyState _dailyState[CHANNEL_COUNT];
     ChannelCalculated _calculated[CHANNEL_COUNT];
     ContainerVolume   _containerVolume[CHANNEL_COUNT];
@@ -331,10 +297,11 @@ private:
     static DosedTracker _emptyDosedTracker;
     
     /**
-     * Zapisz pending config do FRAM i oznacz jako has_pending
+     * Plan the rest of today for a candidate config (updates *state)
      */
-    bool _savePendingConfig(uint8_t channel);
-    
+    void _planToday(uint8_t channel, const ChannelConfig& cfg, const TimeInfo& now,
+                    ChannelDailyState* state, ConfigSaveResult* result) const;
+
     /**
      * Aktualizuj CRC w strukturze
      */

@@ -173,7 +173,6 @@ void testChannelManager() {
     Serial.println(F("  1 - Print all channels"));
     Serial.println(F("  2 - Print single channel detail"));
     Serial.println(F("  3 - Set test config on CH0"));
-    Serial.println(F("  4 - Apply pending changes"));
     Serial.println(F("  5 - Simulate dosing event"));
     Serial.println(F("  6 - Reset daily states"));
     Serial.println(F("  0 - Exit"));
@@ -210,37 +209,23 @@ void testChannelManager() {
                 Serial.println(F("  Daily dose: 6.0 ml"));
                 Serial.println(F("  Rate: 0.5 ml/s"));
 
-                // Set events: bits 8, 12, 18
-                uint32_t events = (1 << 8) | (1 << 12) | (1 << 18);
-                channelManager.setEventsBitmask(0, events);
+                ChannelManager::ConfigUpdate update;
+                update.has_events = true;
+                update.events = (1UL << 8) | (1UL << 12) | (1UL << 18);
+                update.has_days = true;
+                update.days = 0x1F;  // Mon-Fri
+                update.has_dose = true;
+                update.dose = 6.0f;
+                update.has_rate = true;
+                update.rate = 0.5f;
 
-                // Set days: Mon-Fri (bits 0-4)
-                channelManager.setDaysBitmask(0, 0x1F);
-
-                // Set dose
-                channelManager.setDailyDose(0, 6.0);
-
-                // Set rate
-                channelManager.setDosingRate(0, 0.5);
-
-                // Enable
-                channelManager.setEnabled(0, true);
-
-                Serial.println(F("Done! Config saved as PENDING."));
-                Serial.println(F("Use '4' to apply or check with '2'."));
+                if (channelManager.updateConfig(0, update, nullptr)) {
+                    Serial.println(F("Done! Config is active."));
+                } else {
+                    Serial.println(F("Failed: config rejected or FRAM write error."));
+                }
 
                 channelManager.printChannelInfo(0);
-                break;
-            }
-
-            case '4': {
-                Serial.println(F("\nApplying all pending changes..."));
-                if (channelManager.applyAllPendingChanges()) {
-                    Serial.println(F("Success!"));
-                } else {
-                    Serial.println(F("Failed!"));
-                }
-                channelManager.printAllChannels();
                 break;
             }
 
@@ -477,21 +462,17 @@ void testScheduler() {
                 Serial.printf("  Setting event at hour %d\n", nextHour);
                 Serial.printf("  Current day of week: %d\n", now.dayOfWeek);
 
-                // Set single event at next hour
-                uint32_t events = (1UL << nextHour);
-                channelManager.setEventsBitmask(0, events);
-
-                // Set current day only
-                uint8_t days = (1 << now.dayOfWeek);
-                channelManager.setDaysBitmask(0, days);
-
-                // Set small dose for testing
-                channelManager.setDailyDose(0, 2.0);  // 2ml
-                channelManager.setDosingRate(0, 0.5); // 0.5 ml/s = 4 sec pump
-                channelManager.setEnabled(0, true);
-
-                // Apply immediately (bypass pending)
-                channelManager.applyPendingChanges(0);
+                // Single event at the next hour, current day only, small dose
+                ChannelManager::ConfigUpdate update;
+                update.has_events = true;
+                update.events = (1UL << nextHour);
+                update.has_days = true;
+                update.days = (1 << now.dayOfWeek);
+                update.has_dose = true;
+                update.dose = 2.0f;
+                update.has_rate = true;
+                update.rate = 0.5f;  // 4 s pump
+                channelManager.updateConfig(0, update, nullptr);
 
                 Serial.println(F("\nConfig applied:"));
                 channelManager.printChannelInfo(0);

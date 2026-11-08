@@ -173,7 +173,6 @@ bool FramController::_initializeEmpty() {
     
     for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
         if (!writeActiveConfig(i, &emptyConfig)) return false;
-        if (!writePendingConfig(i, &emptyConfig)) return false;
     }
     
     // Initialize empty daily states
@@ -330,24 +329,6 @@ bool FramController::writeActiveConfig(uint8_t channel, const ChannelConfig* con
     if (channel >= CHANNEL_COUNT) return false;
     
     uint16_t addr = FRAM_ADDR_ACTIVE_CH(channel);
-    return writeBytes(addr, config, sizeof(ChannelConfig));
-}
-
-// ============================================================================
-// CHANNEL CONFIG (PENDING)
-// ============================================================================
-
-bool FramController::readPendingConfig(uint8_t channel, ChannelConfig* config) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    uint16_t addr = FRAM_ADDR_PENDING_CH(channel);
-    return readBytes(addr, config, sizeof(ChannelConfig));
-}
-
-bool FramController::writePendingConfig(uint8_t channel, const ChannelConfig* config) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    uint16_t addr = FRAM_ADDR_PENDING_CH(channel);
     return writeBytes(addr, config, sizeof(ChannelConfig));
 }
 

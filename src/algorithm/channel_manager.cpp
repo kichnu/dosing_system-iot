@@ -3,6 +3,7 @@
  */
 
 #include "channel_manager.h"
+#include "rtc_controller.h"
 
 // Global instance
 ChannelManager channelManager;
@@ -107,11 +108,6 @@ const ChannelConfig& ChannelManager::getActiveConfig(uint8_t channel) const {
     return _activeConfig[channel];
 }
 
-const ChannelConfig& ChannelManager::getPendingConfig(uint8_t channel) const {
-    if (channel >= CHANNEL_COUNT) return _emptyConfig;
-    return _pendingConfig[channel];
-}
-
 const ChannelDailyState& ChannelManager::getDailyState(uint8_t channel) const {
     if (channel >= CHANNEL_COUNT) return _emptyDailyState;
     return _dailyState[channel];
@@ -130,14 +126,8 @@ const ContainerVolume& ChannelManager::getContainerVolume(uint8_t channel) const
 ChannelState ChannelManager::getChannelState(uint8_t channel) const {
     if (channel >= CHANNEL_COUNT) return CH_STATE_INACTIVE;
     
-    const ChannelConfig& pending = _pendingConfig[channel];
     const ChannelConfig& active = _activeConfig[channel];
     const ChannelCalculated& calc = _calculated[channel];
-    
-    // Check if has pending changes
-    if (pending.has_pending) {
-        return CH_STATE_PENDING;
-    }
     
     // Check if inactive (no events)
     if (active.events_bitmask == 0) {
@@ -159,81 +149,36 @@ ChannelState ChannelManager::getChannelState(uint8_t channel) const {
 }
 
 // ============================================================================
-// SETTERS (modify pending config)
+// CONFIGURATION
 // ============================================================================
 
-bool ChannelManager::setEventsBitmask(uint8_t channel, uint32_t bitmask) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    // Mask to valid hours (1-23), clear bit 0 and bits 24+
-    bitmask &= 0x00FFFFFE;
-    
-    _pendingConfig[channel].events_bitmask = bitmask;
-    
-    // Auto-enable if has events, auto-disable if no events
-    _pendingConfig[channel].enabled = (bitmask > 0) ? 1 : 0;
-    
-    return _savePendingConfig(channel);
-}
+bool ChannelManager::updateConfig(uint8_t channel, const ConfigUpdate& update, const TimeInfo* now,
+                                  ConfigSaveResult* result, ValidationError* error) {
+    ConfigSaveResult localResult;
+    if (!result) result = &localResult;
+    *result = ConfigSaveResult();
 
-bool ChannelManager::setDaysBitmask(uint8_t channel, uint8_t bitmask) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    // Mask to valid days (0-6)
-    bitmask &= 0x7F;
-    
-    _pendingConfig[channel].days_bitmask = bitmask;
-    return _savePendingConfig(channel);
-}
-
-bool ChannelManager::setDailyDose(uint8_t channel, float dose_ml) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    // Clamp to valid range
-    if (dose_ml < 0) dose_ml = 0;
-    float maxDose = (channel == AIR_PUMP_CHANNEL) ? (float)MAX_AIR_PUMP_DURATION_SECONDS : MAX_DAILY_DOSE_ML;
-    if (dose_ml > maxDose) dose_ml = maxDose;
-
-    _pendingConfig[channel].daily_dose_ml = dose_ml;
-    return _savePendingConfig(channel);
-}
-
-bool ChannelManager::setDosingRate(uint8_t channel, float rate) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    // Clamp to valid range
-    if (rate < MIN_DOSING_RATE) rate = MIN_DOSING_RATE;
-    if (rate > MAX_DOSING_RATE) rate = MAX_DOSING_RATE;
-    
-    _pendingConfig[channel].dosing_rate = rate;
-    return _savePendingConfig(channel);
-}
-
-bool ChannelManager::setEnabled(uint8_t channel, bool enabled) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    _pendingConfig[channel].enabled = enabled ? 1 : 0;
-    return _savePendingConfig(channel);
-}
-
-bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdate& update) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    // Lock for atomic batch update (prevents scheduler reading partial config)
-    ChannelLock lock;
-    if (!lock.isLocked()) {
-        Serial.println(F("[CH_MGR] WARNING: updatePendingConfigBatch failed to acquire lock"));
+    if (channel >= CHANNEL_COUNT) {
+        result->valid = false;
+        return false;
     }
 
-    // Apply all updates atomically to RAM cache
+    // Lock so the scheduler never reads a partial update
+    ChannelLock lock;
+    if (!lock.isLocked()) {
+        Serial.println(F("[CH_MGR] WARNING: updateConfig failed to acquire lock"));
+    }
+
+    const ChannelConfig& active = _activeConfig[channel];
+    ChannelConfig candidate = active;
+
     if (update.has_events) {
-        // Maska tylko parzyste godziny 2,4,...,22
-        uint32_t events = update.events & EVENT_VALID_HOURS_MASK;
-        _pendingConfig[channel].events_bitmask = events;
+        // Only even hours 2,4,...,22 are valid
+        candidate.events_bitmask = update.events & EVENT_VALID_HOURS_MASK;
     }
 
     if (update.has_days) {
-        _pendingConfig[channel].days_bitmask = update.days & 0x7F;
+        candidate.days_bitmask = update.days & 0x7F;
     }
 
     if (update.has_dose) {
@@ -241,22 +186,140 @@ bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdat
         if (dose < 0) dose = 0;
         float maxDose = (channel == AIR_PUMP_CHANNEL) ? (float)MAX_AIR_PUMP_DURATION_SECONDS : MAX_DAILY_DOSE_ML;
         if (dose > maxDose) dose = maxDose;
-        _pendingConfig[channel].daily_dose_ml = dose;
+        candidate.daily_dose_ml = dose;
     }
 
     if (update.has_rate) {
         float rate = update.rate;
         if (rate < MIN_DOSING_RATE) rate = MIN_DOSING_RATE;
         if (rate > MAX_DOSING_RATE) rate = MAX_DOSING_RATE;
-        _pendingConfig[channel].dosing_rate = rate;
+        candidate.dosing_rate = rate;
     }
 
-    // enabled zawsze wynika z events_bitmask — ignorujemy has_enabled z GUI
-    // (brak UI-toggle dla enabled; zapobiega pętli propagacji enabled=0 z FRAM)
-    _pendingConfig[channel].enabled = (_pendingConfig[channel].events_bitmask > 0) ? 1 : 0;
+    // enabled always follows events_bitmask (no GUI toggle for it)
+    candidate.enabled = (candidate.events_bitmask > 0) ? 1 : 0;
 
-    // Single FRAM write with all changes
-    return _savePendingConfig(channel);
+    if (!validateConfig(channel, candidate, error)) {
+        result->valid = false;
+        return false;
+    }
+
+    ChannelDailyState newState = _dailyState[channel];
+    bool planChanged = false;
+    if (now) {
+        planChanged = candidate.daily_dose_ml != active.daily_dose_ml ||
+                      candidate.events_bitmask != active.events_bitmask ||
+                      candidate.isDayEnabled(now->dayOfWeek) != active.isDayEnabled(now->dayOfWeek);
+        if (planChanged) {
+            _planToday(channel, candidate, *now, &newState, result);
+            result->today_recalculated = true;
+            _updateDailyStateCRC(&newState);
+        }
+    }
+
+    _updateConfigCRC(&candidate);
+
+    // RAM follows FRAM: a failed write leaves the running config unchanged
+    if (!framController.writeActiveConfig(channel, &candidate)) {
+        return false;
+    }
+    _activeConfig[channel] = candidate;
+
+    bool stateOk = true;
+    if (planChanged) {
+        stateOk = framController.writeDailyState(channel, &newState);
+        _dailyState[channel] = newState;
+    }
+
+    recalculate(channel);
+    return stateOk;
+}
+
+void ChannelManager::_planToday(uint8_t channel, const ChannelConfig& cfg, const TimeInfo& now,
+                                ChannelDailyState* state, ConfigSaveResult* result) const {
+    state->today_dose_cml = TODAY_DOSE_STANDARD;
+
+    // Slots that have not run and whose window is still open or ahead
+    uint8_t slots = 0;
+    if (cfg.isDayEnabled(now.dayOfWeek)) {
+        uint16_t nowMin = (uint16_t)now.hour * 60 + now.minute;
+        uint16_t offsetMin = (uint16_t)CHANNEL_SLOT_MAP[channel] * CHANNEL_OFFSET_MINUTES;
+        for (uint8_t h = FIRST_EVENT_HOUR; h <= LAST_EVENT_HOUR; h += 2) {
+            if (!cfg.isEventEnabled(h)) continue;
+            if (state->isEventCompleted(h) || state->isEventFailed(h)) continue;
+            uint16_t windowEnd = (uint16_t)h * 60 + offsetMin + EVENT_WINDOW_SECONDS / 60;
+            if (nowMin < windowEnd) slots++;
+        }
+    }
+    result->today_slots = slots;
+    if (slots == 0) return;
+
+    float standard = cfg.getSingleDose();
+
+    // Air pump runs a fixed time per event; there is no dose to rebalance
+    if (channel == AIR_PUMP_CHANNEL) {
+        result->today_dose_ml = standard;
+        return;
+    }
+
+    float remaining = cfg.daily_dose_ml - state->today_added_ml;
+    if (remaining < MIN_SINGLE_DOSE_ML) {
+        state->today_dose_cml = TODAY_DOSE_NONE;
+        return;
+    }
+
+    float dose = remaining / (float)slots;
+    if (fabsf(dose - standard) < 0.005f) {
+        result->today_dose_ml = standard;
+        return;
+    }
+
+    if (dose < MIN_SINGLE_DOSE_ML) dose = MIN_SINGLE_DOSE_ML;
+
+    // Cap at the limits; whatever does not fit is dropped rather than overdosed
+    float maxDose = MAX_SINGLE_DOSE_ML;
+    ChannelParams params;
+    if (framController.readChannelParams(channel, &params) &&
+        params.max_single_dose_ml > 0 && params.max_single_dose_ml < maxDose) {
+        maxDose = params.max_single_dose_ml;
+    }
+    float maxByPump = (float)(MAX_PUMP_DURATION_SECONDS - 1) * cfg.dosing_rate;
+    if (maxByPump < maxDose) maxDose = maxByPump;
+    if (dose > maxDose) dose = maxDose;
+
+    long cml = lroundf(dose * 100.0f);
+    if (cml < 1) cml = 1;
+    if (cml >= TODAY_DOSE_NONE) cml = TODAY_DOSE_NONE - 1;
+    state->today_dose_cml = (uint16_t)cml;
+    result->today_dose_ml = cml / 100.0f;
+}
+
+float ChannelManager::getStandardDoseMl(uint8_t channel) const {
+    if (channel >= CHANNEL_COUNT) return 0;
+    return _activeConfig[channel].getSingleDose();
+}
+
+float ChannelManager::getNextDoseMl(uint8_t channel) const {
+    if (channel >= CHANNEL_COUNT) return 0;
+
+    const ChannelConfig& cfg = _activeConfig[channel];
+    const ChannelDailyState& state = _dailyState[channel];
+
+    if (channel == AIR_PUMP_CHANNEL || state.today_dose_cml == TODAY_DOSE_STANDARD) {
+        return cfg.getSingleDose();
+    }
+    if (state.today_dose_cml == TODAY_DOSE_NONE) return 0;
+
+    float remaining = cfg.daily_dose_ml - state.today_added_ml;
+    if (remaining < MIN_SINGLE_DOSE_ML) return 0;
+
+    float dose = state.today_dose_cml / 100.0f;
+    if (dose > remaining) dose = remaining;
+
+    // The rate may have been recalibrated after today's plan was made
+    float maxByPump = (float)(MAX_PUMP_DURATION_SECONDS - 1) * cfg.dosing_rate;
+    if (dose > maxByPump) dose = maxByPump;
+    return dose;
 }
 
 // ============================================================================
@@ -264,6 +327,10 @@ bool ChannelManager::updatePendingConfigBatch(uint8_t channel, const ConfigUpdat
 // ============================================================================
 
 bool ChannelManager::validateConfig(uint8_t channel, ValidationError* error) {
+    return validateConfig(channel, getActiveConfig(channel), error);
+}
+
+bool ChannelManager::validateConfig(uint8_t channel, const ChannelConfig& cfg, ValidationError* error) {
     if (channel >= CHANNEL_COUNT) {
         if (error) {
             error->has_error = true;
@@ -272,8 +339,6 @@ bool ChannelManager::validateConfig(uint8_t channel, ValidationError* error) {
         }
         return false;
     }
-    
-    const ChannelConfig& cfg = _pendingConfig[channel];
     
     // Skip validation if no events (inactive channel)
     if (cfg.events_bitmask == 0) {
@@ -375,78 +440,6 @@ bool ChannelManager::validateAll(ValidationError* firstError) {
 }
 
 // ============================================================================
-// PENDING CHANGES
-// ============================================================================
-
-bool ChannelManager::hasPendingChanges(uint8_t channel) const {
-    if (channel >= CHANNEL_COUNT) return false;
-    return _pendingConfig[channel].has_pending != 0;
-}
-
-bool ChannelManager::hasAnyPendingChanges() const {
-    for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-        if (_pendingConfig[i].has_pending) return true;
-    }
-    return false;
-}
-
-bool ChannelManager::applyPendingChanges(uint8_t channel) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    if (!_pendingConfig[channel].has_pending) {
-        return true; // Nothing to apply
-    }
-    
-    Serial.printf("[CH_MGR] Applying pending CH%d\n", channel);
-    
-    // Copy pending to active
-    memcpy(&_activeConfig[channel], &_pendingConfig[channel], sizeof(ChannelConfig));
-    
-    // Clear pending flag
-    _activeConfig[channel].has_pending = 0;
-    _pendingConfig[channel].has_pending = 0;
-    
-    // Update CRCs
-    _updateConfigCRC(&_activeConfig[channel]);
-    _updateConfigCRC(&_pendingConfig[channel]);
-    
-    // Save to FRAM
-    if (!framController.writeActiveConfig(channel, &_activeConfig[channel])) {
-        return false;
-    }
-    if (!framController.writePendingConfig(channel, &_pendingConfig[channel])) {
-        return false;
-    }
-    
-    // Recalculate
-    recalculate(channel);
-    
-    return true;
-}
-
-bool ChannelManager::applyAllPendingChanges() {
-    bool success = true;
-    for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-        if (!applyPendingChanges(i)) {
-            success = false;
-        }
-    }
-    return success;
-}
-
-bool ChannelManager::revertPendingChanges(uint8_t channel) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    // Copy active to pending
-    memcpy(&_pendingConfig[channel], &_activeConfig[channel], sizeof(ChannelConfig));
-    _pendingConfig[channel].has_pending = 0;
-    
-    _updateConfigCRC(&_pendingConfig[channel]);
-    
-    return framController.writePendingConfig(channel, &_pendingConfig[channel]);
-}
-
-// ============================================================================
 // DAILY STATE
 // ============================================================================
 
@@ -523,27 +516,6 @@ bool ChannelManager::resetDailyStates() {
     return true;
 }
 
-bool ChannelManager::resetDailyState(uint8_t channel) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    Serial.printf("[CH_MGR] Resetting daily state CH%d\n", channel);
-
-    ChannelLock lock;
-    if (!lock.isLocked()) {
-        Serial.println(F("[CH_MGR] WARNING: resetDailyState failed to acquire lock"));
-    }
-
-    _dailyState[channel].reset();
-    _updateDailyStateCRC(&_dailyState[channel]);
-
-    if (!framController.writeDailyState(channel, &_dailyState[channel])) {
-        return false;
-    }
-
-    recalculate(channel);
-    return true;
-}
-
 bool ChannelManager::isEventCompleted(uint8_t channel, uint8_t hour) const {
     if (channel >= CHANNEL_COUNT) return false;
     return _dailyState[channel].isEventCompleted(hour);
@@ -570,9 +542,7 @@ bool ChannelManager::shouldExecuteEvent(uint8_t channel, uint8_t hour, uint8_t d
     
     const ChannelConfig& cfg = _activeConfig[channel];
     const ChannelDailyState& state = _dailyState[channel];
-    const ChannelCalculated& calc = _calculated[channel];
     
-    // Waliduj na podstawie active config (calc pochodzi z pending i może być niespójny)
     if (!cfg.enabled) return false;
     if (cfg.daily_dose_ml <= 0 || cfg.dosing_rate <= 0) return false;
     
@@ -588,8 +558,11 @@ bool ChannelManager::shouldExecuteEvent(uint8_t channel, uint8_t hour, uint8_t d
     // Check if failed (no retry after critical error)
     if (state.isEventFailed(hour)) return false;
     
-    // Check if daily dose already reached
-    if (state.today_added_ml >= cfg.daily_dose_ml) return false;
+    // Air pump runs per event; a daily total would cut off runs after a slot change
+    if (channel != AIR_PUMP_CHANNEL) {
+        if (state.today_added_ml >= cfg.daily_dose_ml) return false;
+        if (getNextDoseMl(channel) <= 0) return false;
+    }
     
     return true;
 }
@@ -699,12 +672,7 @@ float ChannelManager::getContainerCapacity(uint8_t channel) const {
 float ChannelManager::getDaysRemaining(uint8_t channel) const {
     if (channel >= CHANNEL_COUNT) return 0;
     
-    // Use pending config if it has unsaved changes, same as the rest of the
-    // GUI fields (dailyDose, events, days) — otherwise Days Left disagrees
-    // with the values shown next to it until the midnight rollover.
-    const ChannelConfig& cfg = _pendingConfig[channel].has_pending
-        ? _pendingConfig[channel]
-        : _activeConfig[channel];
+    const ChannelConfig& cfg = _activeConfig[channel];
 
     // If no daily dose configured, infinite days
     if (cfg.daily_dose_ml <= 0) return 999.0f;
@@ -833,11 +801,6 @@ bool ChannelManager::reloadFromFRAM() {
             return false;
         }
         
-        if (!framController.readPendingConfig(i, &_pendingConfig[i])) {
-            Serial.printf("[CH_MGR] Failed to read pending CH%d\n", i);
-            return false;
-        }
-        
         if (!framController.readDailyState(i, &_dailyState[i])) {
             Serial.printf("[CH_MGR] Failed to read daily CH%d\n", i);
             return false;
@@ -850,26 +813,12 @@ bool ChannelManager::reloadFromFRAM() {
 bool ChannelManager::saveToFRAM() {
     for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
         _updateConfigCRC(&_activeConfig[i]);
-        _updateConfigCRC(&_pendingConfig[i]);
         _updateDailyStateCRC(&_dailyState[i]);
         
         if (!framController.writeActiveConfig(i, &_activeConfig[i])) return false;
-        if (!framController.writePendingConfig(i, &_pendingConfig[i])) return false;
         if (!framController.writeDailyState(i, &_dailyState[i])) return false;
     }
     return true;
-}
-
-bool ChannelManager::_savePendingConfig(uint8_t channel) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    _pendingConfig[channel].has_pending = 1;
-    _updateConfigCRC(&_pendingConfig[channel]);
-    
-    // Recalculate with pending values
-    recalculate(channel);
-    
-    return framController.writePendingConfig(channel, &_pendingConfig[channel]);
 }
 
 // ============================================================================
@@ -879,8 +828,7 @@ bool ChannelManager::_savePendingConfig(uint8_t channel) {
 void ChannelManager::recalculate(uint8_t channel) {
     if (channel >= CHANNEL_COUNT) return;
     
-    // Use pending config for calculations (shows what will happen)
-    const ChannelConfig& cfg = _pendingConfig[channel];
+    const ChannelConfig& cfg = _activeConfig[channel];
     const ChannelDailyState& state = _dailyState[channel];
     ChannelCalculated& calc = _calculated[channel];
     
@@ -957,16 +905,14 @@ void ChannelManager::printChannelInfo(uint8_t channel) const {
     }
     
     const ChannelConfig& cfg = _activeConfig[channel];
-    const ChannelConfig& pending = _pendingConfig[channel];
     const ChannelDailyState& state = _dailyState[channel];
     const ChannelCalculated& calc = _calculated[channel];
     
-    const char* stateNames[] = {"INACTIVE", "INCOMPLETE", "INVALID", "CONFIGURED", "PENDING"};
+    const char* stateNames[] = {"INACTIVE", "INCOMPLETE", "INVALID", "CONFIGURED"};
     
     Serial.printf("\n=== Channel %d ===\n", channel);
     Serial.printf("State: %s\n", stateNames[calc.state]);
     Serial.printf("Enabled: %s\n", cfg.enabled ? "YES" : "NO");
-    Serial.printf("Has pending: %s\n", pending.has_pending ? "YES" : "NO");
     
     Serial.println(F("\nActive Config:"));
     Serial.printf("  Events bitmask: 0x%06X (%d events)\n", cfg.events_bitmask, calc.active_events_count);
@@ -1001,7 +947,7 @@ void ChannelManager::printAllChannels() const {
     Serial.println(F("│ CH │    State     │ Events │  Days  │ Dose/day │  Rate  │"));
     Serial.println(F("├────┼──────────────┼────────┼────────┼──────────┼────────┤"));
     
-    const char* stateNames[] = {"INACTIVE", "INCOMPLETE", "INVALID", "CONFIGURED", "PENDING"};
+    const char* stateNames[] = {"INACTIVE", "INCOMPLETE", "INVALID", "CONFIGURED"};
     
     for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
         const ChannelConfig& cfg = _activeConfig[i];

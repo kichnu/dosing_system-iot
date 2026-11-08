@@ -77,7 +77,7 @@ private:
     bool _checkDailyReset();
     bool _performDailyReset();
     void _checkSchedule();
-    bool _startDosing(uint8_t channel, uint8_t eventHour);
+    bool _startDosing(uint8_t channel, uint8_t eventHour, float singleDoseMl);
     void _checkDosingProgress();
     void _completeDosing(bool success);
 

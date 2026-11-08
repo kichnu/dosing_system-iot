@@ -65,10 +65,6 @@ public:
     bool readActiveConfig(uint8_t channel, ChannelConfig* config);
     bool writeActiveConfig(uint8_t channel, const ChannelConfig* config);
     
-    // --- Channel Config (Pending) ---
-    
-    bool readPendingConfig(uint8_t channel, ChannelConfig* config);
-    bool writePendingConfig(uint8_t channel, const ChannelConfig* config);
     
     // --- Daily State ---
     

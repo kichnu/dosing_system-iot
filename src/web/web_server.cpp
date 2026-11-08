@@ -13,6 +13,7 @@
 #include "../algorithm/channel_manager.h"
 #include "../hardware/dosing_scheduler.h"
 #include "../hardware/rtc_controller.h"
+#include "../hardware/relay_controller.h"
 #include "../hardware/fram_controller.h"
 
 // ============================================================================
@@ -259,13 +260,9 @@ void handleApiDosingStatus(AsyncWebServerRequest* request) {
     JsonArray channels = doc["channels"].to<JsonArray>();
     
 for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-        const ChannelConfig& active = channelManager.getActiveConfig(i);
-        const ChannelConfig& pending = channelManager.getPendingConfig(i);
+        const ChannelConfig& cfg = channelManager.getActiveConfig(i);
         const ChannelDailyState& daily = channelManager.getDailyState(i);
         const ChannelCalculated& calc = channelManager.getCalculated(i);
-        
-        // Use pending config if has changes, otherwise active
-        const ChannelConfig& cfg = pending.has_pending ? pending : active;
         
         JsonObject ch = channels.add<JsonObject>();
         
@@ -311,8 +308,6 @@ for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
         ch["completedToday"] = calc.completed_today_count;
         ch["isValid"] = calc.is_valid;
         
-        ch["hasPending"] = pending.has_pending ? true : false;
-        
         // State string for GUI
         const char* stateStr;
         switch (calc.state) {
@@ -320,7 +315,6 @@ for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
             case CH_STATE_INCOMPLETE: stateStr = "incomplete"; break;
             case CH_STATE_INVALID:    stateStr = "invalid"; break;
             case CH_STATE_CONFIGURED: stateStr = "configured"; break;
-            case CH_STATE_PENDING:    stateStr = "pending"; break;
             default:                  stateStr = "unknown"; break;
         }
         ch["state"] = stateStr;
@@ -444,6 +438,12 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         }
     }
 
+    // Today's total is only updated when the dose ends, so plan with the pump stopped
+    if (relayController.isChannelOn(channel)) {
+        request->send(409, "application/json", "{\"success\":false,\"error\":\"Pump is running, try again when it stops\"}");
+        return;
+    }
+
     // Build atomic config update
     ChannelManager::ConfigUpdate update;
 
@@ -471,11 +471,18 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         Serial.printf("  Rate: %.3f ml/s\n", update.rate);
     }
 
-    // Apply all changes atomically
-    bool success = channelManager.updatePendingConfigBatch(channel, update);
+    // Takes effect immediately and plans the rest of today
+    TimeInfo now;
+    bool hasTime = rtcController.isReady();
+    if (hasTime) now = rtcController.getTime();
+
+    ChannelManager::ConfigSaveResult saveResult;
+    ValidationError valErr;
+    valErr.has_error = false;
+    bool success = channelManager.updateConfig(channel, update, hasTime ? &now : nullptr, &saveResult, &valErr);
 
     // Save channel name if provided
-    if (doc["name"].is<const char*>()) {
+    if (success && doc["name"].is<const char*>()) {
         const char* name = doc["name"].as<const char*>();
         ChannelLabel label;
         memset(&label, 0, sizeof(label));
@@ -483,31 +490,30 @@ void handleApiDosingConfig(AsyncWebServerRequest* request, uint8_t* data, size_t
         framController.writeChannelLabel(channel, &label);
         Serial.printf("  Name: %s\n", label.name);
     }
-    
-    // Validate config
-    ValidationError valErr;
-    bool valid = channelManager.validateConfig(channel, &valErr);
-    
-    if (!valid) {
+
+    if (!saveResult.valid) {
         LOG_INFO("[WEB] Validation: %s", valErr.message);
     }
-    
+
     // Build response
     JsonDocument resp;
     resp["success"] = success;
-    resp["valid"] = valid;
-    resp["hasPending"] = channelManager.hasPendingChanges(channel);
-    
-    if (!valid && valErr.has_error) {
-        resp["validationError"] = valErr.message;
+    resp["valid"] = saveResult.valid;
+    resp["todayRecalculated"] = saveResult.today_recalculated;
+    resp["todaySlots"] = saveResult.today_slots;
+    resp["todayDose"] = saveResult.today_dose_ml;
+
+    if (!success) {
+        resp["error"] = saveResult.valid ? "FRAM write failed" : valErr.message;
     }
-    
+
     String response;
     serializeJson(resp, response);
     request->send(200, "application/json", response);
-    
-    LOG_INFO("[WEB] Config saved: success=%d valid=%d pending=%d",
-                  success, valid, channelManager.hasPendingChanges(channel));
+
+    LOG_INFO("[WEB] Config saved: success=%d valid=%d recalculated=%d slots=%d dose=%.2f",
+                  success, saveResult.valid, saveResult.today_recalculated,
+                  saveResult.today_slots, saveResult.today_dose_ml);
 }
 
 // ============================================================================
@@ -764,7 +770,6 @@ void handleApiDailyReset(AsyncWebServerRequest* request) {
     JsonDocument resp;
     resp["success"] = success;
     resp["message"] = success ? "Daily reset complete" : "Reset failed";
-    resp["pendingApplied"] = !channelManager.hasAnyPendingChanges();
     
     String response;
     serializeJson(resp, response);
@@ -973,61 +978,6 @@ void handleApiResetDosed(AsyncWebServerRequest* request) {
     request->send(200, "application/json", response);
 
     LOG_INFO("[WEB] Reset dosed CH%d: %s", channel, success ? "OK" : "FAILED");
-}
-
-// ============================================================================
-// API: APPLY PENDING - Natychmiastowe zatwierdzenie pending configu (jak CLI 'n')
-// + reset stanu dobowego TYLKO dla tego kanału (nadpisuje dzisiejszy postęp)
-// ============================================================================
-
-void handleApiApplyPending(AsyncWebServerRequest* request) {
-    if (!isAuthenticated(request)) {
-        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
-        return;
-    }
-
-    if (!request->hasParam("channel")) {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing channel\"}");
-        return;
-    }
-
-    uint8_t channel = request->getParam("channel")->value().toInt();
-
-    if (channel >= CHANNEL_COUNT) {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Invalid channel\"}");
-        return;
-    }
-
-    LOG_INFO("[WEB] Apply pending request CH%d", channel);
-
-    bool applyOk = channelManager.applyPendingChanges(channel);
-    bool resetOk = channelManager.resetDailyState(channel);
-    bool success = applyOk && resetOk;
-
-    const ChannelConfig& active = channelManager.getActiveConfig(channel);
-    const ChannelCalculated& calc = channelManager.getCalculated(channel);
-
-    JsonDocument resp;
-    resp["success"] = success;
-    resp["channel"] = channel;
-    resp["dailyDose"] = active.daily_dose_ml;
-    resp["dosingRate"] = active.dosing_rate;
-    resp["events"] = active.events_bitmask;
-    resp["days"] = active.days_bitmask;
-    resp["enabled"] = (bool)active.enabled;
-    resp["hasPending"] = false;
-    resp["daysRemaining"] = channelManager.getDaysRemaining(channel);
-    resp["eventsCompleted"] = 0;
-    resp["eventsFailed"] = 0;
-    resp["todayDosed"] = 0;
-    resp["isValid"] = calc.is_valid;
-    resp["message"] = success ? "Pending changes applied" : "Apply failed";
-
-    String response;
-    serializeJson(resp, response);
-    request->send(200, "application/json", response);
-
-    LOG_INFO("[WEB] Apply pending CH%d: %s", channel, success ? "OK" : "FAILED");
 }
 
 void handleHealth(AsyncWebServerRequest* request) {
@@ -1384,7 +1334,6 @@ void initWebServer() {
     server.on("/api/container-volume", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiContainerVolumeSet);
     server.on("/api/refill", HTTP_POST, handleApiRefill);
     server.on("/api/reset-dosed", HTTP_POST, handleApiResetDosed);
-    server.on("/api/apply-pending", HTTP_POST, handleApiApplyPending);
 
     // === SHARED NOTES API ===
     server.on("/api/notes", HTTP_GET, handleApiNotesGet);

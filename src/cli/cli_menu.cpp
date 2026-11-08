@@ -44,7 +44,7 @@ void printMenu() {
     Serial.println(F("|    m     Menu Channel Manager                                         |"));
     Serial.println(F("|    w     Menu RTC (czas/data)                                         |"));
     Serial.println(F("|    d     Menu schedulera dozowania                                    |"));
-    Serial.println(F("|    n     Apply pending + reset stanów dziennych (= północ)            |"));
+    Serial.println(F("|    n     Reset daily states (= midnight)                              |"));
     Serial.println(F("+-----------------------------------------------------------------------+"));
     Serial.println();
 }
