@@ -155,7 +155,7 @@ static const uint8_t CHANNEL_SLOT_MAP[CHANNEL_COUNT] = {0, 4, 1, 2, 3, 5, 6, 7};
 
 // Channel 7: air pump (duration mode — seconds, not ml)
 #define AIR_PUMP_CHANNEL                7
-#define MAX_AIR_PUMP_DURATION_SECONDS   600
+#define MAX_AIR_PUMP_DURATION_SECONDS   MAX_PUMP_DURATION_SECONDS
 #define MAX_AIR_PUMP_DURATION_MS        (MAX_AIR_PUMP_DURATION_SECONDS * 1000UL)
 
 #define CALIBRATION_DURATION_SEC    30
