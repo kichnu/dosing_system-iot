@@ -442,33 +442,6 @@ void setup() {
     } else {
         Serial.println(F("[MAIN] Running in degraded mode"));
     }
-
-    // === TEST: Zapisz testową wartość do Container Volume ===
-Serial.println(F("\n[TEST] Writing test data to Container Volume..."));
-ContainerVolume testVol;
-testVol.setContainerMl(1000.0f);  // 1000ml pojemność
-testVol.setRemainingMl(750.0f);   // 750ml pozostało
-testVol.crc32 = framController.calculateCRC32(&testVol, sizeof(testVol) - sizeof(testVol.crc32));
-
-if (framController.writeContainerVolume(0, &testVol)) {
-    Serial.printf("[TEST] Written to CH0: container=%.1fml, remaining=%.1fml\n",
-                  testVol.getContainerMl(), testVol.getRemainingMl());
-    
-    // Odczytaj z powrotem
-    ContainerVolume readBack;
-    if (framController.readContainerVolume(0, &readBack)) {
-        Serial.printf("[TEST] Read back: container=%.1fml, remaining=%.1fml\n",
-                      readBack.getContainerMl(), readBack.getRemainingMl());
-        
-        if (readBack.getContainerMl() == 1000.0f && readBack.getRemainingMl() == 750.0f) {
-            Serial.println(F("[TEST] ✓ Container Volume: PASS"));
-        } else {
-            Serial.println(F("[TEST] ✗ Container Volume: FAIL (corrupted!)"));
-        }
-    }
-} else {
-    Serial.println(F("[TEST] ✗ Failed to write Container Volume!"));
-}
 }
 
 // ============================================================================

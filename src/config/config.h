@@ -173,14 +173,6 @@ static const uint8_t CHANNEL_SLOT_MAP[CHANNEL_COUNT] = {0, 4, 1, 2, 3, 5, 6, 7};
 #define MAX_DOSING_RATE             5.0f
 
 // ============================================================================
-// CONTAINER VOLUME TRACKING
-// ============================================================================
-#define CONTAINER_MIN_ML            100
-#define CONTAINER_MAX_ML            5000
-#define CONTAINER_DEFAULT_ML        1000
-#define LOW_VOLUME_THRESHOLD_PCT    10
-
-// ============================================================================
 // DAILY RESET
 // ============================================================================
 #define DAILY_RESET_HOUR            0

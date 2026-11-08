@@ -40,8 +40,7 @@
 // CRITICAL_ERROR     | 0x0700   | 32 B      | Critical error state
 // AUTH_DATA          | 0x0720   | 64 B      | Admin password hash
 // SESSION_DATA       | 0x0760   | 128 B     | Session persistence
-// CONTAINER_VOLUME   | 0x07E0   | 64 B      | Container vol  (8 × 8B)
-// DOSED_TRACKER      | 0x0820   | 64 B      | Dosed tracker  (8 × 8B)
+// RESERVED           | 0x07E0   | 128 B     | Unused (formerly container volume, dosed tracker)
 // CHANNEL_LABELS     | 0x0860   | 256 B     | Channel names  (8 × 32B)
 // CHANNEL_PARAMS     | 0x0960   | 256 B     | Channel limits (8 × 32B)
 // PUMP_MON_CONFIG    | 0x0A60   | 32 B      | Edge Impulse config reserved
@@ -137,18 +136,8 @@ static_assert(sizeof(AuthData) == FRAM_SIZE_AUTH_DATA, "AuthData size mismatch")
 #define FRAM_SIZE_SESSION_DATA      128
 
 // ----------------------------------------------------------------------------
-// CONTAINER VOLUME (0x07E0 - 0x081F)  8 × 8B = 64B
+// RESERVED (0x07E0 - 0x085F)  128B — unused, formerly container volume and dosed tracker
 // ----------------------------------------------------------------------------
-#define FRAM_ADDR_CONTAINER_VOLUME  0x07E0
-#define FRAM_SIZE_CONTAINER_VOLUME  (8 * sizeof(ContainerVolume))   // 64B
-#define FRAM_ADDR_CONTAINER_CH(n)   (FRAM_ADDR_CONTAINER_VOLUME + ((n) * sizeof(ContainerVolume)))
-
-// ----------------------------------------------------------------------------
-// DOSED TRACKER (0x0820 - 0x085F)  8 × 8B = 64B
-// ----------------------------------------------------------------------------
-#define FRAM_ADDR_DOSED_TRACKER     0x0820
-#define FRAM_SIZE_DOSED_TRACKER     (8 * sizeof(DosedTracker))      // 64B
-#define FRAM_ADDR_DOSED_TRACKER_CH(n) (FRAM_ADDR_DOSED_TRACKER + ((n) * sizeof(DosedTracker)))
 
 // ----------------------------------------------------------------------------
 // CHANNEL LABELS (0x0860 - 0x095F)  8 × 32B = 256B  [NOWE]
@@ -253,9 +242,6 @@ bool framReadDailyState(uint8_t channel, ChannelDailyState* state);
 bool framWriteDailyState(uint8_t channel, const ChannelDailyState* state);
 bool framResetAllDailyStates(uint8_t currentDay);
 
-bool framReadDosedTracker(uint8_t channel, DosedTracker* tracker);
-bool framWriteDosedTracker(uint8_t channel, const DosedTracker* tracker);
-bool framResetDosedTracker(uint8_t channel);
 
 bool framReadSystemState(SystemState* state);
 bool framWriteSystemState(const SystemState* state);

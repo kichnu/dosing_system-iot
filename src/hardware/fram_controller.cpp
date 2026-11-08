@@ -196,11 +196,6 @@ bool FramController::_initializeEmpty() {
     // Clear error state
     // if (!clearErrorState()) return false;
     
-    // Initialize container volumes
-    if (!initializeContainerVolumes()) return false;
-
-    // Initialize dosed trackers
-    if (!initializeDosedTrackers()) return false;
 
     return true;
 }
@@ -455,81 +450,6 @@ void FramController::dumpSection(uint16_t address, size_t length) {
     }
 }
 
-// ============================================================================
-// CONTAINER VOLUME
-// ============================================================================
-
-bool FramController::readContainerVolume(uint8_t channel, ContainerVolume* volume) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    uint16_t addr = FRAM_ADDR_CONTAINER_CH(channel);
-    return readBytes(addr, volume, sizeof(ContainerVolume));
-}
-
-bool FramController::writeContainerVolume(uint8_t channel, const ContainerVolume* volume) {
-    if (channel >= CHANNEL_COUNT) return false;
-    
-    uint16_t addr = FRAM_ADDR_CONTAINER_CH(channel);
-    return writeBytes(addr, volume, sizeof(ContainerVolume));
-}
-
-bool FramController::initializeContainerVolumes() {
-    ContainerVolume emptyVolume;
-    emptyVolume.reset();
-    emptyVolume.crc32 = calculateCRC32(&emptyVolume, sizeof(ContainerVolume) - sizeof(uint32_t));
-
-    for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-        if (!writeContainerVolume(i, &emptyVolume)) {
-            return false;
-        }
-    }
-
-    Serial.println(F("[FRAM] Container volumes initialized"));
-    return true;
-}
-
-// ============================================================================
-// DOSED TRACKER
-// ============================================================================
-
-bool FramController::readDosedTracker(uint8_t channel, DosedTracker* tracker) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    uint16_t addr = FRAM_ADDR_DOSED_TRACKER_CH(channel);
-    return readBytes(addr, tracker, sizeof(DosedTracker));
-}
-
-bool FramController::writeDosedTracker(uint8_t channel, const DosedTracker* tracker) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    uint16_t addr = FRAM_ADDR_DOSED_TRACKER_CH(channel);
-    return writeBytes(addr, tracker, sizeof(DosedTracker));
-}
-
-bool FramController::resetDosedTracker(uint8_t channel) {
-    if (channel >= CHANNEL_COUNT) return false;
-
-    DosedTracker tracker;
-    tracker.reset();
-    tracker.crc32 = calculateCRC32(&tracker, sizeof(DosedTracker) - sizeof(uint32_t));
-
-    return writeDosedTracker(channel, &tracker);
-}
-
-bool FramController::initializeDosedTrackers() {
-    DosedTracker emptyTracker;
-    emptyTracker.reset();
-    emptyTracker.crc32 = calculateCRC32(&emptyTracker, sizeof(DosedTracker) - sizeof(uint32_t));
-
-    for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-        if (!writeDosedTracker(i, &emptyTracker)) {
-            return false;
-        }
-    }
-
-    Serial.println(F("[FRAM] Dosed trackers initialized"));
-    return true;
-}
 // ============================================================================
 // CHANNEL LABELS (nazwy kanałów)
 // ============================================================================

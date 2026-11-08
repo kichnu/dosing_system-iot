@@ -77,18 +77,6 @@ public:
     bool readSystemState(SystemState* state);
     bool writeSystemState(const SystemState* state);
 
-    // --- Container Volume ---
-
-    bool readContainerVolume(uint8_t channel, ContainerVolume* volume);
-    bool writeContainerVolume(uint8_t channel, const ContainerVolume* volume);
-    bool initializeContainerVolumes();
-
-    // --- Dosed Tracker ---
-
-    bool readDosedTracker(uint8_t channel, DosedTracker* tracker);
-    bool writeDosedTracker(uint8_t channel, const DosedTracker* tracker);
-    bool resetDosedTracker(uint8_t channel);
-    bool initializeDosedTrackers();
 
     // --- Channel Labels & Params ---
     bool readChannelLabel(uint8_t channel, ChannelLabel* label);

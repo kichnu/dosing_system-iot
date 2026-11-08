@@ -161,8 +161,6 @@ void testFRAM() {
 
     Serial.println(F("\n[FRAM TEST] Complete\n"));
 
-    Serial.println(F("\n--- Container Volume CH0 ---"));
-    framController.dumpSection(0x0730, 8);
 }
 
 // ============================================================================
