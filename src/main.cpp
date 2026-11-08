@@ -131,9 +131,6 @@ void initNetwork() {
     // --- WiFi ---
     Serial.print(F("[INIT] WiFi... "));
     
-    // TODO: Docelowo credentials z FRAM/Captive Portal
-    // WiFi.begin("KiG_2.4_IOT", "*qY4I@5&*%0lK1Q$U6UV7^S");
-
     // Use credentials from FRAM or fallback
     const char* ssid = getWiFiSSID();
     const char* password = getWiFiPassword();
