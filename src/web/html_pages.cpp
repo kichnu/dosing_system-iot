@@ -100,7 +100,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .app-container{display:flex;flex-direction:column;width:100vw;height:100dvh;overflow:hidden;z-index:1}
 .card-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 var(--card-padding);height:var(--header-height);width:100%;max-width:var(--card-width);align-self:center;flex:none;margin-top:auto}
 .card-time{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--text-secondary)}
-.channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:8px var(--card-padding);width:100%;max-width:var(--card-width);align-self:center;flex:none}
+.channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:var(--section-padding);width:calc(100% - 2*var(--card-padding));max-width:calc(var(--card-width) - 2*var(--card-padding));align-self:center;flex:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md)}
 .ch-nav-btn{height:32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast)}
 .ch-nav-btn:hover{border-color:var(--border-light);color:var(--text-primary)}
 .ch-nav-btn.configured{background:rgba(34,197,94,0.15)}
@@ -218,7 +218,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
 @media (max-width:768px){
 .card-topbar{margin-bottom:12px}
-.channel-nav{grid-template-columns:repeat(4,1fr);gap:8px;padding-block:10px}
+.channel-nav{grid-template-columns:repeat(4,1fr);gap:8px}
 .ch-nav-btn{height:var(--day-slot-height);font-size:var(--font-md)}
 }
 
@@ -365,8 +365,8 @@ body:not(.editing-locked) .lock-status{display:flex}
 .logo-icon svg{width:24px;height:24px}
 .logo-text{font-size:1.25rem;letter-spacing:-0.02em;margin-top:0}
 .btn-icon{width:36px;height:36px}
-.channel-nav{gap:8px}
-.ch-nav-btn{height:40px}
+.channel-nav{gap:8px;padding-block:12px;margin-top:4px}
+.ch-nav-btn{height:36px}
 .events-grid,.days-grid{gap:8px}
 .section-header{padding-block:14px}
 .section-title{gap:10px}
