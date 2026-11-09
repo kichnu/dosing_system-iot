@@ -357,6 +357,14 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .lock-btn.unlocked{color:var(--accent-green);border-color:var(--accent-green)}
 .lock-form-bar{display:none;position:fixed;top:var(--header-height);left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
 .lock-form-bar.visible{display:flex}
+@media (min-width:769px){
+.card-inner{max-width:none;border:none;padding-block:24px;overflow-y:auto;scrollbar-gutter:stable both-edges;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
+.card-topbar,.channel-nav,.card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none}
+.card-topbar{margin-top:auto;background:transparent;border-bottom:none}
+.channel-nav{background:transparent;border-bottom:none}
+.card-body{margin-bottom:auto;overflow:visible}
+.lock-form-bar{top:0}
+}
 @keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .shake-inp{animation:lock-shake 0.35s}
 .lock-pwd-input{flex:1;height:34px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--font-md);outline:none;min-width:0}
@@ -445,15 +453,16 @@ function init(){
 
 function renderChannels(){
     const slider=document.getElementById('channelScreen');
-    const activeCardBody=document.querySelector(`.channel-card[data-ch="${currentCh}"] .card-body`);
-    const scrollTop=activeCardBody?activeCardBody.scrollTop:0;
+    const scrollerSel=window.matchMedia('(min-width:769px)').matches?'.card-inner':'.card-body';
+    const activeScroller=document.querySelector(`.channel-card[data-ch="${currentCh}"] ${scrollerSel}`);
+    const scrollTop=activeScroller?activeScroller.scrollTop:0;
     slider.innerHTML=channels.map((ch,idx)=>renderChannelCard(ch,idx)).join('');
     channels.forEach((ch,idx)=>{attachCardEvents(idx);});
     const newActiveCard=document.querySelector(`.channel-card[data-ch="${currentCh}"]`);
     if(newActiveCard){
         newActiveCard.classList.add('active');
-        const newCardBody=newActiveCard.querySelector('.card-body');
-        if(newCardBody)newCardBody.scrollTop=scrollTop;
+        const newScroller=newActiveCard.querySelector(scrollerSel);
+        if(newScroller)newScroller.scrollTop=scrollTop;
     }
     updateClock();
     updateLockUI();
