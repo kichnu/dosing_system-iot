@@ -13,7 +13,7 @@ const char* LOGIN_HTML = R"rawliteral(
     <style>
 :root{--bg-primary:#0a0f1a;--bg-card:#111827;--bg-input:#1e293b;--border:#2d3a4f;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent-blue:#38bdf8;--accent-cyan:#22d3d5;--accent-green:#22c55e;--accent-red:#ef4444;--radius:12px;--radius-sm:8px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;justify-content:center;align-items:center}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,0.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(34,211,213,0.06) 0%,transparent 50%);pointer-events:none;z-index:0}
 .login-box{background:var(--bg-card);border:1px solid var(--border);padding:40px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,0.4);width:100%;max-width:400px;margin:20px;position:relative;z-index:1}
 .logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:30px}
@@ -94,7 +94,7 @@ const char* DASHBOARD_HTML = R"rawliteral(
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;touch-action:pan-y}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.4}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.4}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(34,211,213,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
 
 .app-container{display:flex;flex-direction:column;width:100vw;height:100dvh;overflow:hidden;z-index:1}
@@ -216,8 +216,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-secondary:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
 
-@media (max-width:768px) and (hover:none){
-.channel-nav{grid-template-columns:repeat(4,1fr)}
+@media (max-width:768px){
+.channel-nav{grid-template-columns:repeat(4,1fr);gap:8px;padding-block:10px}
+.ch-nav-btn{height:44px;font-size:var(--font-md)}
 }
 
 .params-actions{display:flex;gap:8px;margin-top:4px}
@@ -356,7 +357,22 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .lock-btn.unlocked{color:var(--accent-green);border-color:var(--accent-green)}
 .lock-form-bar{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
 .lock-form-bar.visible{display:flex}
-@media (min-width:769px){.card-inner{padding-block:24px;scrollbar-gutter:stable both-edges}}
+@media (min-width:769px){
+:root{--card-padding:16px;--section-gap:16px;--section-padding:20px;--event-slot-height:48px;--day-slot-height:44px;--header-height:64px;--font-xs:0.7rem;--font-sm:0.8rem;--font-md:0.875rem}
+.card-inner{padding-block:24px;scrollbar-gutter:stable both-edges}
+.logo-icon{width:40px;height:40px}
+.logo-icon svg{width:24px;height:24px}
+.logo-text{font-size:1.25rem;letter-spacing:-0.02em;margin-top:0}
+.btn-icon{width:36px;height:36px}
+.channel-nav{gap:8px}
+.ch-nav-btn{height:40px}
+.events-grid,.days-grid{gap:8px}
+.section-header{padding-block:14px}
+.section-title{gap:10px}
+.section-title svg,.notes-icon{width:16px;height:16px}
+.notes-header,.params-header{min-height:54px;padding-block:12px}
+.notes-toggle-btn{width:28px;height:28px}
+}
 @keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .shake-inp{animation:lock-shake 0.35s}
 .lock-pwd-input{flex:1;height:34px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--font-md);outline:none;min-width:0}
