@@ -26,9 +26,6 @@ testowane jeszcze fizycznie na sprzęcie DOZOWNIKA (nie pod ręką w trakcie tej
 sesji) — objaw (reset po zalogowaniu) tutaj się jeszcze nie ujawnił, ale ten
 sam wzorzec kodu = to samo ryzyko.
 
-Zobacz też `docs/buzzer_control.md` (przykład `xTaskCreate` tam wciąż pokazuje
-starą wartość 1024 — do zaktualizowania przy okazji).
-
 ## 2. analogRead(A0) koliduje z GPIO1 — ZNALEZIONE, NIEZAAPLIKOWANE (celowo)
 
 **Plik:** `src/security/session_manager.cpp:92`, funkcja `createSession()`:

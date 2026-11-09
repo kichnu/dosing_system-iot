@@ -22,3 +22,6 @@ Punkt naprawiony → oznaczyć tu i w tabeli w dev-knowledge. Audyt 2026-10-29, 
 - Blok brakujący przy starcie: po powrocie restart (maks. 3 na zatrzask), bo aplikacja z nim nie wystartowała.
 - `buzzerOK()` tylko przy sprawnym starcie. Nieczytelny stan błędu z FRAM to awaria, nie „brak błędu”.
 - Do zrobienia: dashboard VPS nie pokazuje jeszcze pola `alarm`.
+- Do zrobienia: tryb provisioning jest bez sygnału buzzera. `runProvisioningLoop()` (`src/provisioning/ap_core.cpp`)
+  powinien ustawiać `setBuzzerMode(BuzzerMode::WARNING)` jak w Dolewce, a błąd FRAM/AP w tej ścieżce wywoływać
+  `buzzerCritical()`. Stan sprawdzony 2026-11-09.
