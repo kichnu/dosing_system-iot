@@ -115,9 +115,8 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .logo-icon svg{width:18px;height:18px;fill:var(--bg-primary)}
 .logo-text{margin-left:10px;font-size:1rem;font-weight:700;margin-top:3px}
 .header-actions{display:flex;gap:6px}
-.btn-icon{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-input);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition-fast)}
-.btn-icon:hover{background:var(--bg-card-hover);color:var(--text-primary)}
-.btn-icon svg{width:16px;height:16px}
+.btn-back{background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);padding:8px 16px;border-radius:var(--radius-sm);font-size:0.875rem;font-weight:500;cursor:pointer;transition:all 0.2s}
+.btn-back:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
 
 .channel-card{background:var(--bg-primary);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;opacity:0;display:flex;justify-content:center;pointer-events:none;transition:opacity 0.3s ease}
@@ -364,7 +363,6 @@ body:not(.editing-locked) .lock-status{display:flex}
 .logo-icon{width:40px;height:40px}
 .logo-icon svg{width:24px;height:24px}
 .logo-text{font-size:1.25rem;letter-spacing:-0.02em;margin-top:0}
-.btn-icon{width:36px;height:36px}
 .channel-nav{gap:8px;padding-block:12px;margin-top:4px}
 .ch-nav-btn{height:36px}
 .events-grid,.days-grid{gap:8px}
@@ -542,7 +540,7 @@ function renderChannelCard(ch,idx){
     const navBtns=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===idx?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
 <div class="card-inner">
-<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
+<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="btn-back" onclick="logout()">Back</button></div></div>
 <div class="channel-nav">${navBtns}</div>
 <div class="card-body">
 <div class="card-content">
@@ -783,7 +781,7 @@ function loadStatus(){
 function popcount(n){let count=0;while(n){count+=n&1;n>>>=1;}return count;}
 function getStateLabel(state){return{inactive:'Inactive',incomplete:'Setup',invalid:'Invalid',configured:'Active'}[state]||state;}
 function updateClock(){const now=new Date();const t=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0')+':'+String(now.getUTCSeconds()).padStart(2,'0');document.querySelectorAll('.card-time').forEach(el=>el.textContent=t);}
-function logout(){showConfirm('Logout','End current session?','logout',()=>{fetch('api/logout',{method:'POST'}).then(()=>{if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';}else{window.location.href='login';}});});}
+function logout(){fetch('api/logout',{method:'POST'}).then(()=>{if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';}else{window.location.href='login';}});}
 
 let pendingSaveChannel=-1;
 
@@ -824,16 +822,14 @@ ok:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 err:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
 warn:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
 info:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-logout:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
 };
-let alertCallback=null;let alertTimeout=null;
+let alertTimeout=null;
 
-function showAlert(title,msg,type,callback){
+function showAlert(title,msg,type){
     document.getElementById('alertIcon').className='modal-icon '+type;
     document.getElementById('alertIcon').innerHTML=MODAL_ICONS[type]||MODAL_ICONS.info;
     document.getElementById('alertTitle').textContent=title;
     document.getElementById('alertText').textContent=msg;
-    alertCallback=callback||null;
     if(type==='ok'){
         document.getElementById('alertActions').innerHTML='';
         alertTimeout=setTimeout(closeAlert,1000);
@@ -843,21 +839,9 @@ function showAlert(title,msg,type,callback){
     document.getElementById('alertModal').classList.add('show');
 }
 
-function showConfirm(title,msg,type,onConfirm){
-    document.getElementById('alertIcon').className='modal-icon '+type;
-    document.getElementById('alertIcon').innerHTML=MODAL_ICONS[type]||MODAL_ICONS.info;
-    document.getElementById('alertTitle').textContent=title;
-    document.getElementById('alertText').textContent=msg;
-    document.getElementById('alertActions').innerHTML='<button class="btn btn-secondary" onclick="closeAlert()">Cancel</button><button class="btn btn-primary" onclick="closeAlert(true)">Confirm</button>';
-    alertCallback=onConfirm;
-    document.getElementById('alertModal').classList.add('show');
-}
-
-function closeAlert(confirmed){
+function closeAlert(){
     if(alertTimeout){clearTimeout(alertTimeout);alertTimeout=null;}
     document.getElementById('alertModal').classList.remove('show');
-    if(confirmed&&alertCallback)alertCallback();
-    alertCallback=null;
 }
 // ── Channel Lock ─────────────────────────────────────────────────────────
 let pendingUnlockCh=-1;
