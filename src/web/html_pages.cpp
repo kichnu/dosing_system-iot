@@ -217,8 +217,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
 
 @media (max-width:768px){
+.card-topbar{margin-bottom:12px}
 .channel-nav{grid-template-columns:repeat(4,1fr);gap:8px;padding-block:10px}
-.ch-nav-btn{height:44px;font-size:var(--font-md)}
+.ch-nav-btn{height:var(--day-slot-height);font-size:var(--font-md)}
 }
 
 .params-actions{display:flex;gap:8px;margin-top:4px}
