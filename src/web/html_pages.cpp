@@ -353,11 +353,11 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .eventlog-ts{font-size:var(--font-xs);color:var(--text-muted);font-family:'SF Mono','Fira Code',monospace}
 .eventlog-text{font-size:var(--font-sm);color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
 .eventlog-empty{padding:10px 8px;text-align:center;font-size:var(--font-xs);color:var(--text-muted);font-style:italic}
-.lock-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 4px;margin-left:5px;font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:color var(--transition-fast),border-color var(--transition-fast);white-space:nowrap}
-.lock-btn.locked{color:var(--text-muted)}
-.lock-btn.unlocked{color:var(--accent-green);border-color:var(--accent-green)}
-.lock-form-bar{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
-.lock-form-bar.visible{display:flex}
+.lock-status{display:none;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:var(--font-xs);color:var(--accent-green)}
+body:not(.editing-locked) .lock-status{display:flex}
+.lock-again-btn{background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--text-muted);font-size:var(--font-xs);cursor:pointer}
+.lock-again-btn:hover{color:var(--text-secondary)}
+#lockModal{transition:none}
 @media (min-width:769px){
 :root{--card-padding:16px;--section-gap:16px;--section-padding:20px;--event-slot-height:48px;--day-slot-height:44px;--header-height:64px;--font-xs:0.7rem;--font-sm:0.8rem;--font-md:0.875rem}
 .card-inner{padding-block:24px;scrollbar-gutter:stable both-edges}
@@ -376,13 +376,12 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 }
 @keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .shake-inp{animation:lock-shake 0.35s}
-.lock-pwd-input{flex:1;height:34px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--font-md);outline:none;min-width:0}
+.lock-pwd-input{display:block;width:100%;height:42px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:1rem;text-align:center;letter-spacing:0.2em;outline:none}
 .lock-pwd-input:focus{border-color:var(--accent-cyan)}
 .lock-pwd-input.error{border-color:var(--accent-red)}
-.lock-pwd-msg{font-size:var(--font-xs);color:var(--accent-red);flex-shrink:0;min-width:0}
-.lock-submit-btn{height:34px;padding:0 12px;background:var(--accent-cyan);color:#000;border:none;border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:700;cursor:pointer;flex-shrink:0}
-.lock-close-btn{height:34px;width:34px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-body.editing-locked .lockable-btn{pointer-events:none;opacity:0.45}
+.lock-pwd-msg{display:block;min-height:1.4em;margin:8px 0;text-align:center;font-size:var(--font-sm);color:var(--accent-red)}
+body.editing-locked .lockable-btn{background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-secondary)}
+body.editing-locked .lockable-btn svg{display:none}
 body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f1f5f9' stroke-width='2.5'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") no-repeat center/contain;margin-right:4px}
 </style>
 </head>
@@ -411,12 +410,16 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
             </div>
         </div>
     </div>
-    <form id="lockFormBar" class="lock-form-bar" onsubmit="submitUnlock();return false;" autocomplete="off">
-        <input type="password" id="lockPwdInput" name="lock_pin" class="lock-pwd-input" placeholder="PIN…" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*">
-        <span id="lockFormMsg" class="lock-pwd-msg"></span>
-        <button type="submit" class="lock-submit-btn">Unlock</button>
-        <button type="button" class="lock-close-btn" onclick="hideLockForm()">&#215;</button>
-    </form>
+    <div class="modal-overlay" id="lockModal">
+        <form class="modal-box" onsubmit="submitUnlock();return false;" autocomplete="off">
+            <div class="modal-icon info"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="modal-title">Enter PIN to save</div>
+            <div class="modal-text">Saving stays unlocked for 5 minutes.</div>
+            <input type="password" id="lockPwdInput" name="lock_pin" class="lock-pwd-input" placeholder="PIN…" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*">
+            <span id="lockFormMsg" class="lock-pwd-msg"></span>
+            <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="hideLockForm()">Cancel</button><button type="submit" class="btn btn-primary">Unlock</button></div>
+        </form>
+    </div>
 <script>
 const CFG={CHANNEL_COUNT:8,EVENTS_PER_DAY:11,FIRST_EVENT_HOUR:2,LAST_EVENT_HOUR:22,CHANNEL_OFFSET_MIN:15,CHANNEL_SLOT_MAP:[0,4,1,2,3,5,6,7],EVENT_WINDOW_SEC:300,MAX_PUMP_SEC:180,MIN_DOSE_ML:0.1,MIN_RATE:1/30,MAX_RATE:5.0,CALIB_SEC:30,SWIPE_THRESHOLD:50};
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -539,7 +542,7 @@ function renderChannelCard(ch,idx){
     const navBtns=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===idx?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
 <div class="card-inner">
-<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="lock-btn locked" onclick="toggleLock()"></button><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
+<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="btn-icon" title="Logout" onclick="logout()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
 <div class="channel-nav">${navBtns}</div>
 <div class="card-body">
 <div class="card-content">
@@ -625,7 +628,7 @@ function toggleSettings(idx){if(settingsOpen[idx])closeSettings(idx);else setSet
 function renderConfigSection(ch,idx,validClass,validMsg,validIcon,single,pumpTime,weekly){
 const holdTile=`<div class="settings-field"><span>Hold to Run</span><button class="calib-hold-btn" id="pumpHoldBtn_${idx}" data-ch="${idx}" oncontextmenu="return false;"><svg id="pumpHoldIcon_${idx}" width="20" height="20" fill="currentColor" stroke="none" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button></div>`;
 const manualGroup=`<div class="settings-group"><div class="settings-title">Manual Run</div><div class="settings-grid settings-grid-single">${holdTile}</div></div>`;
-const footer=`<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div><div class="params-actions"><button class="btn btn-primary lockable-btn" id="saveBtn_${idx}" onclick="showSaveModal(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Save</button><button class="btn btn-secondary" onclick="closeSettings(${idx})">Cancel</button></div>`;
+const footer=`<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div><div class="params-actions"><button class="btn btn-primary lockable-btn" id="saveBtn_${idx}" onclick="requestSave(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg><span class="save-lbl">Save</span></button><button class="btn btn-secondary" onclick="closeSettings(${idx})">Cancel</button></div><div class="lock-status"><span>Unlocked &middot; <span class="lock-time"></span></span><button class="lock-again-btn" onclick="setLocked(true)">Lock</button></div>`;
 if(idx===7){const dur=Math.round(ch.dailyDose)||60;return `<div class="settings-panel"><div class="settings-groups"><div class="settings-group"><div class="settings-title">Air Pump</div><div class="settings-grid settings-grid-single"><label class="settings-field">Run Duration (s/event)<input type="number" id="duration_${idx}" value="${dur}" step="1" min="1" max="${CFG.MAX_PUMP_SEC}" data-ch="${idx}"></label></div></div>${manualGroup}</div>${footer}</div>`;}
 return `<div class="settings-panel"><div class="settings-title">Configuration</div><div class="settings-grid"><label class="settings-field">Daily Dose (ml)<input type="number" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></label><div class="settings-field"><span>Single Dose</span><div class="settings-readout" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="settings-field"><span>Pump Time</span><div class="settings-readout" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="settings-field"><span>Weekly</span><div class="settings-readout" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div><div class="settings-groups"><div class="settings-group"><div class="settings-title">Pump Calibration</div><div class="settings-grid"><label class="settings-field">Measured in 30 s (ml)<input type="number" id="calibMl_${idx}" placeholder="—" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"></label><div class="settings-field"><span>Start Calibration</span><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="calibTxt_${idx}">30s</span></button></div></div></div>${manualGroup}</div>${footer}</div>`;}
 
@@ -814,7 +817,7 @@ function confirmSave(){
     .catch(()=>showAlert('Error','Connection error','err'));
 }
 
-document.addEventListener('click',function(e){if(e.target.id==='alertModal')closeAlert();if(e.target.id==='saveModal')closeSaveModal();});
+document.addEventListener('click',function(e){if(e.target.id==='alertModal')closeAlert();if(e.target.id==='saveModal')closeSaveModal();if(e.target.id==='lockModal')hideLockForm();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAlert();closeSaveModal();}});
 const MODAL_ICONS={
 ok:'<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
@@ -857,15 +860,17 @@ function closeAlert(confirmed){
     alertCallback=null;
 }
 // ── Channel Lock ─────────────────────────────────────────────────────────
-function toggleLock(){if(isLocked)showLockForm();else setLocked(true);}
+let pendingUnlockCh=-1;
+function requestSave(idx){if(isLocked){pendingUnlockCh=idx;showLockForm();}else showSaveModal(idx);}
 function showLockForm(){
-    const f=document.getElementById('lockFormBar');if(!f)return;
-    f.classList.add('visible');
+    const f=document.getElementById('lockModal');if(!f)return;
+    f.classList.add('show');
     const i=document.getElementById('lockPwdInput');if(i){i.value='';i.focus();}
     document.getElementById('lockFormMsg').textContent='';
 }
 function hideLockForm(){
-    const f=document.getElementById('lockFormBar');if(f)f.classList.remove('visible');
+    pendingUnlockCh=-1;
+    const f=document.getElementById('lockModal');if(f)f.classList.remove('show');
     const i=document.getElementById('lockPwdInput');if(i)i.value='';
     document.getElementById('lockFormMsg').textContent='';
 }
@@ -885,14 +890,10 @@ function _lockMinsLeft(){return Math.max(1,Math.ceil((lockUnlockAt-Date.now())/6
 let _lockCdInt=null;
 function _startCd(){clearInterval(_lockCdInt);_lockCdInt=setInterval(()=>{if(isLocked){clearInterval(_lockCdInt);}else{updateLockUI();}},60000);}
 function updateLockUI(){
-    document.querySelectorAll('.lock-btn').forEach(btn=>{
-        if(!lockEnabled){btn.style.display='none';return;}
-        btn.style.display='';
-        if(isLocked){btn.className='lock-btn locked';btn.textContent='LOCKED';}
-        else{btn.className='lock-btn unlocked';btn.textContent='EDITING \xb7 '+_lockMinsLeft()+'m';}
-    });
-    if(isLocked)document.body.classList.add('editing-locked');
-    else document.body.classList.remove('editing-locked');
+    const label=isLocked?'Unlock to save':'Save';
+    document.querySelectorAll('.save-lbl').forEach(l=>{l.textContent=label;});
+    if(!isLocked){const left=_lockMinsLeft()+'m left';document.querySelectorAll('.lock-time').forEach(t=>{t.textContent=left;});}
+    document.body.classList.toggle('editing-locked',isLocked);
 }
 function submitUnlock(){
     if(Date.now()<lockThrottleUntil){
@@ -904,7 +905,7 @@ function submitUnlock(){
     if(!inp||!inp.value){if(inp)inp.focus();return;}
     fetch('api/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:inp.value})})
     .then(r=>r.json()).then(d=>{
-        if(d.success){lockFailedAttempts=0;setLocked(false);}
+        if(d.success){const ch=pendingUnlockCh;lockFailedAttempts=0;setLocked(false);if(ch>=0)showSaveModal(ch);}
         else{
             lockFailedAttempts++;
             if(inp){inp.value='';inp.focus();inp.classList.add('error','shake-inp');setTimeout(()=>inp.classList.remove('error','shake-inp'),400);}
