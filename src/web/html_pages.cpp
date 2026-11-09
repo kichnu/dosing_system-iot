@@ -98,9 +98,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(34,211,213,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
 
 .app-container{display:flex;flex-direction:column;width:100vw;height:100dvh;overflow:hidden;z-index:1}
-.card-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--header-height);flex-shrink:0}
+.card-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 var(--card-padding);height:var(--header-height);width:100%;max-width:var(--card-width);align-self:center;flex:none;margin-top:auto}
 .card-time{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-md);font-weight:600;color:var(--text-secondary)}
-.channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:8px var(--card-padding);background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0}
+.channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:8px var(--card-padding);width:100%;max-width:var(--card-width);align-self:center;flex:none}
 .ch-nav-btn{height:32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast)}
 .ch-nav-btn:hover{border-color:var(--border-light);color:var(--text-primary)}
 .ch-nav-btn.configured{background:rgba(34,197,94,0.15)}
@@ -122,10 +122,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
 .channel-card{background:var(--bg-primary);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;opacity:0;display:flex;justify-content:center;pointer-events:none;transition:opacity 0.3s ease}
 .channel-card.active{opacity:1;pointer-events:auto}
-.card-inner{width:100%;max-width:var(--card-width);height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border);border-right:1px solid var(--border)}
-.card-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
-.card-body::-webkit-scrollbar{width:8px}
-.card-body::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
+.card-inner{width:100%;height:100%;display:flex;flex-direction:column;padding-block:12px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
+.card-inner::-webkit-scrollbar{width:8px}
+.card-inner::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
+.card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none;margin-bottom:auto}
 
 .state-badge{padding:3px 8px;border-radius:10px;font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
 .state-badge.inactive{background:rgba(75,85,99,0.2);color:var(--state-inactive)}
@@ -218,7 +218,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
 @media (max-width:768px) and (hover:none){
 .channel-nav{grid-template-columns:repeat(4,1fr)}
-.card-inner{border-left:none;border-right:none}
 }
 
 .params-actions{display:flex;gap:8px;margin-top:4px}
@@ -355,16 +354,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .lock-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 4px;margin-left:5px;font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:color var(--transition-fast),border-color var(--transition-fast);white-space:nowrap}
 .lock-btn.locked{color:var(--text-muted)}
 .lock-btn.unlocked{color:var(--accent-green);border-color:var(--accent-green)}
-.lock-form-bar{display:none;position:fixed;top:var(--header-height);left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
+.lock-form-bar{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(100vw,var(--card-width));z-index:200;background:var(--bg-card);border-bottom:1px solid var(--border);padding:7px 12px;gap:8px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.5)}
 .lock-form-bar.visible{display:flex}
-@media (min-width:769px){
-.card-inner{max-width:none;border:none;padding-block:24px;overflow-y:auto;scrollbar-gutter:stable both-edges;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
-.card-topbar,.channel-nav,.card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none}
-.card-topbar{margin-top:auto;background:transparent;border-bottom:none}
-.channel-nav{background:transparent;border-bottom:none}
-.card-body{margin-bottom:auto;overflow:visible}
-.lock-form-bar{top:0}
-}
+@media (min-width:769px){.card-inner{padding-block:24px;scrollbar-gutter:stable both-edges}}
 @keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .shake-inp{animation:lock-shake 0.35s}
 .lock-pwd-input{flex:1;height:34px;padding:0 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--font-md);outline:none;min-width:0}
@@ -453,15 +445,14 @@ function init(){
 
 function renderChannels(){
     const slider=document.getElementById('channelScreen');
-    const scrollerSel=window.matchMedia('(min-width:769px)').matches?'.card-inner':'.card-body';
-    const activeScroller=document.querySelector(`.channel-card[data-ch="${currentCh}"] ${scrollerSel}`);
+    const activeScroller=document.querySelector(`.channel-card[data-ch="${currentCh}"] .card-inner`);
     const scrollTop=activeScroller?activeScroller.scrollTop:0;
     slider.innerHTML=channels.map((ch,idx)=>renderChannelCard(ch,idx)).join('');
     channels.forEach((ch,idx)=>{attachCardEvents(idx);});
     const newActiveCard=document.querySelector(`.channel-card[data-ch="${currentCh}"]`);
     if(newActiveCard){
         newActiveCard.classList.add('active');
-        const newScroller=newActiveCard.querySelector(scrollerSel);
+        const newScroller=newActiveCard.querySelector('.card-inner');
         if(newScroller)newScroller.scrollTop=scrollTop;
     }
     updateClock();
