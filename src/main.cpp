@@ -26,6 +26,7 @@
 #include "config/credentials_manager.h"
 #include "hardware/safety_manager.h"
 #include "hardware/hw_health.h"
+#include "core/user_data.h"
 #include "hardware/buzzer_controller.h"
 #include "security/session_manager.h"
 #include "security/rate_limiter.h"
@@ -397,6 +398,7 @@ void setup() {
     Serial.println(F("╚══════════════════════════════════════════════════════════╝"));
     
     // === INITIALIZATION SEQUENCE ===
+    initUserData();   // mutex + revisions, before the web server can call it
     initHardware();
     initNetwork();
     initApplication();

@@ -70,6 +70,12 @@ pio run -t clean
 - Checks FRAM and RTC at boot, every 60 s and after failed transfers
 - A failure latches the critical alarm and stops dosing until the block works and the alarm is acknowledged
 
+**User data** (`src/core/user_data.h`)
+- Shared notes and the parameter tracker, changed only by single-item operations (read-modify-write under a mutex)
+- Web GUI: `GET /api/notes|paramlog` + form POSTs `/api/note-set|note-select|param-add|param-edit|param-delete|param-template-create|param-template-assign`
+- Every change bumps `notesRev` / `paramsRev` (random start per boot, in `/api/dosing-status`); clients reload on a new revision
+- `ch_note_idx = 255` means no note; the touch panel (ESP-NOW) will use the same operations
+
 **FramController** (`src/hardware/fram_controller.h`)
 - Low-level FRAM access with CRC32 validation
 - See `fram_layout.h` for complete memory map

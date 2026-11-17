@@ -16,6 +16,7 @@
 #include "../hardware/relay_controller.h"
 #include "../hardware/safety_manager.h"
 #include "../hardware/fram_controller.h"
+#include "../core/user_data.h"
 
 // ============================================================================
 // SERVER INSTANCE
@@ -238,6 +239,8 @@ void handleApiDosingStatus(AsyncWebServerRequest* request) {
     doc["alarmText"] = safetyManager.getAlarmText();
     doc["wifiConnected"] = (WiFi.status() == WL_CONNECTED);
     doc["schedulerEnabled"] = dosingScheduler.isEnabled();
+    doc["notesRev"] = getNotesRev();
+    doc["paramsRev"] = getParamsRev();
     
     // Active dosing info
     if (relayController.isAnyOn()) {
@@ -813,109 +816,125 @@ void handleNotFound(AsyncWebServerRequest* request) {
 }
 
 // ============================================================================
-// API: SHARED NOTES — GET
+// API: SHARED NOTES / PARAM LOG
+// GET returns the whole structure plus its revision. Changes are single-item
+// POSTs (form-encoded) through core/user_data — the same operations the touch
+// panel uses, so no client can overwrite another client's changes.
 // ============================================================================
+
+static void sendUserDataResult(AsyncWebServerRequest* request, UserDataResult res, uint16_t rev) {
+    JsonDocument doc;
+    doc["success"] = (res == UserDataResult::OK);
+    if (res != UserDataResult::OK) doc["error"] = userDataResultToString(res);
+    doc["rev"] = rev;
+    String response;
+    serializeJson(doc, response);
+    int code = 200;
+    if (res == UserDataResult::FRAM_ERROR || res == UserDataResult::BUSY) code = 503;
+    else if (res != UserDataResult::OK) code = 400;
+    request->send(code, "application/json", response);
+}
+
+// Integer form parameter; false when missing or not a number in [0, maxVal].
+static bool getUintParam(AsyncWebServerRequest* request, const char* name, long maxVal, uint8_t* out) {
+    if (!request->hasParam(name, true)) return false;
+    String v = request->getParam(name, true)->value();
+    if (v.length() == 0) return false;
+    for (size_t i = 0; i < v.length(); i++) if (!isDigit(v[i])) return false;
+    long n = v.toInt();
+    if (n < 0 || n > maxVal) return false;
+    *out = (uint8_t)n;
+    return true;
+}
+
+static bool getFloatParam(AsyncWebServerRequest* request, const char* name, float* out) {
+    if (!request->hasParam(name, true)) return false;
+    String v = request->getParam(name, true)->value();
+    v.replace(',', '.');
+    v.trim();
+    if (v.length() == 0) return false;
+    char* end = nullptr;
+    float f = strtof(v.c_str(), &end);
+    if (!end || *end != '\0') return false;
+    *out = f;
+    return true;
+}
+
+static void sendBadRequest(AsyncWebServerRequest* request) {
+    request->send(400, "application/json", "{\"success\":false,\"error\":\"BAD_REQUEST\"}");
+}
 
 void handleApiNotesGet(AsyncWebServerRequest* request) {
     if (!isAuthenticated(request)) {
         request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
         return;
     }
-    if (framBusy) {
-        request->send(503, "application/json", "{\"error\":\"FRAM busy\"}");
+    SharedNotes notes;
+    UserDataResult res = notesRead(&notes);
+    if (res != UserDataResult::OK) {
+        sendUserDataResult(request, res, getNotesRev());
         return;
     }
-    SharedNotes notes;
-    framController.readSharedNotes(&notes);  // zwraca zerowy blok jeśli CRC fail — OK
 
     JsonDocument doc;
+    doc["rev"] = getNotesRev();
     JsonArray notesArr = doc["notes"].to<JsonArray>();
-    for (int i = 0; i < 12; i++) {
-        notesArr.add(notes.notes[i].text);
+    for (int i = 0; i < NOTE_COUNT; i++) {
+        notesArr.add((notes.notes[i].flags & 1) ? notes.notes[i].text : "");
     }
     JsonArray idxArr = doc["ch_note_idx"].to<JsonArray>();
-    for (int i = 0; i < 8; i++) {
-        idxArr.add(notes.ch_note_idx[i]);
+    for (int i = 0; i < CHANNEL_COUNT; i++) {
+        idxArr.add(notes.ch_note_idx[i]);   // NOTE_NONE (255) = no note
     }
     String response;
     serializeJson(doc, response);
     request->send(200, "application/json", response);
 }
 
-// ============================================================================
-// API: SHARED NOTES — POST
-// ============================================================================
-
-void handleApiNotesPost(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-    static String bodyBuffer;
-    if (index == 0) bodyBuffer = "";
-    bodyBuffer += String((char*)data).substring(0, len);
-    if (index + len < total) return;
-
-    if (!isAuthenticated(request)) {
-        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
-        bodyBuffer = "";
-        return;
-    }
-
-    JsonDocument doc;
-    if (deserializeJson(doc, bodyBuffer) != DeserializationError::Ok) {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Invalid JSON\"}");
-        bodyBuffer = "";
-        return;
-    }
-    bodyBuffer = "";
-
-    SharedNotes notes;
-    memset(&notes, 0, sizeof(notes));
-
-    JsonArray notesArr = doc["notes"].as<JsonArray>();
-    for (int i = 0; i < 12 && i < (int)notesArr.size(); i++) {
-        const char* text = notesArr[i] | "";
-        strncpy(notes.notes[i].text, text, 30);
-        notes.notes[i].text[29] = '\0';
-        notes.notes[i].flags = (strlen(notes.notes[i].text) > 0) ? 1 : 0;
-    }
-
-    JsonArray idxArr = doc["ch_note_idx"].as<JsonArray>();
-    for (int i = 0; i < 8 && i < (int)idxArr.size(); i++) {
-        uint8_t idx = (uint8_t)(idxArr[i] | 0);
-        notes.ch_note_idx[i] = (idx < 12) ? idx : 0;
-    }
-
-    bool ok = framController.writeSharedNotes(&notes);
-    request->send(200, "application/json", ok ? "{\"success\":true}" : "{\"success\":false,\"error\":\"FRAM write failed\"}");
+// POST /api/note-set  slot, text (empty = clear)
+void handleApiNoteSet(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t slot;
+    if (!getUintParam(request, "slot", NOTE_COUNT - 1, &slot) || !request->hasParam("text", true)) { sendBadRequest(request); return; }
+    String text = request->getParam("text", true)->value();
+    UserDataResult res = noteSet(slot, text.c_str());
+    if (res == UserDataResult::OK) LOG_INFO("[NOTES] Slot %d set (%d B)", slot + 1, text.length());
+    sendUserDataResult(request, res, getNotesRev());
 }
 
-// ============================================================================
-// API: PARAM LOG — GET
-// Zwraca pełny stan ParamLog: 20 slotów szablonów + 100 slotów ring buffer
-// ============================================================================
+// POST /api/note-select  channel, slot (255 = no note)
+void handleApiNoteSelect(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t ch, slot;
+    if (!getUintParam(request, "channel", CHANNEL_COUNT - 1, &ch) || !getUintParam(request, "slot", 255, &slot)) { sendBadRequest(request); return; }
+    sendUserDataResult(request, noteSelect(ch, slot), getNotesRev());
+}
 
 void handleApiParamLogGet(AsyncWebServerRequest* request) {
     if (!isAuthenticated(request)) {
         request->send(401, "application/json", "{\"error\":\"Unauthorized\"}");
         return;
     }
-    if (framBusy) {
-        request->send(503, "application/json", "{\"error\":\"FRAM busy\"}");
-        return;
-    }
-
     ParamLog* log = (ParamLog*)malloc(sizeof(ParamLog));
     if (!log) {
         request->send(503, "application/json", "{\"error\":\"Out of memory\"}");
         return;
     }
-    framController.readParamLog(log);  // zerowy blok jeśli CRC fail — OK
+    UserDataResult res = paramLogRead(log);
+    if (res != UserDataResult::OK) {
+        free(log);
+        sendUserDataResult(request, res, getParamsRev());
+        return;
+    }
 
     JsonDocument doc;
+    doc["rev"]        = getParamsRev();
     doc["head"]       = log->head;
     doc["count"]      = log->count;
     doc["tmpl_count"] = log->tmpl_count;
 
     JsonArray tArr = doc["templates"].to<JsonArray>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < PARAM_TMPL_COUNT; i++) {
         JsonObject t = tArr.add<JsonObject>();
         t["name"]  = log->templates[i].name;
         t["unit"]  = log->templates[i].unit;
@@ -924,7 +943,7 @@ void handleApiParamLogGet(AsyncWebServerRequest* request) {
     }
 
     JsonArray rArr = doc["ring"].to<JsonArray>();
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < PARAM_RING_SIZE; i++) {
         JsonObject r = rArr.add<JsonObject>();
         r["tmpl_idx"]  = log->ring[i].tmpl_idx;
         r["channel"]   = log->ring[i].channel;
@@ -940,75 +959,61 @@ void handleApiParamLogGet(AsyncWebServerRequest* request) {
     request->send(200, "application/json", response);
 }
 
-// ============================================================================
-// API: PARAM LOG — POST
-// Przyjmuje pełny stan ParamLog i zapisuje do FRAM
-// ============================================================================
+// POST /api/param-add  tmpl, channel (255 = template's first channel), value
+void handleApiParamAdd(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t tmpl, ch;
+    float value;
+    if (!getUintParam(request, "tmpl", PARAM_TMPL_COUNT - 1, &tmpl) || !getUintParam(request, "channel", 255, &ch)
+        || !getFloatParam(request, "value", &value)) { sendBadRequest(request); return; }
+    sendUserDataResult(request, paramAdd(tmpl, ch, value), getParamsRev());
+}
 
-void handleApiParamLogPost(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-    static String plBodyBuffer;
-    if (index == 0) plBodyBuffer = "";
-    plBodyBuffer += String((char*)data).substring(0, len);
-    if (index + len < total) return;
+// POST /api/param-edit  rec, value
+void handleApiParamEdit(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t rec;
+    float value;
+    if (!getUintParam(request, "rec", PARAM_RING_SIZE - 1, &rec) || !getFloatParam(request, "value", &value)) { sendBadRequest(request); return; }
+    sendUserDataResult(request, paramEdit(rec, value), getParamsRev());
+}
 
-    if (!isAuthenticated(request)) {
-        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
-        plBodyBuffer = "";
-        return;
-    }
+// POST /api/param-delete  rec
+void handleApiParamDelete(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t rec;
+    if (!getUintParam(request, "rec", PARAM_RING_SIZE - 1, &rec)) { sendBadRequest(request); return; }
+    sendUserDataResult(request, paramDelete(rec), getParamsRev());
+}
 
+// POST /api/param-template-create  name, unit, channel -> slot
+void handleApiParamTemplateCreate(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t ch;
+    if (!getUintParam(request, "channel", CHANNEL_COUNT - 1, &ch) || !request->hasParam("name", true)) { sendBadRequest(request); return; }
+    String name = request->getParam("name", true)->value();
+    String unit = request->hasParam("unit", true) ? request->getParam("unit", true)->value() : String("");
+    name.trim();
+    unit.trim();
+    uint8_t slot = 0;
+    UserDataResult res = paramTemplateCreate(name.c_str(), unit.c_str(), ch, &slot);
+    if (res != UserDataResult::OK) { sendUserDataResult(request, res, getParamsRev()); return; }
     JsonDocument doc;
-    if (deserializeJson(doc, plBodyBuffer) != DeserializationError::Ok) {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Invalid JSON\"}");
-        plBodyBuffer = "";
-        return;
-    }
-    plBodyBuffer = "";
+    doc["success"] = true;
+    doc["rev"] = getParamsRev();
+    doc["slot"] = slot;
+    String response;
+    serializeJson(doc, response);
+    request->send(200, "application/json", response);
+}
 
-    ParamLog* log = (ParamLog*)malloc(sizeof(ParamLog));
-    if (!log) {
-        request->send(503, "application/json", "{\"success\":false,\"error\":\"Out of memory\"}");
-        return;
-    }
-    memset(log, 0, sizeof(ParamLog));
-
-    log->head       = (uint8_t)(doc["head"]       | 0);
-    log->count      = (uint8_t)(doc["count"]       | 0);
-    log->tmpl_count = (uint8_t)(doc["tmpl_count"]  | 0);
-    if (log->head >= 100)    log->head = 0;
-    if (log->count > 100)    log->count = 100;
-    if (log->tmpl_count > 20) log->tmpl_count = 20;
-
-    JsonArray tArr = doc["templates"].as<JsonArray>();
-    for (int i = 0; i < 20 && i < (int)tArr.size(); i++) {
-        JsonObject t = tArr[i];
-        const char* name = t["name"] | "";
-        const char* unit = t["unit"] | "";
-        strncpy(log->templates[i].name, name, 19);
-        log->templates[i].name[19] = '\0';
-        strncpy(log->templates[i].unit, unit, 7);
-        log->templates[i].unit[7]  = '\0';
-        log->templates[i].flags        = (uint8_t)(t["flags"] | 0);
-        log->templates[i].channel_mask = (uint8_t)(t["channel_mask"] | 0);
-    }
-
-    JsonArray rArr = doc["ring"].as<JsonArray>();
-    for (int i = 0; i < 100 && i < (int)rArr.size(); i++) {
-        JsonObject r = rArr[i];
-        log->ring[i].tmpl_idx  = (uint8_t)(r["tmpl_idx"]  | 0);
-        log->ring[i].channel   = (uint8_t)(r["channel"]   | 0);
-        log->ring[i].value     = r["value"]     | 0.0f;
-        log->ring[i].timestamp = (uint32_t)(r["timestamp"] | 0);
-        log->ring[i].flags     = (uint8_t)(r["flags"]     | 0);
-        if (log->ring[i].tmpl_idx >= 20) log->ring[i].tmpl_idx = 0;
-        if (log->ring[i].channel  >= 8)  log->ring[i].channel  = 0;
-    }
-
-    bool ok = framController.writeParamLog(log);
-    free(log);
-
-    request->send(200, "application/json",
-        ok ? "{\"success\":true}" : "{\"success\":false,\"error\":\"FRAM write failed\"}");
+// POST /api/param-template-assign  tmpl, channel, assigned (0|1)
+void handleApiParamTemplateAssign(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
+    uint8_t tmpl, ch, on;
+    if (!getUintParam(request, "tmpl", PARAM_TMPL_COUNT - 1, &tmpl) || !getUintParam(request, "channel", CHANNEL_COUNT - 1, &ch)
+        || !getUintParam(request, "assigned", 1, &on)) { sendBadRequest(request); return; }
+    sendUserDataResult(request, paramTemplateAssign(tmpl, ch, on == 1), getParamsRev());
 }
 
 // ============================================================================
@@ -1139,11 +1144,16 @@ void initWebServer() {
 
     // === SHARED NOTES API ===
     server.on("/api/notes", HTTP_GET, handleApiNotesGet);
-    server.on("/api/notes", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiNotesPost);
+    server.on("/api/note-set", HTTP_POST, handleApiNoteSet);
+    server.on("/api/note-select", HTTP_POST, handleApiNoteSelect);
 
     // === PARAM LOG API ===
     server.on("/api/paramlog", HTTP_GET, handleApiParamLogGet);
-    server.on("/api/paramlog", HTTP_POST, [](AsyncWebServerRequest* request){}, NULL, handleApiParamLogPost);
+    server.on("/api/param-add", HTTP_POST, handleApiParamAdd);
+    server.on("/api/param-edit", HTTP_POST, handleApiParamEdit);
+    server.on("/api/param-delete", HTTP_POST, handleApiParamDelete);
+    server.on("/api/param-template-create", HTTP_POST, handleApiParamTemplateCreate);
+    server.on("/api/param-template-assign", HTTP_POST, handleApiParamTemplateAssign);
 
     // === EVENT LOG API ===
     server.on("/api/eventlog", HTTP_GET, handleApiEventLogGet);

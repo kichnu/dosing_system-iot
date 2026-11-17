@@ -430,7 +430,8 @@ let touchStart={x:0,y:0};
 let editingChannel=-1;
 const settingsOpen=Array(8).fill(false);
 let sharedNotes=Array(12).fill('');
-let chNoteIdx=Array(8).fill(0);
+let chNoteIdx=Array(8).fill(255);
+let notesRev=null,paramsRev=null;
 let notesExpanded=Array(8).fill(false);
 let editingNotes=false;
 const LOCK_TIMEOUT_MS=5*60*1000;
@@ -605,11 +606,17 @@ function pumpHoldStop(idx){
     fetch(`api/pump-stop?channel=${idx}`,{method:'POST'}).catch(()=>{});
 }
 
-function loadNotes(){fetch('api/notes').then(r=>r.json()).then(d=>{if(Array.isArray(d.notes))sharedNotes=d.notes;if(Array.isArray(d.ch_note_idx))chNoteIdx=d.ch_note_idx;for(let i=0;i<CFG.CHANNEL_COUNT;i++)refreshNotesPreview(i);}).catch(()=>{});}
-function saveNotes(){fetch('api/notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({notes:sharedNotes,ch_note_idx:chNoteIdx})}).catch(()=>{});}
+// Notes and the parameter tracker change through single-item POSTs; the node bumps a
+// revision on every change (also from the touch panel) and loadStatus() reloads on a new one.
+const NOTE_NONE=255;
+function utf8Cut(s,max){const enc=new TextEncoder();if(enc.encode(s).length<=max)return s;let out='';for(const c of s){if(enc.encode(out+c).length>max)break;out+=c;}return out;}
+function postForm(url,params){return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params)}).then(r=>r.json().catch(()=>({success:false,error:'HTTP '+r.status}))).catch(()=>({success:false,error:'Network error'}));}
+function userDataError(d){showAlert('Error','Save failed: '+(d.error||'unknown'),'err');}
+function canRerender(){return editingChannel===-1&&!editingNotes&&!document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input,.assign-select:focus,.eventlog-add-form.visible');}
+function loadNotes(){fetch('api/notes').then(r=>r.json()).then(d=>{if(Array.isArray(d.notes))sharedNotes=d.notes;if(Array.isArray(d.ch_note_idx))chNoteIdx=d.ch_note_idx;if(d.rev!==undefined)notesRev=d.rev;if(canRerender())renderChannels();else for(let i=0;i<CFG.CHANNEL_COUNT;i++)refreshNotesPreview(i);}).catch(()=>{});}
 function toggleNotes(idx){notesExpanded[idx]=!notesExpanded[idx];const s=document.getElementById('notesSec_'+idx);const b=document.getElementById('notesToggleBtn_'+idx);if(s)s.classList.toggle('expanded',notesExpanded[idx]);if(b)b.textContent=notesExpanded[idx]?'▴':'▾';}
-function selectNote(ch,ni){const prev=chNoteIdx[ch];chNoteIdx[ch]=ni;[prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+ch+'_'+i);const btn=document.getElementById('noteSelBtn_'+ch+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});refreshNotesPreview(ch);saveNotes();}
-function onNoteBlur(ch,ni,val){editingNotes=false;const t=val.slice(0,30);if(sharedNotes[ni]===t)return;sharedNotes[ni]=t;for(let c=0;c<CFG.CHANNEL_COUNT;c++){const inp=document.getElementById('noteInput_'+c+'_'+ni);if(inp&&inp!==document.activeElement)inp.value=t;refreshNotesPreview(c);}saveNotes();}
+function selectNote(ch,ni,fromBtn){if(fromBtn&&chNoteIdx[ch]===ni)ni=NOTE_NONE;const prev=chNoteIdx[ch];chNoteIdx[ch]=ni;[prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+ch+'_'+i);const btn=document.getElementById('noteSelBtn_'+ch+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});refreshNotesPreview(ch);if(ni===NOTE_NONE||(sharedNotes[ni]||'').trim())postForm('api/note-select',{channel:ch,slot:ni}).then(d=>{if(!d.success)userDataError(d);loadNotes();});}
+function onNoteBlur(ch,ni,val){editingNotes=false;const t=utf8Cut(val.trim(),29);if(sharedNotes[ni]===t)return;sharedNotes[ni]=t;for(let c=0;c<CFG.CHANNEL_COUNT;c++){const inp=document.getElementById('noteInput_'+c+'_'+ni);if(inp&&inp!==document.activeElement)inp.value=t;refreshNotesPreview(c);}postForm('api/note-set',{slot:ni,text:t}).then(d=>{if(!d.success){userDataError(d);loadNotes();return;}if(t.trim()&&chNoteIdx[ch]===ni)postForm('api/note-select',{channel:ch,slot:ni}).then(()=>loadNotes());else loadNotes();});}
 function refreshNotesPreview(ch){const p=document.getElementById('notesPreview_'+ch);if(!p)return;const t=sharedNotes[chNoteIdx[ch]]||'';const empty=!t.trim();p.textContent=empty?'— no note —':t;p.classList.toggle('empty',empty);}
 function selSvg(f){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"'+(f?' fill="currentColor"':'')+'/></svg>';}
 function escAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
@@ -630,7 +637,7 @@ const footer=`<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fil
 if(idx===7){const dur=Math.round(ch.dailyDose)||60;return `<div class="settings-panel"><div class="settings-groups"><div class="settings-group"><div class="settings-title">Air Pump</div><div class="settings-grid settings-grid-single"><label class="settings-field">Run Duration (s/event)<input type="number" id="duration_${idx}" value="${dur}" step="1" min="1" max="${CFG.MAX_PUMP_SEC}" data-ch="${idx}"></label></div></div>${manualGroup}</div>${footer}</div>`;}
 return `<div class="settings-panel"><div class="settings-title">Configuration</div><div class="settings-grid"><label class="settings-field">Daily Dose (ml)<input type="number" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></label><div class="settings-field"><span>Single Dose</span><div class="settings-readout" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="settings-field"><span>Pump Time</span><div class="settings-readout" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="settings-field"><span>Weekly</span><div class="settings-readout" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div><div class="settings-groups"><div class="settings-group"><div class="settings-title">Pump Calibration</div><div class="settings-grid"><label class="settings-field">Measured in 30 s (ml)<input type="number" id="calibMl_${idx}" placeholder="—" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"></label><div class="settings-field"><span>Start Calibration</span><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="calibTxt_${idx}">30s</span></button></div></div></div>${manualGroup}</div>${footer}</div>`;}
 
-function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="30" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+')">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
+function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="29" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+',true)">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
 
 function updateChannel(idx){
     const ch=channels[idx];
@@ -749,6 +756,8 @@ function showSessionExpired(){document.getElementById('sessionExpiredModal').cla
 function loadStatus(){
     fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
         updateAlarmBanner(data);
+        if(data.notesRev!==undefined&&notesRev!==null&&data.notesRev!==notesRev&&!editingNotes)loadNotes();
+        if(data.paramsRev!==undefined&&paramsRev!==null&&data.paramsRev!==paramsRev&&canRerender())loadParamLog();
         if(data.channels){
             data.channels.forEach((chData,i)=>{
                 if(!channels[i])return;
@@ -765,7 +774,7 @@ function loadStatus(){
                 channels[i].eventsFailed=chData.eventsFailed||0;
                 channels[i].state=chData.state||'inactive';
             });
-            if(editingChannel===-1&&!editingNotes&&!document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input,.assign-select:focus,.eventlog-add-form.visible')){
+            if(canRerender()){
                 renderChannels();
             }
         }
@@ -902,6 +911,7 @@ function submitUnlock(){
 function loadParamLog(){
     fetch('api/paramlog').then(r=>r.json()).then(data=>{
         paramLog=data;
+        if(data.rev!==undefined) paramsRev=data.rev;
         for(let c=0;c<8;c++) chTmplAssign[c]=[];
         paramLog.templates.forEach((t,tmplId)=>{
             if(!(t.flags&1)) return;
@@ -911,10 +921,7 @@ function loadParamLog(){
         for(let c=0;c<CFG.CHANNEL_COUNT;c++) refreshParams(c);
     }).catch(()=>{});
 }
-function saveParamLog(cb){
-    fetch('api/paramlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(paramLog)})
-    .then(r=>r.json()).then(d=>{if(cb)cb(!!d.success);}).catch(()=>{if(cb)cb(false);});
-}
+function paramOp(url,params){return postForm(url,params).then(d=>{if(!d.success)userDataError(d);loadParamLog();return d;});}
 function showAddRec(ch,tmplId){
     const f=document.getElementById('addForm_'+ch+'_'+tmplId);
     if(f){f.classList.add('visible');const inp=f.querySelector('.add-rec-input');if(inp)inp.focus();}
@@ -929,12 +936,8 @@ function saveRec(ch,tmplId){
     if(!inp) return;
     const val=parseFloat(inp.value.replace(',','.'));
     if(isNaN(val)){inp.focus();return;}
-    const now=Math.floor(Date.now()/1000);
-    paramLog.ring[paramLog.head]={value:val,timestamp:now,tmpl_idx:tmplId,channel:ch,flags:1};
-    paramLog.head=(paramLog.head+1)%100;
-    if(paramLog.count<100) paramLog.count++;
     hideAddRec(ch,tmplId);
-    saveParamLog(()=>refreshParams(ch));
+    paramOp('api/param-add',{tmpl:tmplId,channel:ch,value:val});
 }
 function editRec(ri,ch){
     if(!paramLog||!paramLog.ring[ri]) return;
@@ -945,7 +948,7 @@ function editRec(ri,ch){
     span.replaceWith(inp);inp.focus();inp.select();
     const commit=()=>{
         const v=parseFloat(inp.value.replace(',','.'));
-        if(!isNaN(v)){r.value=v;r.timestamp=Math.floor(Date.now()/1000);saveParamLog(()=>refreshParams(ch));}
+        if(!isNaN(v)){paramOp('api/param-edit',{rec:ri,value:v});}
         else refreshParams(ch);
     };
     inp.addEventListener('blur',commit);
@@ -956,22 +959,17 @@ function editRec(ri,ch){
 }
 function deleteRec(ri,ch){
     if(!paramLog||!paramLog.ring[ri]) return;
-    paramLog.ring[ri].flags=0;
-    saveParamLog(()=>refreshParams(ch));
+    paramOp('api/param-delete',{rec:ri});
 }
 function assignTmpl(ch){
     const sel=document.getElementById('assignSel_'+ch);
     if(!sel||!sel.value) return;
     const id=parseInt(sel.value);
-    if(!chTmplAssign[ch].includes(id)) chTmplAssign[ch].push(id);
-    paramLog.templates[id].channel_mask=(paramLog.templates[id].channel_mask|0)|(1<<ch);
-    saveParamLog(()=>refreshParams(ch));
+    paramOp('api/param-template-assign',{tmpl:id,channel:ch,assigned:1});
 }
 function removeTmpl(ch,tmplId){
-    chTmplAssign[ch]=chTmplAssign[ch].filter(id=>id!==tmplId);
-    paramLog.templates[tmplId].channel_mask=(paramLog.templates[tmplId].channel_mask|0)&~(1<<ch);
     const cs=getChartState(ch,tmplId);cs.open=false;
-    saveParamLog(()=>refreshParams(ch));
+    paramOp('api/param-template-assign',{tmpl:tmplId,channel:ch,assigned:0});
 }
 function showNewTmplForm(ch){
     const btn=document.getElementById('newTmplBtn_'+ch);if(btn)btn.style.display='none';
@@ -987,17 +985,15 @@ function createTmpl(ch){
     if(!paramLog) return;
     const nameEl=document.getElementById('newTmplName_'+ch);
     const unitEl=document.getElementById('newTmplUnit_'+ch);
-    const name=(nameEl?nameEl.value:'').trim();
+    const name=utf8Cut((nameEl?nameEl.value:'').trim(),19);
     if(!name){if(nameEl)nameEl.focus();return;}
     if(paramLog.tmpl_count>=20){showAlert('Limit','Max 20 templates reached','warn');return;}
-    let slot=-1;
-    for(let i=0;i<20;i++){if(!(paramLog.templates[i].flags&1)){slot=i;break;}}
-    if(slot<0){showAlert('Full','No free template slots','warn');return;}
-    paramLog.templates[slot]={name:name,unit:(unitEl?unitEl.value:'').trim(),flags:1,channel_mask:(1<<ch)};
-    paramLog.tmpl_count++;
-    if(!chTmplAssign[ch].includes(slot)) chTmplAssign[ch].push(slot);
+    const unit=utf8Cut((unitEl?unitEl.value:'').trim(),7);
     hideNewTmplForm(ch);
-    saveParamLog(()=>refreshParams(ch));
+    postForm('api/param-template-create',{name:name,unit:unit,channel:ch}).then(d=>{
+        if(!d.success){if(d.error==='FULL')showAlert('Full','No free template slots','warn');else userDataError(d);}
+        loadParamLog();
+    });
 }
 function exportCsv(ch,tmplId){
     if(!paramLog) return;
@@ -1268,9 +1264,9 @@ function renderParamsSection(idx){
         +'<button class="new-tmpl-btn" id="newTmplBtn_'+idx+'" onclick="showNewTmplForm('+idx+')">'
         +'+ New Template \xb7 ('+paramLog.tmpl_count+'/20 \xb7 ring: '+paramLog.count+'/100)</button>'
         +'<div class="new-tmpl-form" id="newTmplForm_'+idx+'">'
-        +'<input class="new-tmpl-name" id="newTmplName_'+idx+'" type="text" placeholder="Parameter name" maxlength="20"'
+        +'<input class="new-tmpl-name" id="newTmplName_'+idx+'" type="text" placeholder="Parameter name" maxlength="19"'
         +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
-        +'<input class="new-tmpl-unit" id="newTmplUnit_'+idx+'" type="text" placeholder="unit" maxlength="8"'
+        +'<input class="new-tmpl-unit" id="newTmplUnit_'+idx+'" type="text" placeholder="unit" maxlength="7"'
         +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
         +'<button class="new-tmpl-create" onclick="createTmpl('+idx+')">Create</button>'
         +'<button class="new-tmpl-cancel" onclick="hideNewTmplForm('+idx+')">\xd7</button>'
