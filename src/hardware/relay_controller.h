@@ -30,7 +30,8 @@ enum class RelayResult : uint8_t {
     ERROR_SYSTEM_HALTED,
     ERROR_ALREADY_ON,
     ERROR_ALREADY_OFF,
-    ERROR_TIMEOUT
+    ERROR_TIMEOUT,
+    ERROR_STOPPED       // user stop (STOP), cleared by RESUME
 };
 
 // ============================================================================

@@ -70,9 +70,9 @@ bool SafetyManager::enableIfSafe() {
         return false;
     }
     
-    // Brak błędu - włącz master relay
-    _setMasterRelay(true);
-    Serial.println(F("[SAFETY] No error in FRAM - Master relay ENABLED"));
+    // No error: master relay on unless the user stopped dosing
+    _enableMasterIfAllowed();
+    Serial.println(F("[SAFETY] No error in FRAM"));
     
     return true;
 }
@@ -105,7 +105,7 @@ void SafetyManager::_syncHardwareAlarm() {
         Serial.printf("[SAFETY] *** HARDWARE ALARM: %s ***\n", getHwFaultText().c_str());
     } else if (!_errorActive) {
         setBuzzerMode(BuzzerMode::OFF);
-        _setMasterRelay(true);
+        _enableMasterIfAllowed();
         buzzerOK();
         Serial.println(F("[SAFETY] Hardware alarm cleared - normal operation resumed"));
     }
@@ -201,8 +201,7 @@ bool SafetyManager::resetCriticalError() {
     
     // 5. Enable master relay and confirm, unless a hardware fault is still latched
     if (!isHwFaultAlarm()) {
-        _setMasterRelay(true);
-        Serial.println(F("[SAFETY] Master relay RE-ENABLED"));
+        _enableMasterIfAllowed();
         buzzerOK();
     }
     
@@ -220,6 +219,24 @@ void SafetyManager::_setMasterRelay(bool enabled) {
     digitalWrite(MASTER_RELAY_PIN, enabled ? MASTER_RELAY_ACTIVE : MASTER_RELAY_INACTIVE);
     _masterRelayEnabled = enabled;
     Serial.printf("[SAFETY] Master relay: %s\n", enabled ? "ENABLED" : "DISABLED");
+}
+
+void SafetyManager::_enableMasterIfAllowed() {
+    if (_userStop) {
+        Serial.println(F("[SAFETY] Master relay stays OFF: user stop"));
+        return;
+    }
+    if (_errorActive || isHwFaultAlarm()) return;
+    _setMasterRelay(true);
+}
+
+void SafetyManager::setUserStop(bool stopped) {
+    _userStop = stopped;
+    if (stopped) {
+        _setMasterRelay(false);
+    } else if (_initialized) {
+        _enableMasterIfAllowed();
+    }
 }
 
 void SafetyManager::_handleResetButton() {

@@ -80,6 +80,11 @@ RelayResult RelayController::turnOn(uint8_t channel, uint32_t max_duration_ms) {
         return RelayResult::ERROR_SYSTEM_HALTED;
     }
 
+    if (safetyManager.isUserStopped()) {
+        LOG_INFO("[PUMP] ERROR: Dosing stopped by user");
+        return RelayResult::ERROR_STOPPED;
+    }
+
     portENTER_CRITICAL(&_pumpMutex);
 
     if (_activeChannel < CHANNEL_COUNT && _activeChannel != channel) {
@@ -274,6 +279,7 @@ const char* RelayController::resultToString(RelayResult result) {
         case RelayResult::ERROR_INVALID_CHANNEL: return "INVALID_CHANNEL";
         case RelayResult::ERROR_MUTEX_LOCKED:    return "MUTEX_LOCKED";
         case RelayResult::ERROR_SYSTEM_HALTED:   return "SYSTEM_HALTED";
+        case RelayResult::ERROR_STOPPED:         return "STOPPED";
         case RelayResult::ERROR_ALREADY_ON:      return "ALREADY_ON";
         case RelayResult::ERROR_ALREADY_OFF:     return "ALREADY_OFF";
         case RelayResult::ERROR_TIMEOUT:         return "TIMEOUT";

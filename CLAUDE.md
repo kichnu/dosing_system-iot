@@ -76,6 +76,13 @@ pio run -t clean
 - Every change bumps `notesRev` / `paramsRev` (random start per boot, in `/api/dosing-status`); clients reload on a new revision
 - `ch_note_idx = 255` means no note; the touch panel (ESP-NOW) will use the same operations
 
+**Node commands** (`src/core/node_commands.h`)
+- One gate for the web GUI and the touch panel: `cmdEmergencyStop()` / `cmdResume()`
+- STOP: master relay + all pump relays off at once (any pump source, any state), then in the main loop the
+  current dose is recorded as failed and the scheduler disabled in FRAM (the stop survives a restart)
+- RESUME: scheduler + master relay on; refused (`HALTED`) with a critical error. No buzzer — a user action
+- Web: `POST /api/emergency-stop|resume`, `stopped` in `/api/dosing-status`; `/api/scheduler` maps to the same gate
+
 **FramController** (`src/hardware/fram_controller.h`)
 - Low-level FRAM access with CRC32 validation
 - See `fram_layout.h` for complete memory map

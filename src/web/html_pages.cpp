@@ -230,6 +230,14 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .alarm-banner{display:none;align-items:center;gap:10px;padding:10px var(--card-padding);background:var(--accent-red);color:#fff;font-size:var(--font-md);font-weight:600;flex-shrink:0}
 .alarm-banner span{flex:1;min-width:0;overflow-wrap:anywhere}
 .alarm-banner button{flex-shrink:0;padding:6px 14px;border:1px solid #fff;border-radius:var(--radius-sm);background:transparent;color:#fff;font-weight:600;cursor:pointer}
+.alarm-banner.stop-banner{background:var(--accent-orange)}
+body.stopped .stop-banner{display:flex}
+.btn-stop,.btn-resume{height:42px;width:100%;background:var(--accent-red);border:1px solid var(--accent-red);color:#fff;border-radius:var(--radius-sm);font-size:0.875rem;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s}
+.btn-stop:hover{filter:brightness(1.15)}
+body.stopped .btn-stop{display:none}
+.btn-resume{display:none;background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.4);color:var(--accent-green)}
+body.stopped .btn-resume{display:block}
+.settings-note{margin-top:6px;font-size:var(--font-sm);color:var(--text-muted);line-height:1.35}
 .settings-panel{margin-top:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px}
 .settings-title{font-size:var(--font-sm);font-weight:600;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px}
 .settings-grid + .settings-groups{margin-top:14px}
@@ -386,6 +394,7 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
 <body>
     <div class="app-container">
         <div class="alarm-banner" id="alarmBanner"><span id="alarmText"></span><button onclick="ackAlarm()">Reset</button></div>
+        <div class="alarm-banner stop-banner" id="stopBanner"><span>DOSING STOPPED - pumps and master relay off</span><button onclick="showResumeModal()">Resume</button></div>
         <div class="channels-wrapper">
             <div class="channels-screen" id="channelScreen"></div>
         </div>
@@ -632,7 +641,8 @@ function closeSettings(idx){
 function toggleSettings(idx){if(settingsOpen[idx])closeSettings(idx);else setSettingsOpen(idx,true);}
 function renderConfigSection(ch,idx,validClass,validMsg,validIcon,single,pumpTime,weekly){
 const holdTile=`<div class="settings-field"><span>Hold to Run</span><button class="calib-hold-btn" id="pumpHoldBtn_${idx}" data-ch="${idx}" oncontextmenu="return false;"><svg id="pumpHoldIcon_${idx}" width="20" height="20" fill="currentColor" stroke="none" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button></div>`;
-const manualGroup=`<div class="settings-group"><div class="settings-title">Manual Run</div><div class="settings-grid settings-grid-single">${holdTile}</div></div>`;
+const stopTile=`<div class="settings-field"><span>Emergency Stop</span><button class="btn-stop" onclick="emergencyStop()">STOP</button><button class="btn-resume" onclick="showResumeModal()">Resume</button></div>`;
+const manualGroup=`<div class="settings-group"><div class="settings-title">Pump Control</div><div class="settings-grid">${holdTile}${stopTile}</div><div class="settings-note">STOP: all pumps and the master relay off at once, scheduler paused until Resume (also after a restart).</div></div>`;
 const footer=`<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div><div class="params-actions"><button class="btn btn-primary lockable-btn" id="saveBtn_${idx}" onclick="requestSave(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg><span class="save-lbl">Save</span></button><button class="btn btn-secondary" onclick="closeSettings(${idx})">Cancel</button></div><div class="lock-status"><span>Unlocked &middot; <span class="lock-time"></span></span><button class="lock-again-btn" onclick="setLocked(true)">Lock</button></div>`;
 if(idx===7){const dur=Math.round(ch.dailyDose)||60;return `<div class="settings-panel"><div class="settings-groups"><div class="settings-group"><div class="settings-title">Air Pump</div><div class="settings-grid settings-grid-single"><label class="settings-field">Run Duration (s/event)<input type="number" id="duration_${idx}" value="${dur}" step="1" min="1" max="${CFG.MAX_PUMP_SEC}" data-ch="${idx}"></label></div></div>${manualGroup}</div>${footer}</div>`;}
 return `<div class="settings-panel"><div class="settings-title">Configuration</div><div class="settings-grid"><label class="settings-field">Daily Dose (ml)<input type="number" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></label><div class="settings-field"><span>Single Dose</span><div class="settings-readout" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="settings-field"><span>Pump Time</span><div class="settings-readout" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="settings-field"><span>Weekly</span><div class="settings-readout" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div><div class="settings-groups"><div class="settings-group"><div class="settings-title">Pump Calibration</div><div class="settings-grid"><label class="settings-field">Measured in 30 s (ml)<input type="number" id="calibMl_${idx}" placeholder="—" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"></label><div class="settings-field"><span>Start Calibration</span><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="calibTxt_${idx}">30s</span></button></div></div></div>${manualGroup}</div>${footer}</div>`;}
@@ -751,11 +761,34 @@ function updateAlarmBanner(data){
     b.style.display=data.alarm?'flex':'none';
     if(data.alarm)document.getElementById('alarmText').textContent='CRITICAL ALARM - dosing stopped: '+data.alarmText;
 }
+function setStopped(on){document.body.classList.toggle('stopped',!!on);}
+function emergencyStop(){
+    setStopped(true);
+    fetch('api/emergency-stop',{method:'POST'}).then(r=>{if(r.status===401){showSessionExpired();return;}setTimeout(loadStatus,500);}).catch(()=>{showAlert('Error','STOP not confirmed - connection error','err');loadStatus();});
+}
+function showResumeModal(){
+    document.getElementById('alertIcon').className='modal-icon warn';
+    document.getElementById('alertIcon').innerHTML=MODAL_ICONS.warn;
+    document.getElementById('alertTitle').textContent='Resume dosing?';
+    document.getElementById('alertText').textContent='The master relay and the scheduler turn back on. Doses missed while stopped are handled as after re-enabling the scheduler.';
+    document.getElementById('alertActions').innerHTML='<button class="btn btn-secondary" onclick="closeAlert()">Cancel</button><button class="btn btn-primary" onclick="resumeDosing()">Resume</button>';
+    document.getElementById('alertModal').classList.add('show');
+}
+function resumeDosing(){
+    closeAlert();
+    fetch('api/resume',{method:'POST'}).then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(d=>{
+        if(!d)return;
+        if(d.success){setTimeout(loadStatus,500);}
+        else if(d.error==='HALTED')showAlert('Resume refused','Critical alarm active - clear it first.','warn');
+        else showAlert('Error','Resume failed: '+(d.error||'unknown'),'err');
+    }).catch(()=>showAlert('Error','Connection error','err'));
+}
 function ackAlarm(){fetch('api/alarm-ack',{method:'POST'}).then(()=>setTimeout(loadStatus,500)).catch(()=>showAlert('Error','Connection error','err'));}
 function showSessionExpired(){document.getElementById('sessionExpiredModal').classList.add('show');}
 function loadStatus(){
     fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
         updateAlarmBanner(data);
+        if(data.stopped!==undefined)setStopped(data.stopped);
         if(data.notesRev!==undefined&&notesRev!==null&&data.notesRev!==notesRev&&!editingNotes)loadNotes();
         if(data.paramsRev!==undefined&&paramsRev!==null&&data.paramsRev!==paramsRev&&canRerender())loadParamLog();
         if(data.channels){

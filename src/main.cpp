@@ -27,6 +27,7 @@
 #include "hardware/safety_manager.h"
 #include "hardware/hw_health.h"
 #include "core/user_data.h"
+#include "core/node_commands.h"
 #include "hardware/buzzer_controller.h"
 #include "security/session_manager.h"
 #include "security/rate_limiter.h"
@@ -404,6 +405,8 @@ void setup() {
     initApplication();
 
     safetyManager.begin();
+    // A STOP from before the restart (scheduler disabled in FRAM) keeps the master relay off
+    if (initStatus.scheduler_ok && !dosingScheduler.isEnabled()) safetyManager.setUserStop(true);
 
     // A critical block failing at boot latches the alarm and keeps dosing stopped
     uint8_t bootFaults = 0;
@@ -461,6 +464,7 @@ void loop() {
     // === CRITICAL: Always update relay (safety) ===
     safetyManager.update();
     relayController.update();
+    processNodeCommands();   // STOP works in every state, also in the alarm branch below
 
     updateHwHealth();
 

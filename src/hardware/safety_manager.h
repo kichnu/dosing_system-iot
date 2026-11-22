@@ -37,6 +37,12 @@ public:
     void requestAlarmAck() { _ackRequested = true; }
     String getAlarmText() const;
     bool isMasterRelayEnabled() const { return _masterRelayEnabled; }
+
+    // User stop (STOP / RESUME): keeps the master relay off until resumed.
+    // Not an alarm: no buzzer, no FRAM error record. Persisted by the scheduler
+    // (system_enabled = 0); main applies it at boot before enableIfSafe().
+    void setUserStop(bool stopped);
+    bool isUserStopped() const { return _userStop; }
     CriticalErrorType getErrorType() const { return _currentError.error_type; }
     uint8_t getErrorChannel() const { return _currentError.channel; }
     const CriticalErrorState& getErrorState() const { return _currentError; }
@@ -47,6 +53,7 @@ private:
     bool _initialized = false;
     bool _errorActive = false;
     bool _masterRelayEnabled = false;
+    volatile bool _userStop = false;
     bool _hwAlarmOn = false;
     volatile bool _ackRequested = false;
     CriticalErrorState _currentError;
@@ -56,6 +63,8 @@ private:
     bool _resetInProgress = false;
 
     void _setMasterRelay(bool enabled);
+    // Master relay on only without a user stop, critical error or hardware fault
+    void _enableMasterIfAllowed();
     void _handleResetButton();
     void _takePumpSnapshot();
     void _saveErrorToFRAM();

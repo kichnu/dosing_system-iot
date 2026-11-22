@@ -43,6 +43,7 @@ public:
     bool begin();
     void update();
 
+    bool isInitialized() const { return _initialized; }
     bool isEnabled() const { return _enabled; }
     void setEnabled(bool enabled);
     void syncTimeState();

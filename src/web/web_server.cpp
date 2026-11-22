@@ -17,6 +17,7 @@
 #include "../hardware/safety_manager.h"
 #include "../hardware/fram_controller.h"
 #include "../core/user_data.h"
+#include "../core/node_commands.h"
 
 // ============================================================================
 // SERVER INSTANCE
@@ -239,6 +240,7 @@ void handleApiDosingStatus(AsyncWebServerRequest* request) {
     doc["alarmText"] = safetyManager.getAlarmText();
     doc["wifiConnected"] = (WiFi.status() == WL_CONNECTED);
     doc["schedulerEnabled"] = dosingScheduler.isEnabled();
+    doc["stopped"] = isDoserStopped();
     doc["notesRev"] = getNotesRev();
     doc["paramsRev"] = getParamsRev();
     
@@ -672,22 +674,56 @@ void handleApiScheduler(AsyncWebServerRequest* request) {
         return;
     }
     
-    // Set enabled state
+    // Set enabled state — through the command gate: disable = STOP, enable = RESUME
     String val = request->getParam("enabled", true)->value();
     bool enabled = (val == "true" || val == "1");
     
-    dosingScheduler.setEnabled(enabled);
+    CmdResult r = enabled ? cmdResume() : cmdEmergencyStop();
     
-    LOG_INFO("[WEB] Scheduler %s", enabled ? "ENABLED" : "DISABLED");
+    LOG_INFO("[WEB] Scheduler %s: %s", enabled ? "RESUME" : "STOP", cmdResultToString(r));
     
     JsonDocument resp;
-    resp["success"] = true;
+    resp["success"] = (r == CmdResult::OK);
+    if (r != CmdResult::OK) resp["error"] = cmdResultToString(r);
     resp["enabled"] = dosingScheduler.isEnabled();
     resp["state"] = DosingScheduler::stateToString(dosingScheduler.getState());
     
     String response;
     serializeJson(resp, response);
     request->send(200, "application/json", response);
+}
+
+// ============================================================================
+// API: EMERGENCY STOP / RESUME (POST) - command gate, no parameters
+// ============================================================================
+
+static void sendCmdResult(AsyncWebServerRequest* request, CmdResult r) {
+    if (r == CmdResult::OK) {
+        request->send(200, "application/json", "{\"success\":true}");
+        return;
+    }
+    String json = "{\"success\":false,\"error\":\"";
+    json += cmdResultToString(r);
+    json += "\"}";
+    request->send(409, "application/json", json);
+}
+
+void handleApiEmergencyStop(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
+        return;
+    }
+    LOG_INFO("[WEB] Emergency STOP");
+    sendCmdResult(request, cmdEmergencyStop());
+}
+
+void handleApiResume(AsyncWebServerRequest* request) {
+    if (!isAuthenticated(request)) {
+        request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}");
+        return;
+    }
+    LOG_INFO("[WEB] RESUME");
+    sendCmdResult(request, cmdResume());
 }
 
 // ============================================================================
@@ -1140,6 +1176,8 @@ void initWebServer() {
     server.on("/api/pump-stop", HTTP_POST, handleApiPumpStop);
     server.on("/api/scheduler", HTTP_POST, handleApiScheduler);
     server.on("/api/manual-dose", HTTP_POST, handleApiManualDose);
+    server.on("/api/emergency-stop", HTTP_POST, handleApiEmergencyStop);
+    server.on("/api/resume", HTTP_POST, handleApiResume);
     server.on("/api/daily-reset", HTTP_POST, handleApiDailyReset);
 
     // === SHARED NOTES API ===

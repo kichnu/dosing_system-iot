@@ -8,6 +8,7 @@
 
 #include "dosing_scheduler.h"
 #include "../core/logging.h"
+#include "safety_manager.h"
 
 DosingScheduler dosingScheduler;
 
@@ -300,7 +301,8 @@ void DosingScheduler::_checkDosingProgress() {
     }
 
     if (!relayController.isChannelOn(_currentEvent.channel)) {
-        _completeDosing(true);
+        // A pump cut by STOP is an interrupted dose, not a completed one
+        _completeDosing(!safetyManager.isUserStopped());
         return;
     }
 
