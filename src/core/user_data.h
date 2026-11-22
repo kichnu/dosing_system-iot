@@ -19,7 +19,7 @@ static constexpr uint8_t NOTE_NONE       = 0xFF;   // ch_note_idx: no note for t
 static constexpr uint8_t NOTE_MAX_BYTES  = 29;     // UTF-8 bytes, without the terminator
 static constexpr uint8_t PARAM_TMPL_COUNT = 20;
 static constexpr uint8_t PARAM_RING_SIZE  = 100;
-static constexpr uint8_t PARAM_ANY_CHANNEL = 0xFF; // paramAdd: use the template's first channel
+static constexpr uint8_t PARAM_ANY_CHANNEL = 0xFF; // paramAdd: record not tied to a channel
 
 enum class UserDataResult : uint8_t {
     OK = 0,
@@ -48,12 +48,12 @@ UserDataResult noteSelect(uint8_t channel, uint8_t slot);
 
 // --- Parameter tracker ---
 UserDataResult paramLogRead(ParamLog* out);
-// Timestamp from the RTC. channel = PARAM_ANY_CHANNEL -> first channel of the template's mask (0 if none).
+// Timestamp from the RTC. channel = PARAM_ANY_CHANNEL -> record not tied to a channel.
 UserDataResult paramAdd(uint8_t tmpl, uint8_t channel, float value);
 // Keeps the existing web GUI behavior: an edited record gets the current time.
 UserDataResult paramEdit(uint8_t rec, float value);
 UserDataResult paramDelete(uint8_t rec);
-UserDataResult paramTemplateCreate(const char* name, const char* unit, uint8_t channel, uint8_t* outSlot);
-UserDataResult paramTemplateAssign(uint8_t tmpl, uint8_t channel, bool assigned);
+// Templates are shared by all channels (the tracker is one section in the GUI).
+UserDataResult paramTemplateCreate(const char* name, const char* unit, uint8_t* outSlot);
 
 #endif // USER_DATA_H

@@ -108,7 +108,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .ch-nav-btn.incomplete{background:rgba(234,179,8,0.12)}
 .ch-nav-btn.active{background:rgba(34,211,213,0.15);border-color:var(--accent-cyan);color:var(--accent-cyan)}
 .channels-wrapper{flex:1;min-height:0;overflow:hidden;position:relative}
-.channels-screen{width:100%;height:100%;position:relative}
+.channels-screen{width:100%;flex:none;margin-bottom:auto}
 
 .logo{display:flex;align-items:center;gap:8px}
 .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center}
@@ -119,12 +119,15 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-back:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 
 
-.channel-card{background:var(--bg-primary);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;opacity:0;display:flex;justify-content:center;pointer-events:none;transition:opacity 0.3s ease}
-.channel-card.active{opacity:1;pointer-events:auto}
-.card-inner{width:100%;height:100%;display:flex;flex-direction:column;padding-block:12px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
-.card-inner::-webkit-scrollbar{width:8px}
-.card-inner::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
-.card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none;margin-bottom:auto}
+.channel-card{display:none;width:100%;flex-direction:column}
+.channel-card.active{display:flex}
+.channel-card.fade-in{animation:ch-fade 0.3s ease}
+@keyframes ch-fade{from{opacity:0}to{opacity:1}}
+.main-scroll{width:100%;height:100%;display:flex;flex-direction:column;padding-block:12px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.4) transparent}
+.main-scroll::-webkit-scrollbar{width:8px}
+.main-scroll::-webkit-scrollbar-thumb{background-color:rgba(255,255,255,0.25);border-radius:6px}
+.card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none}
+.shared-body .card-content{padding-bottom:0}
 
 .state-badge{padding:3px 8px;border-radius:10px;font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
 .state-badge.inactive{background:rgba(75,85,99,0.2);color:var(--state-inactive)}
@@ -333,11 +336,6 @@ body.stopped .btn-resume{display:block}
 .rec-btn.del:hover{color:var(--accent-red)}
 .records-empty{padding:10px 8px;text-align:center;font-size:var(--font-xs);color:var(--text-muted);font-style:italic}
 .params-bottom{display:flex;flex-direction:column;gap:5px}
-.assign-row{display:flex;gap:6px;align-items:center}
-.assign-select{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-lg);outline:none;appearance:none;cursor:pointer}
-.assign-select:focus{border-color:var(--accent-cyan)}
-.assign-btn{height:30px;padding:0 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-md);cursor:pointer;transition:all var(--transition-fast);flex-shrink:0}
-.assign-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
 .new-tmpl-btn{width:100%;height:28px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-lg);cursor:pointer;transition:all var(--transition-fast)}
 .new-tmpl-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
 .new-tmpl-form{display:none;align-items:center;gap:6px}
@@ -367,7 +365,7 @@ body:not(.editing-locked) .lock-status{display:flex}
 #lockModal{transition:none}
 @media (min-width:769px){
 :root{--card-padding:16px;--section-gap:16px;--section-padding:20px;--event-slot-height:48px;--day-slot-height:44px;--header-height:64px;--font-xs:0.7rem;--font-sm:0.8rem;--font-md:0.875rem}
-.card-inner{padding-block:24px;scrollbar-gutter:stable both-edges}
+.main-scroll{padding-block:24px;scrollbar-gutter:stable both-edges}
 .logo-icon{width:40px;height:40px}
 .logo-icon svg{width:24px;height:24px}
 .logo-text{font-size:1.25rem;letter-spacing:-0.02em;margin-top:0}
@@ -396,7 +394,12 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
         <div class="alarm-banner" id="alarmBanner"><span id="alarmText"></span><button onclick="ackAlarm()">Reset</button></div>
         <div class="alarm-banner stop-banner" id="stopBanner"><span>DOSING STOPPED - pumps and master relay off</span><button onclick="showResumeModal()">Resume</button></div>
         <div class="channels-wrapper">
-            <div class="channels-screen" id="channelScreen"></div>
+            <div class="main-scroll" id="mainScroll">
+                <div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge" id="stateBadge"></span></div><div class="header-actions"><button class="btn-back" onclick="logout()">Back</button></div></div>
+                <div class="channel-nav" id="channelNav"></div>
+                <div class="card-body shared-body"><div class="card-content"><div id="paramsHost"></div><div id="eventlogHost"></div></div></div>
+                <div class="channels-screen" id="channelScreen"></div>
+            </div>
         </div>
         <div class="modal-overlay" id="alertModal"><div class="modal-box"><div class="modal-icon" id="alertIcon"></div><div class="modal-title" id="alertTitle"></div><div class="modal-text" id="alertText"></div><div class="modal-actions" id="alertActions"></div></div></div>
         <div class="modal-overlay" id="saveModal">
@@ -447,17 +450,18 @@ const LOCK_TIMEOUT_MS=5*60*1000;
 let isLocked=true,lockEnabled=false,lockTimer=null,lockUnlockAt=0;
 let lockFailedAttempts=0,lockThrottleUntil=0;
 let paramLog=null;
-const paramsExpanded=Array(8).fill(false);
+let paramsExpanded=false;
 const chartState={};
-const chTmplAssign=Array.from({length:8},()=>[]);
 let eventLog=null;
-const eventLogExpanded=Array(8).fill(false);
+let eventLogExpanded=false;
 
 function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
         channels.push({id:i,events:0,days:0,dailyDose:0,dosingRate:0.33,enabled:true,name:'CH'+i,eventsCompleted:0,eventsFailed:0,state:'inactive',});
     }
     renderChannels();
+    refreshParams();
+    refreshEventLog();
     goToChannel(0);
     setupTouch();
     updateClock();
@@ -472,20 +476,24 @@ function init(){
 
 
 function renderChannels(){
-    const slider=document.getElementById('channelScreen');
-    const activeScroller=document.querySelector(`.channel-card[data-ch="${currentCh}"] .card-inner`);
-    const scrollTop=activeScroller?activeScroller.scrollTop:0;
-    slider.innerHTML=channels.map((ch,idx)=>renderChannelCard(ch,idx)).join('');
+    const scroller=document.getElementById('mainScroll');
+    const scrollTop=scroller.scrollTop;
+    document.getElementById('channelScreen').innerHTML=channels.map((ch,idx)=>renderChannelCard(ch,idx)).join('');
     channels.forEach((ch,idx)=>{attachCardEvents(idx);});
-    const newActiveCard=document.querySelector(`.channel-card[data-ch="${currentCh}"]`);
-    if(newActiveCard){
-        newActiveCard.classList.add('active');
-        const newScroller=newActiveCard.querySelector('.card-inner');
-        if(newScroller)newScroller.scrollTop=scrollTop;
-    }
+    const activeCard=document.querySelector(`.channel-card[data-ch="${currentCh}"]`);
+    if(activeCard)activeCard.classList.add('active');
+    scroller.scrollTop=scrollTop;
+    renderNav();
     updateClock();
     updateLockUI();
-    for(let c=0;c<CFG.CHANNEL_COUNT;c++){(chTmplAssign[c]||[]).forEach(tmplId=>{if(getChartState(c,tmplId).open)requestAnimationFrame(()=>drawChart(c,tmplId));});}
+}
+
+// Topbar badge and channel selector, shared by all channels
+function renderNav(){
+    document.getElementById('channelNav').innerHTML=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===currentCh?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
+    const ch=channels[currentCh];
+    const badge=document.getElementById('stateBadge');
+    if(ch&&badge){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
 }
 
 function getNextEventHour(ch,chIdx){
@@ -547,23 +555,17 @@ function renderChannelCard(ch,idx){
     });
 
     const enabledClass=ch.enabled?'':'channel-disabled';
-    const navBtns=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===idx?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
-<div class="card-inner">
-<div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge ${ch.state}">${getStateLabel(ch.state)}</span></div><div class="header-actions"><button class="btn-back" onclick="logout()">Back</button></div></div>
-<div class="channel-nav">${navBtns}</div>
 <div class="card-body">
 <div class="card-content">
 ${renderNotesSection(idx)}
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><span class="card-time">--:--:--</span></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
 <div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
-${renderParamsSection(idx)}
-${renderEventLogSection(idx)}
 <div class="settings-row"><button class="settings-btn${settingsOpen[idx]?' active':''}" id="settingsBtn_${idx}" onclick="toggleSettings(${idx})">&#9881; Settings</button></div>
 <div id="settingsPanel_${idx}" style="display:${settingsOpen[idx]?'block':'none'}">${renderConfigSection(ch,idx,validClass,validMsg,validIcon,single,pumpTime,weekly)}</div>
 </div>
 </div>
-</div></div>`;
+</div>`;
 }
 
 function attachCardEvents(idx){
@@ -621,7 +623,8 @@ const NOTE_NONE=255;
 function utf8Cut(s,max){const enc=new TextEncoder();if(enc.encode(s).length<=max)return s;let out='';for(const c of s){if(enc.encode(out+c).length>max)break;out+=c;}return out;}
 function postForm(url,params){return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params)}).then(r=>r.json().catch(()=>({success:false,error:'HTTP '+r.status}))).catch(()=>({success:false,error:'Network error'}));}
 function userDataError(d){showAlert('Error','Save failed: '+(d.error||'unknown'),'err');}
-function canRerender(){return editingChannel===-1&&!editingNotes&&!document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input,.assign-select:focus,.eventlog-add-form.visible');}
+function canRerender(){return editingChannel===-1&&!editingNotes;}
+function trackerIdle(){return !document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input');}
 function loadNotes(){fetch('api/notes').then(r=>r.json()).then(d=>{if(Array.isArray(d.notes))sharedNotes=d.notes;if(Array.isArray(d.ch_note_idx))chNoteIdx=d.ch_note_idx;if(d.rev!==undefined)notesRev=d.rev;if(canRerender())renderChannels();else for(let i=0;i<CFG.CHANNEL_COUNT;i++)refreshNotesPreview(i);}).catch(()=>{});}
 function toggleNotes(idx){notesExpanded[idx]=!notesExpanded[idx];const s=document.getElementById('notesSec_'+idx);const b=document.getElementById('notesToggleBtn_'+idx);if(s)s.classList.toggle('expanded',notesExpanded[idx]);if(b)b.textContent=notesExpanded[idx]?'▴':'▾';}
 function selectNote(ch,ni,fromBtn){if(fromBtn&&chNoteIdx[ch]===ni)ni=NOTE_NONE;const prev=chNoteIdx[ch];chNoteIdx[ch]=ni;[prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+ch+'_'+i);const btn=document.getElementById('noteSelBtn_'+ch+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});refreshNotesPreview(ch);if(ni===NOTE_NONE||(sharedNotes[ni]||'').trim())postForm('api/note-select',{channel:ch,slot:ni}).then(d=>{if(!d.success)userDataError(d);loadNotes();});}
@@ -684,8 +687,8 @@ function updateChannel(idx){
     else{validMsg.classList.add('ok');validTxt.textContent='Configuration valid';icon='<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>';saveBtn.disabled=false;ch.state='configured';}
     
     validMsg.querySelector('svg').innerHTML=icon;
-    const badge=document.querySelector(`.channel-card[data-ch="${idx}"] .state-badge`);
-    if(badge){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
+    const badge=document.getElementById('stateBadge');
+    if(badge&&idx===currentCh){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
     document.querySelectorAll(`.ch-nav-btn[data-ch="${idx}"]`).forEach(btn=>{btn.className=`ch-nav-btn ${ch.state}${currentCh===idx?' active':''}`;});
 }
 
@@ -735,11 +738,11 @@ function calcCalibration(idx){
 }
 
 function goToChannel(idx){
-    document.querySelectorAll('.channel-card').forEach(card=>{card.classList.remove('active');});
+    document.querySelectorAll('.channel-card').forEach(card=>{card.classList.remove('active','fade-in');});
     currentCh=idx;
-    document.querySelectorAll('.ch-nav-btn').forEach(btn=>{btn.classList.toggle('active',parseInt(btn.dataset.ch)===idx);});
+    renderNav();
     const newCard=document.querySelector(`.channel-card[data-ch="${idx}"]`);
-    if(newCard)newCard.classList.add('active');
+    if(newCard){newCard.classList.add('active','fade-in');newCard.addEventListener('animationend',()=>newCard.classList.remove('fade-in'),{once:true});}
 }
 
 function nextCh(){if(currentCh<CFG.CHANNEL_COUNT-1)goToChannel(currentCh+1);}
@@ -790,7 +793,7 @@ function loadStatus(){
         updateAlarmBanner(data);
         if(data.stopped!==undefined)setStopped(data.stopped);
         if(data.notesRev!==undefined&&notesRev!==null&&data.notesRev!==notesRev&&!editingNotes)loadNotes();
-        if(data.paramsRev!==undefined&&paramsRev!==null&&data.paramsRev!==paramsRev&&canRerender())loadParamLog();
+        if(data.paramsRev!==undefined&&paramsRev!==null&&data.paramsRev!==paramsRev&&trackerIdle())loadParamLog();
         if(data.channels){
             data.channels.forEach((chData,i)=>{
                 if(!channels[i])return;
@@ -945,34 +948,28 @@ function loadParamLog(){
     fetch('api/paramlog').then(r=>r.json()).then(data=>{
         paramLog=data;
         if(data.rev!==undefined) paramsRev=data.rev;
-        for(let c=0;c<8;c++) chTmplAssign[c]=[];
-        paramLog.templates.forEach((t,tmplId)=>{
-            if(!(t.flags&1)) return;
-            const mask=t.channel_mask|0;
-            for(let c=0;c<8;c++){if(mask&(1<<c)) chTmplAssign[c].push(tmplId);}
-        });
-        for(let c=0;c<CFG.CHANNEL_COUNT;c++) refreshParams(c);
+        refreshParams();
     }).catch(()=>{});
 }
 function paramOp(url,params){return postForm(url,params).then(d=>{if(!d.success)userDataError(d);loadParamLog();return d;});}
-function showAddRec(ch,tmplId){
-    const f=document.getElementById('addForm_'+ch+'_'+tmplId);
+function showAddRec(tmplId){
+    const f=document.getElementById('addForm_'+tmplId);
     if(f){f.classList.add('visible');const inp=f.querySelector('.add-rec-input');if(inp)inp.focus();}
 }
-function hideAddRec(ch,tmplId){
-    const f=document.getElementById('addForm_'+ch+'_'+tmplId);
+function hideAddRec(tmplId){
+    const f=document.getElementById('addForm_'+tmplId);
     if(f){f.classList.remove('visible');const inp=f.querySelector('.add-rec-input');if(inp)inp.value='';}
 }
-function saveRec(ch,tmplId){
+function saveRec(tmplId){
     if(!paramLog) return;
-    const inp=document.getElementById('addVal_'+ch+'_'+tmplId);
+    const inp=document.getElementById('addVal_'+tmplId);
     if(!inp) return;
     const val=parseFloat(inp.value.replace(',','.'));
     if(isNaN(val)){inp.focus();return;}
-    hideAddRec(ch,tmplId);
-    paramOp('api/param-add',{tmpl:tmplId,channel:ch,value:val});
+    hideAddRec(tmplId);
+    paramOp('api/param-add',{tmpl:tmplId,channel:255,value:val});
 }
-function editRec(ri,ch){
+function editRec(ri){
     if(!paramLog||!paramLog.ring[ri]) return;
     const span=document.getElementById('rv_'+ri);if(!span) return;
     const r=paramLog.ring[ri];
@@ -982,98 +979,88 @@ function editRec(ri,ch){
     const commit=()=>{
         const v=parseFloat(inp.value.replace(',','.'));
         if(!isNaN(v)){paramOp('api/param-edit',{rec:ri,value:v});}
-        else refreshParams(ch);
+        else refreshParams();
     };
     inp.addEventListener('blur',commit);
     inp.addEventListener('keydown',e=>{
         if(e.key==='Enter'){inp.removeEventListener('blur',commit);commit();e.preventDefault();}
-        if(e.key==='Escape'){inp.removeEventListener('blur',commit);refreshParams(ch);}
+        if(e.key==='Escape'){inp.removeEventListener('blur',commit);refreshParams();}
     });
 }
-function deleteRec(ri,ch){
+function deleteRec(ri){
     if(!paramLog||!paramLog.ring[ri]) return;
     paramOp('api/param-delete',{rec:ri});
 }
-function assignTmpl(ch){
-    const sel=document.getElementById('assignSel_'+ch);
-    if(!sel||!sel.value) return;
-    const id=parseInt(sel.value);
-    paramOp('api/param-template-assign',{tmpl:id,channel:ch,assigned:1});
-}
-function removeTmpl(ch,tmplId){
-    const cs=getChartState(ch,tmplId);cs.open=false;
-    paramOp('api/param-template-assign',{tmpl:tmplId,channel:ch,assigned:0});
-}
-function showNewTmplForm(ch){
-    const btn=document.getElementById('newTmplBtn_'+ch);if(btn)btn.style.display='none';
-    const f=document.getElementById('newTmplForm_'+ch);
+function showNewTmplForm(){
+    const btn=document.getElementById('newTmplBtn');if(btn)btn.style.display='none';
+    const f=document.getElementById('newTmplForm');
     if(f){f.classList.add('visible');const n=f.querySelector('.new-tmpl-name');if(n)n.focus();}
 }
-function hideNewTmplForm(ch){
-    const btn=document.getElementById('newTmplBtn_'+ch);if(btn)btn.style.display='';
-    const f=document.getElementById('newTmplForm_'+ch);
+function hideNewTmplForm(){
+    const btn=document.getElementById('newTmplBtn');if(btn)btn.style.display='';
+    const f=document.getElementById('newTmplForm');
     if(f){f.classList.remove('visible');const n=f.querySelector('.new-tmpl-name');if(n)n.value='';const u=f.querySelector('.new-tmpl-unit');if(u)u.value='';}
 }
-function createTmpl(ch){
+function createTmpl(){
     if(!paramLog) return;
-    const nameEl=document.getElementById('newTmplName_'+ch);
-    const unitEl=document.getElementById('newTmplUnit_'+ch);
+    const nameEl=document.getElementById('newTmplName');
+    const unitEl=document.getElementById('newTmplUnit');
     const name=utf8Cut((nameEl?nameEl.value:'').trim(),19);
     if(!name){if(nameEl)nameEl.focus();return;}
     if(paramLog.tmpl_count>=20){showAlert('Limit','Max 20 templates reached','warn');return;}
     const unit=utf8Cut((unitEl?unitEl.value:'').trim(),7);
-    hideNewTmplForm(ch);
-    postForm('api/param-template-create',{name:name,unit:unit,channel:ch}).then(d=>{
+    hideNewTmplForm();
+    postForm('api/param-template-create',{name:name,unit:unit}).then(d=>{
         if(!d.success){if(d.error==='FULL')showAlert('Full','No free template slots','warn');else userDataError(d);}
         loadParamLog();
     });
 }
-function exportCsv(ch,tmplId){
+function exportCsv(tmplId){
     if(!paramLog) return;
     const t=paramLog.templates[tmplId];
     const name=t?t.name:'param'+tmplId;
     const unit=t?t.unit:'';
-    const recs=getChartRecs(ch,tmplId);
+    const recs=getChartRecs(tmplId);
     let csv='timestamp,value'+(unit?',unit':'')+'\n';
     recs.forEach(r=>{csv+=fmtTs(r.timestamp)+','+r.value+(unit?','+unit:'')+'\n';});
     const a=document.createElement('a');
     a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-    a.download='ch'+(ch+1)+'_'+name.replace(/[^a-z0-9]/gi,'_')+'.csv';
+    a.download=name.replace(/[^a-z0-9]/gi,'_')+'.csv';
     a.click();
 }
 
 // ── EventLog CRUD ────────────────────────────────────────────────────────
 function loadEventLog(){
-    fetch('api/eventlog').then(r=>r.json()).then(data=>{eventLog=data;renderChannels();}).catch(()=>{});
+    fetch('api/eventlog').then(r=>r.json()).then(data=>{eventLog=data;refreshEventLog();}).catch(()=>{});
 }
 function saveEventLog(cb){
     fetch('api/eventlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(eventLog)})
     .then(r=>r.json()).then(d=>{if(cb)cb(!!d.success);}).catch(()=>{if(cb)cb(false);});
 }
-function showAddEventLog(idx){
-    const f=document.getElementById('eventlogAddForm_'+idx);
+function showAddEventLog(){
+    const f=document.getElementById('eventlogAddForm');
     if(f){f.classList.add('visible');const inp=f.querySelector('.eventlog-input');if(inp)inp.focus();}
 }
-function hideAddEventLog(idx){
-    const f=document.getElementById('eventlogAddForm_'+idx);
+function hideAddEventLog(){
+    const f=document.getElementById('eventlogAddForm');
     if(!f) return;
     f.classList.remove('visible');
     const inp=f.querySelector('.eventlog-input');
     if(inp){inp.value='';inp.classList.remove('over-limit');}
-    const btn=document.getElementById('eventlogSaveBtn_'+idx);
+    const btn=document.getElementById('eventlogSaveBtn');
     if(btn)btn.disabled=false;
 }
-function onEventLogInput(idx){
-    const inp=document.getElementById('eventlogInput_'+idx);
-    const btn=document.getElementById('eventlogSaveBtn_'+idx);
+function onEventLogInput(){
+    const inp=document.getElementById('eventlogInput');
+    const btn=document.getElementById('eventlogSaveBtn');
     if(!inp||!btn) return;
     const over=inp.value.length>160;
     inp.classList.toggle('over-limit',over);
     btn.disabled=over;
 }
-function saveEventLogEntry(idx){
+function saveEventLogEntry(){
     if(!eventLog) return;
-    const inp=document.getElementById('eventlogInput_'+idx);
+    const inp=document.getElementById('eventlogInput');
     if(!inp) return;
     const text=inp.value;
     if(!text.trim()||text.length>160){inp.focus();return;}
@@ -1081,13 +1068,13 @@ function saveEventLogEntry(idx){
     eventLog.entries[eventLog.head]={timestamp:now,text:text,flags:1};
     eventLog.head=(eventLog.head+1)%75;
     if(eventLog.count<75) eventLog.count++;
-    hideAddEventLog(idx);
-    saveEventLog(()=>renderChannels());
+    hideAddEventLog();
+    saveEventLog(()=>refreshEventLog());
 }
 function deleteEventLogEntry(ei){
     if(!eventLog||!eventLog.entries[ei]) return;
     eventLog.entries[ei].flags=0;
-    saveEventLog(()=>renderChannels());
+    saveEventLog(()=>refreshEventLog());
 }
 function csvField(s){
     const str=String(s==null?'':s);
@@ -1119,17 +1106,17 @@ function niceAxis(dataMin,dataMax){
     return{min:axMin,max:axMax,ticks,step};
 }
 function fmtTickVal(v,step){const dec=step>=1?0:Math.ceil(-Math.log10(step));return v.toFixed(Math.max(0,dec));}
-function drawChart(ch,tmplId){
-    const canvas=document.getElementById('canvas_'+ch+'_'+tmplId);if(!canvas) return;
+function drawChart(tmplId){
+    const canvas=document.getElementById('canvas_'+tmplId);if(!canvas) return;
     const W=canvas.offsetWidth||300;const H=140;canvas.width=W;canvas.height=H;
     const ctx=canvas.getContext('2d');
-    const recs=getChartRecs(ch,tmplId);const s=getChartState(ch,tmplId);const win=chartWindow();
+    const recs=getChartRecs(tmplId);const s=getChartState(tmplId);const win=chartWindow();
     const slice=recs.slice(s.offset,s.offset+win);
-    const prevBtn=document.getElementById('chartPrev_'+ch+'_'+tmplId);
-    const nextBtn=document.getElementById('chartNext_'+ch+'_'+tmplId);
+    const prevBtn=document.getElementById('chartPrev_'+tmplId);
+    const nextBtn=document.getElementById('chartNext_'+tmplId);
     if(prevBtn)prevBtn.disabled=s.offset===0;
     if(nextBtn)nextBtn.disabled=s.offset+win>=recs.length;
-    const foot=document.getElementById('chartFoot_'+ch+'_'+tmplId);
+    const foot=document.getElementById('chartFoot_'+tmplId);
     if(foot){
         if(recs.length===0){foot.textContent='no data';}
         else{const isMob=window.matchMedia('(max-width:600px)').matches;foot.textContent=(s.offset+1)+'–'+Math.min(s.offset+win,recs.length)+' / '+recs.length+' records  \xb7  window: '+(isMob?'mobile (20)':'desktop (80)');}
@@ -1171,76 +1158,76 @@ function drawChart(ch,tmplId){
         if(dotR>=3){ctx.fillStyle='#0a0f1a';ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill();}
     });
 }
-function toggleChart(ch,tmplId){
-    const s=getChartState(ch,tmplId);s.open=!s.open;
-    if(s.open){const n=getChartRecs(ch,tmplId).length;s.offset=Math.max(0,n-chartWindow());}
-    const el=document.getElementById('chart_'+ch+'_'+tmplId);
-    const btn=document.getElementById('chartBtn_'+ch+'_'+tmplId);
+function toggleChart(tmplId){
+    const s=getChartState(tmplId);s.open=!s.open;
+    if(s.open){const n=getChartRecs(tmplId).length;s.offset=Math.max(0,n-chartWindow());}
+    const el=document.getElementById('chart_'+tmplId);
+    const btn=document.getElementById('chartBtn_'+tmplId);
     if(el)el.style.display=s.open?'block':'none';
     if(btn)btn.classList.toggle('active',s.open);
-    if(s.open)requestAnimationFrame(()=>drawChart(ch,tmplId));
+    if(s.open)requestAnimationFrame(()=>drawChart(tmplId));
 }
-function scrollChart(ch,tmplId,dir){
-    const s=getChartState(ch,tmplId);const recs=getChartRecs(ch,tmplId);
+function scrollChart(tmplId,dir){
+    const s=getChartState(tmplId);const recs=getChartRecs(tmplId);
     const win=chartWindow();const step=Math.max(1,Math.floor(win/4));
     s.offset=Math.max(0,Math.min(s.offset+dir*step,Math.max(0,recs.length-win)));
-    drawChart(ch,tmplId);
+    drawChart(tmplId);
 }
-(function(){let _rt;window.addEventListener('resize',()=>{clearTimeout(_rt);_rt=setTimeout(()=>{Object.keys(chartState).forEach(k=>{if(chartState[k].open){const p=k.split('-');drawChart(Number(p[0]),Number(p[1]));}});},150);});})();
+(function(){let _rt;window.addEventListener('resize',()=>{clearTimeout(_rt);_rt=setTimeout(()=>{Object.keys(chartState).forEach(k=>{if(chartState[k].open)drawChart(Number(k));});},150);});})();
 
 // ── ParamLog helpers ─────────────────────────────────────────────────────
-function getChartState(ch,tmplId){
-    const k=ch+'-'+tmplId;
-    if(!chartState[k]) chartState[k]={open:false,offset:0};
-    return chartState[k];
+function getChartState(tmplId){
+    if(!chartState[tmplId]) chartState[tmplId]={open:false,offset:0};
+    return chartState[tmplId];
 }
 function chartWindow(){return window.matchMedia('(max-width:600px)').matches?20:80;}
 function getValidRecs(){
     if(!paramLog||!Array.isArray(paramLog.ring)) return [];
     return paramLog.ring.map((r,i)=>Object.assign({},r,{_ri:i})).filter(r=>r.flags&1).sort((a,b)=>a.timestamp-b.timestamp);
 }
-function getChartRecs(ch,tmplId){return getValidRecs().filter(r=>r.tmpl_idx===tmplId);}
+function getChartRecs(tmplId){return getValidRecs().filter(r=>r.tmpl_idx===tmplId);}
 function fmtTs(ts){const s=new Date(ts*1000).toISOString();return s.slice(8,10)+'-'+s.slice(5,7)+'-'+s.slice(0,4)+' '+s.slice(11,16);}
-
-function toggleParams(idx){
-    paramsExpanded[idx]=!paramsExpanded[idx];
-    const s=document.getElementById('paramsSec_'+idx);
-    const b=document.getElementById('paramsToggleBtn_'+idx);
-    if(s) s.classList.toggle('expanded',paramsExpanded[idx]);
-    if(b) b.textContent=paramsExpanded[idx]?'▴':'▾';
+// Active template slots (the tracker is shared by all channels)
+function activeTmplIds(){
+    if(!paramLog) return [];
+    return paramLog.templates.map((t,i)=>(t.flags&1)?i:-1).filter(i=>i>=0);
 }
-function refreshParams(idx){
-    const old=document.getElementById('paramsSec_'+idx);
-    if(!old) return;
-    const tmp=document.createElement('div');
-    tmp.innerHTML=renderParamsSection(idx);
-    old.parentNode.replaceChild(tmp.firstElementChild,old);
-    chTmplAssign[idx].forEach(tmplId=>{
-        if(getChartState(idx,tmplId).open) requestAnimationFrame(()=>drawChart(idx,tmplId));
+
+function toggleParams(){
+    paramsExpanded=!paramsExpanded;
+    const s=document.getElementById('paramsSec');
+    const b=document.getElementById('paramsToggleBtn');
+    if(s) s.classList.toggle('expanded',paramsExpanded);
+    if(b) b.textContent=paramsExpanded?'▴':'▾';
+}
+function refreshParams(){
+    const host=document.getElementById('paramsHost');
+    if(!host) return;
+    host.innerHTML=renderParamsSection();
+    activeTmplIds().forEach(tmplId=>{
+        if(getChartState(tmplId).open) requestAnimationFrame(()=>drawChart(tmplId));
     });
 }
-function renderParamsSection(idx){
-    const exp=paramsExpanded[idx];
+function renderParamsSection(){
+    const exp=paramsExpanded;
     const svgBar='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
     const svgWave='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,20 9,4 6,12 2,12"/></svg>';
     const svgDown='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
     const hdr='<div class="params-header"><svg class="params-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
     if(!paramLog){
-        return '<div class="params-section" id="paramsSec_'+idx+'">'+hdr+'<span class="params-preview empty">Loading parameters…</span></div></div>';
+        return '<div class="params-section" id="paramsSec">'+hdr+'<span class="params-preview empty">Loading parameters…</span></div></div>';
     }
-    const ids=chTmplAssign[idx];
-    const chRecCount=ids.reduce((s,id)=>s+getChartRecs(idx,id).length,0);
+    const ids=activeTmplIds();
     const empty=ids.length===0;
-    const summary=empty?'— no templates assigned':ids.length+' template'+(ids.length!==1?'s':'')+' \xb7 '+chRecCount+' record'+(chRecCount!==1?'s':'');
     let tmplHtml=empty
-        ?'<div class="params-empty">No templates assigned — use controls below</div>'
+        ?'<div class="params-empty">No templates yet — use + New Template below</div>'
         :ids.map(function(tmplId){
             const t=paramLog.templates[tmplId];
             if(!t||(t.flags&1)===0) return '';
             const ud=t.unit||'—';
-            const cs=getChartState(idx,tmplId);
+            const cs=getChartState(tmplId);
             const win=chartWindow();
-            const allRecs=getChartRecs(idx,tmplId);
+            const allRecs=getChartRecs(tmplId);
             const prevDis=!cs.open||cs.offset===0;
             const nextDis=!cs.open||cs.offset+win>=allRecs.length;
             const recRows=allRecs.length===0
@@ -1250,8 +1237,8 @@ function renderParamsSection(idx){
                         +'<span class="rec-value" id="rv_'+r._ri+'">'+parseFloat(r.value.toPrecision(6))+'</span>'
                         +'<span class="rec-ts">'+fmtTs(r.timestamp)+' UTC</span>'
                         +'<div class="rec-actions">'
-                        +'<button class="rec-btn" onclick="editRec('+r._ri+','+idx+')" title="Edit">✎</button>'
-                        +'<button class="rec-btn del" onclick="deleteRec('+r._ri+','+idx+')" title="Delete">\xd7</button>'
+                        +'<button class="rec-btn" onclick="editRec('+r._ri+')" title="Edit">✎</button>'
+                        +'<button class="rec-btn del" onclick="deleteRec('+r._ri+')" title="Delete">\xd7</button>'
                         +'</div></div>';
                 }).join('');
             return '<div class="tmpl-block">'
@@ -1259,65 +1246,61 @@ function renderParamsSection(idx){
                 +'<span class="tmpl-dot"></span>'
                 +'<span class="tmpl-name">'+escAttr(t.name)+'</span>'
                 +'<span class="tmpl-unit">'+escAttr(ud)+'</span>'
-                +'<button class="tmpl-icon-btn'+(cs.open?' active':'')+'" id="chartBtn_'+idx+'_'+tmplId+'" onclick="toggleChart('+idx+','+tmplId+')" title="Toggle chart">'+svgWave+'</button>'
-                +'<button class="tmpl-icon-btn" onclick="exportCsv('+idx+','+tmplId+')" title="Export CSV">'+svgDown+'</button>'
-                +'<button class="tmpl-add-btn" onclick="showAddRec('+idx+','+tmplId+')">+ Add</button>'
-                +'<button class="tmpl-remove-btn" onclick="removeTmpl('+idx+','+tmplId+')" title="Remove">\xd7</button>'
+                +'<button class="tmpl-icon-btn'+(cs.open?' active':'')+'" id="chartBtn_'+tmplId+'" onclick="toggleChart('+tmplId+')" title="Toggle chart">'+svgWave+'</button>'
+                +'<button class="tmpl-icon-btn" onclick="exportCsv('+tmplId+')" title="Export CSV">'+svgDown+'</button>'
+                +'<button class="tmpl-add-btn" onclick="showAddRec('+tmplId+')">+ Add</button>'
                 +'</div>'
-                +'<div class="chart-container" id="chart_'+idx+'_'+tmplId+'" style="display:'+(cs.open?'block':'none')+'">'
+                +'<div class="chart-container" id="chart_'+tmplId+'" style="display:'+(cs.open?'block':'none')+'">'
                 +'<div class="chart-wrap">'
-                +'<button class="chart-scroll-btn" id="chartPrev_'+idx+'_'+tmplId+'" onclick="scrollChart('+idx+','+tmplId+',-1)"'+(prevDis?' disabled':'')+'>&#9668;</button>'
-                +'<canvas class="chart-canvas" id="canvas_'+idx+'_'+tmplId+'"></canvas>'
-                +'<button class="chart-scroll-btn" id="chartNext_'+idx+'_'+tmplId+'" onclick="scrollChart('+idx+','+tmplId+',1)"'+(nextDis?' disabled':'')+'>&#9658;</button>'
-                +'</div><div class="chart-footer" id="chartFoot_'+idx+'_'+tmplId+'"></div></div>'
+                +'<button class="chart-scroll-btn" id="chartPrev_'+tmplId+'" onclick="scrollChart('+tmplId+',-1)"'+(prevDis?' disabled':'')+'>&#9668;</button>'
+                +'<canvas class="chart-canvas" id="canvas_'+tmplId+'"></canvas>'
+                +'<button class="chart-scroll-btn" id="chartNext_'+tmplId+'" onclick="scrollChart('+tmplId+',1)"'+(nextDis?' disabled':'')+'>&#9658;</button>'
+                +'</div><div class="chart-footer" id="chartFoot_'+tmplId+'"></div></div>'
                 +'<div class="tmpl-records">'
-                +'<div class="add-record-form" id="addForm_'+idx+'_'+tmplId+'">'
-                +'<input class="add-rec-input" id="addVal_'+idx+'_'+tmplId+'" type="number" step="any" placeholder="value"'
-                +' onkeydown="if(event.key===\'Enter\')saveRec('+idx+','+tmplId+');if(event.key===\'Escape\')hideAddRec('+idx+','+tmplId+')">'
+                +'<div class="add-record-form" id="addForm_'+tmplId+'">'
+                +'<input class="add-rec-input" id="addVal_'+tmplId+'" type="number" step="any" placeholder="value"'
+                +' onkeydown="if(event.key===\'Enter\')saveRec('+tmplId+');if(event.key===\'Escape\')hideAddRec('+tmplId+')">'
                 +'<span class="add-rec-unit">'+escAttr(ud)+'</span>'
-                +'<button class="add-rec-save" onclick="saveRec('+idx+','+tmplId+')">Save</button>'
-                +'<button class="add-rec-cancel" onclick="hideAddRec('+idx+','+tmplId+')">\xd7</button>'
+                +'<button class="add-rec-save" onclick="saveRec('+tmplId+')">Save</button>'
+                +'<button class="add-rec-cancel" onclick="hideAddRec('+tmplId+')">\xd7</button>'
                 +'</div>'+recRows+'</div></div>';
         }).join('');
-    const available=paramLog.templates.map(function(t,i){return Object.assign({},t,{_i:i});}).filter(function(t){return (t.flags&1)&&!ids.includes(t._i);});
-    const assignHtml=available.length
-        ?'<div class="assign-row"><select class="assign-select" id="assignSel_'+idx+'"><option value="">— assign template —</option>'
-          +available.map(function(t){return '<option value="'+t._i+'">'+escAttr(t.name)+(t.unit?' ('+escAttr(t.unit)+')':'')+'</option>';}).join('')
-          +'</select><button class="assign-btn" onclick="assignTmpl('+idx+')">Assign</button></div>'
-        :'';
-    return '<div class="params-section'+(exp?' expanded':'')+'" id="paramsSec_'+idx+'">'
+    return '<div class="params-section'+(exp?' expanded':'')+'" id="paramsSec">'
         +hdr
-        +'<span class="params-preview" id="paramsPreview_'+idx+'">Reef Parameter Tracker</span>'
-        +'<button class="params-toggle-btn" id="paramsToggleBtn_'+idx+'" onclick="toggleParams('+idx+')">'+(exp?'▴':'▾')+'</button>'
+        +'<span class="params-preview" id="paramsPreview">Reef Parameter Tracker</span>'
+        +'<button class="params-toggle-btn" id="paramsToggleBtn" onclick="toggleParams()">'+(exp?'▴':'▾')+'</button>'
         +'</div>'
-        +'<div class="params-body" id="paramsBody_'+idx+'">'
+        +'<div class="params-body" id="paramsBody">'
         +tmplHtml
         +'<div class="params-bottom">'
-        +assignHtml
-        +'<button class="new-tmpl-btn" id="newTmplBtn_'+idx+'" onclick="showNewTmplForm('+idx+')">'
+        +'<button class="new-tmpl-btn" id="newTmplBtn" onclick="showNewTmplForm()">'
         +'+ New Template \xb7 ('+paramLog.tmpl_count+'/20 \xb7 ring: '+paramLog.count+'/100)</button>'
-        +'<div class="new-tmpl-form" id="newTmplForm_'+idx+'">'
-        +'<input class="new-tmpl-name" id="newTmplName_'+idx+'" type="text" placeholder="Parameter name" maxlength="19"'
-        +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
-        +'<input class="new-tmpl-unit" id="newTmplUnit_'+idx+'" type="text" placeholder="unit" maxlength="7"'
-        +' onkeydown="if(event.key===\'Enter\')createTmpl('+idx+');if(event.key===\'Escape\')hideNewTmplForm('+idx+')">'
-        +'<button class="new-tmpl-create" onclick="createTmpl('+idx+')">Create</button>'
-        +'<button class="new-tmpl-cancel" onclick="hideNewTmplForm('+idx+')">\xd7</button>'
+        +'<div class="new-tmpl-form" id="newTmplForm">'
+        +'<input class="new-tmpl-name" id="newTmplName" type="text" placeholder="Parameter name" maxlength="19"'
+        +' onkeydown="if(event.key===\'Enter\')createTmpl();if(event.key===\'Escape\')hideNewTmplForm()">'
+        +'<input class="new-tmpl-unit" id="newTmplUnit" type="text" placeholder="unit" maxlength="7"'
+        +' onkeydown="if(event.key===\'Enter\')createTmpl();if(event.key===\'Escape\')hideNewTmplForm()">'
+        +'<button class="new-tmpl-create" onclick="createTmpl()">Create</button>'
+        +'<button class="new-tmpl-cancel" onclick="hideNewTmplForm()">\xd7</button>'
         +'</div></div></div></div>';
 }
-function toggleEventLog(idx){
-    eventLogExpanded[idx]=!eventLogExpanded[idx];
-    const s=document.getElementById('eventlogSec_'+idx);
-    const b=document.getElementById('eventlogToggleBtn_'+idx);
-    if(s) s.classList.toggle('expanded',eventLogExpanded[idx]);
-    if(b) b.textContent=eventLogExpanded[idx]?'▴':'▾';
+function toggleEventLog(){
+    eventLogExpanded=!eventLogExpanded;
+    const s=document.getElementById('eventlogSec');
+    const b=document.getElementById('eventlogToggleBtn');
+    if(s) s.classList.toggle('expanded',eventLogExpanded);
+    if(b) b.textContent=eventLogExpanded?'▴':'▾';
 }
-function renderEventLogSection(idx){
-    const exp=eventLogExpanded[idx];
+function refreshEventLog(){
+    const host=document.getElementById('eventlogHost');
+    if(host) host.innerHTML=renderEventLogSection();
+}
+function renderEventLogSection(){
+    const exp=eventLogExpanded;
     const svgDown='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
     const hdr='<div class="params-header"><svg class="params-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
     if(!eventLog){
-        return '<div class="params-section" id="eventlogSec_'+idx+'">'+hdr+'<span class="params-preview empty">Loading event log…</span></div></div>';
+        return '<div class="params-section" id="eventlogSec">'+hdr+'<span class="params-preview empty">Loading event log…</span></div></div>';
     }
     const activeCount=eventLog.entries.reduce((s,e)=>s+((e.flags&1)?1:0),0);
     const entries=eventLog.entries
@@ -1340,22 +1323,22 @@ function renderEventLogSection(idx){
         +'<span class="tmpl-name">Entries</span>'
         +'<span class="tmpl-unit">'+activeCount+'/75</span>'
         +'<button class="tmpl-icon-btn" onclick="exportEventLogCsv()" title="Export CSV">'+svgDown+'</button>'
-        +'<button class="tmpl-add-btn" onclick="showAddEventLog('+idx+')">+ Add</button>'
+        +'<button class="tmpl-add-btn" onclick="showAddEventLog()">+ Add</button>'
         +'</div>'
-        +'<div class="eventlog-add-form" id="eventlogAddForm_'+idx+'">'
-        +'<textarea class="eventlog-input" id="eventlogInput_'+idx+'" rows="1" placeholder="New entry…" oninput="onEventLogInput('+idx+')"></textarea>'
+        +'<div class="eventlog-add-form" id="eventlogAddForm">'
+        +'<textarea class="eventlog-input" id="eventlogInput" rows="1" placeholder="New entry…" oninput="onEventLogInput()"></textarea>'
         +'<div class="eventlog-add-actions">'
-        +'<button class="add-rec-save" id="eventlogSaveBtn_'+idx+'" onclick="saveEventLogEntry('+idx+')">Save</button>'
-        +'<button class="add-rec-cancel" onclick="hideAddEventLog('+idx+')">\xd7</button>'
+        +'<button class="add-rec-save" id="eventlogSaveBtn" onclick="saveEventLogEntry()">Save</button>'
+        +'<button class="add-rec-cancel" onclick="hideAddEventLog()">\xd7</button>'
         +'</div></div>'
         +rowsHtml
         +'</div>';
-    return '<div class="params-section'+(exp?' expanded':'')+'" id="eventlogSec_'+idx+'">'
+    return '<div class="params-section'+(exp?' expanded':'')+'" id="eventlogSec">'
         +hdr
-        +'<span class="params-preview" id="eventlogPreview_'+idx+'">Event Log</span>'
-        +'<button class="params-toggle-btn" id="eventlogToggleBtn_'+idx+'" onclick="toggleEventLog('+idx+')">'+(exp?'▴':'▾')+'</button>'
+        +'<span class="params-preview" id="eventlogPreview">Event Log</span>'
+        +'<button class="params-toggle-btn" id="eventlogToggleBtn" onclick="toggleEventLog()">'+(exp?'▴':'▾')+'</button>'
         +'</div>'
-        +'<div class="params-body" id="eventlogBody_'+idx+'">'
+        +'<div class="params-body" id="eventlogBody">'
         +blockHtml
         +'</div></div>';
 }

@@ -975,7 +975,6 @@ void handleApiParamLogGet(AsyncWebServerRequest* request) {
         t["name"]  = log->templates[i].name;
         t["unit"]  = log->templates[i].unit;
         t["flags"] = log->templates[i].flags;
-        t["channel_mask"] = log->templates[i].channel_mask;
     }
 
     JsonArray rArr = doc["ring"].to<JsonArray>();
@@ -995,7 +994,7 @@ void handleApiParamLogGet(AsyncWebServerRequest* request) {
     request->send(200, "application/json", response);
 }
 
-// POST /api/param-add  tmpl, channel (255 = template's first channel), value
+// POST /api/param-add  tmpl, channel (255 = not tied to a channel), value
 void handleApiParamAdd(AsyncWebServerRequest* request) {
     if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
     uint8_t tmpl, ch;
@@ -1022,17 +1021,16 @@ void handleApiParamDelete(AsyncWebServerRequest* request) {
     sendUserDataResult(request, paramDelete(rec), getParamsRev());
 }
 
-// POST /api/param-template-create  name, unit, channel -> slot
+// POST /api/param-template-create  name, unit -> slot
 void handleApiParamTemplateCreate(AsyncWebServerRequest* request) {
     if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
-    uint8_t ch;
-    if (!getUintParam(request, "channel", CHANNEL_COUNT - 1, &ch) || !request->hasParam("name", true)) { sendBadRequest(request); return; }
+    if (!request->hasParam("name", true)) { sendBadRequest(request); return; }
     String name = request->getParam("name", true)->value();
     String unit = request->hasParam("unit", true) ? request->getParam("unit", true)->value() : String("");
     name.trim();
     unit.trim();
     uint8_t slot = 0;
-    UserDataResult res = paramTemplateCreate(name.c_str(), unit.c_str(), ch, &slot);
+    UserDataResult res = paramTemplateCreate(name.c_str(), unit.c_str(), &slot);
     if (res != UserDataResult::OK) { sendUserDataResult(request, res, getParamsRev()); return; }
     JsonDocument doc;
     doc["success"] = true;
@@ -1041,15 +1039,6 @@ void handleApiParamTemplateCreate(AsyncWebServerRequest* request) {
     String response;
     serializeJson(doc, response);
     request->send(200, "application/json", response);
-}
-
-// POST /api/param-template-assign  tmpl, channel, assigned (0|1)
-void handleApiParamTemplateAssign(AsyncWebServerRequest* request) {
-    if (!isAuthenticated(request)) { request->send(401, "application/json", "{\"success\":false,\"error\":\"Unauthorized\"}"); return; }
-    uint8_t tmpl, ch, on;
-    if (!getUintParam(request, "tmpl", PARAM_TMPL_COUNT - 1, &tmpl) || !getUintParam(request, "channel", CHANNEL_COUNT - 1, &ch)
-        || !getUintParam(request, "assigned", 1, &on)) { sendBadRequest(request); return; }
-    sendUserDataResult(request, paramTemplateAssign(tmpl, ch, on == 1), getParamsRev());
 }
 
 // ============================================================================
@@ -1191,7 +1180,6 @@ void initWebServer() {
     server.on("/api/param-edit", HTTP_POST, handleApiParamEdit);
     server.on("/api/param-delete", HTTP_POST, handleApiParamDelete);
     server.on("/api/param-template-create", HTTP_POST, handleApiParamTemplateCreate);
-    server.on("/api/param-template-assign", HTTP_POST, handleApiParamTemplateAssign);
 
     // === EVENT LOG API ===
     server.on("/api/eventlog", HTTP_GET, handleApiEventLogGet);

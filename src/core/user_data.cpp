@@ -187,13 +187,6 @@ UserDataResult paramAdd(uint8_t tmpl, uint8_t channel, float value) {
         if (!(log->templates[tmpl].flags & 1)) {
             res = UserDataResult::BAD_SLOT;
         } else {
-            if (channel == PARAM_ANY_CHANNEL) {
-                channel = 0;
-                uint8_t mask = log->templates[tmpl].channel_mask;
-                for (uint8_t c = 0; c < CHANNEL_COUNT; c++) {
-                    if (mask & (1 << c)) { channel = c; break; }
-                }
-            }
             uint8_t head = (log->head < PARAM_RING_SIZE) ? log->head : 0;
             ParamRecord& r = log->ring[head];
             memset(&r, 0, sizeof(r));
@@ -253,8 +246,7 @@ UserDataResult paramDelete(uint8_t rec) {
     return res;
 }
 
-UserDataResult paramTemplateCreate(const char* name, const char* unit, uint8_t channel, uint8_t* outSlot) {
-    if (channel >= CHANNEL_COUNT) return UserDataResult::BAD_SLOT;
+UserDataResult paramTemplateCreate(const char* name, const char* unit, uint8_t* outSlot) {
     if (!name || !name[0]) return UserDataResult::BAD_TEXT;
     if (!validText(name, sizeof(ParamTemplate::name) - 1)) return UserDataResult::BAD_TEXT;
     if (!validText(unit ? unit : "", sizeof(ParamTemplate::unit) - 1)) return UserDataResult::BAD_TEXT;
@@ -277,38 +269,11 @@ UserDataResult paramTemplateCreate(const char* name, const char* unit, uint8_t c
             strncpy(t.name, name, sizeof(t.name) - 1);
             strncpy(t.unit, unit ? unit : "", sizeof(t.unit) - 1);
             t.flags = 1;
-            t.channel_mask = (uint8_t)(1 << channel);
             uint8_t used = 0;
             for (int i = 0; i < PARAM_TMPL_COUNT; i++) if (log->templates[i].flags & 1) used++;
             log->tmpl_count = used;
             res = writeParamLog(log);
             if (res == UserDataResult::OK && outSlot) *outSlot = (uint8_t)slot;
-        }
-    }
-    free(log);
-    return res;
-}
-
-UserDataResult paramTemplateAssign(uint8_t tmpl, uint8_t channel, bool assigned) {
-    if (tmpl >= PARAM_TMPL_COUNT || channel >= CHANNEL_COUNT) return UserDataResult::BAD_SLOT;
-
-    Lock lock;
-    if (!lock.ok()) return UserDataResult::BUSY;
-    ParamLog* log = allocParamLog();
-    if (!log) return UserDataResult::BUSY;
-    UserDataResult res = UserDataResult::FRAM_ERROR;
-    if (readParamLogRaw(log)) {
-        ParamTemplate& t = log->templates[tmpl];
-        if (!(t.flags & 1)) {
-            res = UserDataResult::BAD_SLOT;
-        } else {
-            uint8_t mask = assigned ? (t.channel_mask | (1 << channel)) : (t.channel_mask & ~(1 << channel));
-            if (mask == t.channel_mask) {
-                res = UserDataResult::OK;
-            } else {
-                t.channel_mask = mask;
-                res = writeParamLog(log);
-            }
         }
     }
     free(log);
