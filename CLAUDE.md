@@ -74,7 +74,7 @@ pio run -t clean
 - Shared notes and the parameter tracker, changed only by single-item operations (read-modify-write under a mutex)
 - Web GUI: `GET /api/notes|paramlog` + form POSTs `/api/note-set|note-select|param-add|param-edit|param-delete|param-template-create`
 - Every change bumps `notesRev` / `paramsRev` (random start per boot, in `/api/dosing-status`); clients reload on a new revision
-- `ch_note_idx = 255` means no note; the touch panel (ESP-NOW) will use the same operations
+- `ch_note_idx = 255` means no note; the selected note is the channel name (GUI channel head; picked and edited in Settings, applied with Save); the touch panel (ESP-NOW) will use the same operations
 - Tracker templates are shared by all channels (one GUI section); `ParamTemplate::channel_mask` is unused
 
 **Node commands** (`src/core/node_commands.h`)

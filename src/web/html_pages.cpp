@@ -103,6 +103,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .channel-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:var(--section-padding);width:calc(100% - 2*var(--card-padding));max-width:calc(var(--card-width) - 2*var(--card-padding));align-self:center;flex:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md)}
 .ch-nav-btn{height:32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--transition-fast)}
 .ch-nav-btn:hover{border-color:var(--border-light);color:var(--text-primary)}
+.ch-nav-btn.inactive{color:var(--state-inactive)}
+/* Inactive channel in view: every text on the page greyed out */
+body.ch-inactive .main-scroll,body.ch-inactive .main-scroll *{color:var(--state-inactive)!important}
 .ch-nav-btn.configured{background:rgba(34,197,94,0.15)}
 .ch-nav-btn.invalid{background:rgba(239,68,68,0.12)}
 .ch-nav-btn.incomplete{background:rgba(234,179,8,0.12)}
@@ -129,11 +132,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .card-body{width:100%;max-width:var(--card-width);align-self:center;flex:none}
 .shared-body .card-content{padding-bottom:0}
 
-.state-badge{padding:3px 8px;border-radius:10px;font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
-.state-badge.inactive{background:rgba(75,85,99,0.2);color:var(--state-inactive)}
-.state-badge.incomplete{background:rgba(234,179,8,0.15);color:var(--state-incomplete)}
-.state-badge.invalid{background:rgba(239,68,68,0.15);color:var(--state-invalid)}
-.state-badge.configured{background:rgba(34,197,94,0.15);color:var(--state-configured)}
 
 .card-content{padding:var(--card-padding);display:flex;flex-direction:column;gap:var(--section-gap)}
 .section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
@@ -142,16 +140,26 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .section-title svg{width:12px;height:12px;color:var(--accent-cyan)}
 .section-info{font-size:var(--font-xs);color:var(--text-muted)}
 .section-body{padding:var(--section-padding)}
-.notes-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
-.notes-header{display:flex;align-items:center;padding:9px var(--section-padding);background:rgba(0,0,0,0.2);cursor:default;gap:8px;min-height:40px;border-bottom:1px solid transparent;transition:border-bottom-color var(--transition-fast)}
-.notes-section.expanded .notes-header{border-bottom-color:var(--border)}
-.notes-icon{flex-shrink:0;width:12px;height:12px;color:var(--accent-cyan)}
-.notes-preview{flex:1;font-size:1rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.01em}
-.notes-preview.empty{font-style:italic;font-weight:400;font-size:var(--font-sm);color:var(--text-muted)}
-.notes-toggle-btn{flex-shrink:0;width:24px;height:24px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);font-size:10px;line-height:1}
-.notes-toggle-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:rgba(34,211,213,0.08)}
-.notes-list{display:none;flex-direction:column;gap:4px;padding:8px var(--section-padding)}
-.notes-section.expanded .notes-list{display:flex}
+.ch-main{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;flex-shrink:0}
+.ch-head{display:flex;flex-direction:column;gap:6px;padding:12px var(--section-padding);background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)}
+.ch-head-top{display:flex;align-items:baseline;gap:10px}
+.ch-label{font-size:var(--font-sm);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);flex-shrink:0}
+.ch-name{flex:1;min-width:0;font-size:var(--font-xlg);font-weight:700;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-name.empty{font-size:var(--font-sm);font-weight:400;font-style:italic;color:var(--text-muted)}
+.ch-head .card-time{flex-shrink:0}
+.ch-head-info{display:flex;align-items:center;gap:10px;font-size:var(--font-sm);color:var(--text-secondary)}
+.ch-head-info b{font-family:'SF Mono','Fira Code',monospace;color:var(--text-secondary);font-weight:600}
+.dose-bar{flex:1;height:4px;background:var(--bg-input);border-radius:2px;overflow:hidden;min-width:40px}
+.dose-bar span{display:block;height:100%;background:var(--accent-green)}
+.ch-sub{padding:var(--section-padding)}
+.ch-sub+.ch-sub{padding-top:0}
+.sub-title{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:var(--font-sm);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary)}
+.sub-title svg{width:11px;height:11px;color:var(--accent-cyan)}
+.name-current{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:var(--font-sm);color:var(--text-muted)}
+.name-current b{color:var(--accent-cyan);font-weight:600}
+.name-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px}
+@media (max-width:768px){.name-list{grid-template-columns:minmax(0,1fr)}}
+.settings-group+.settings-title{margin-top:14px}
 .note-entry{display:flex;align-items:center;gap:6px}
 .note-idx{font-family:'SF Mono','Fira Code',monospace;font-size:var(--font-xs);color:var(--text-muted);width:18px;text-align:right;flex-shrink:0}
 .note-input{flex:1;height:30px;padding:0 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;font-size:var(--font-md);color:var(--accent-cyan);outline:none;transition:border-color var(--transition-fast),box-shadow var(--transition-fast)}
@@ -161,7 +169,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .note-sel-btn{flex-shrink:0;width:18px;height:18px;border:none;background:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color var(--transition-fast);padding:0}
 .note-sel-btn:hover,.note-sel-btn.active{color:var(--accent-cyan)}
 .note-sel-btn svg{width:10px;height:10px}
-.notes-hint{font-size:var(--font-xs);color:var(--text-muted);text-align:center;padding:2px 0;font-style:italic}
 
 .events-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .event-slot{position:relative}
@@ -374,9 +381,10 @@ body:not(.editing-locked) .lock-status{display:flex}
 .events-grid,.days-grid{gap:8px}
 .section-header{padding-block:14px}
 .section-title{gap:10px}
-.section-title svg,.notes-icon{width:16px;height:16px}
-.notes-header,.params-header{min-height:54px;padding-block:12px}
-.notes-toggle-btn{width:28px;height:28px}
+.section-title svg{width:16px;height:16px}
+.sub-title svg{width:13px;height:13px}
+.params-header{min-height:54px;padding-block:12px}
+.ch-head{padding-block:14px}
 }
 @keyframes lock-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .shake-inp{animation:lock-shake 0.35s}
@@ -395,7 +403,7 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
         <div class="alarm-banner stop-banner" id="stopBanner"><span>DOSING STOPPED - pumps and master relay off</span><button onclick="showResumeModal()">Resume</button></div>
         <div class="channels-wrapper">
             <div class="main-scroll" id="mainScroll">
-                <div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div><span class="state-badge" id="stateBadge"></span></div><div class="header-actions"><button class="btn-back" onclick="logout()">Back</button></div></div>
+                <div class="card-topbar"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="logo-text">DOZOWNIK</div></div><div class="header-actions"><button class="btn-back" onclick="logout()">Back</button></div></div>
                 <div class="channel-nav" id="channelNav"></div>
                 <div class="card-body shared-body"><div class="card-content"><div id="paramsHost"></div><div id="eventlogHost"></div></div></div>
                 <div class="channels-screen" id="channelScreen"></div>
@@ -406,8 +414,8 @@ body.editing-locked .lockable-btn::before{content:'';width:11px;height:11px;flex
             <div class="modal-box">
                 <div class="modal-icon info"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg></div>
                 <div class="modal-title">Save changes?</div>
-                <div class="modal-text">Changes apply immediately. Today's remaining doses are recalculated from what has already been dosed.</div>
-                <div class="modal-info"><div class="modal-info-label">Channel <span id="saveModalChannel">1</span></div></div>
+                <div class="modal-text" id="saveModalText">Changes apply immediately. Today's remaining doses are recalculated from what has already been dosed.</div>
+                <div class="modal-info"><div class="modal-info-label">Channel <span id="saveModalChannel">1</span></div><div class="modal-info-value" id="saveModalName"></div><div class="modal-info-label" id="saveModalAlso"></div></div>
                 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button><button class="btn btn-primary" onclick="confirmSave()">Save</button></div>
             </div>
         </div>
@@ -444,8 +452,10 @@ const settingsOpen=Array(8).fill(false);
 let sharedNotes=Array(12).fill('');
 let chNoteIdx=Array(8).fill(255);
 let notesRev=null,paramsRev=null;
-let notesExpanded=Array(8).fill(false);
-let editingNotes=false;
+// Channel name edits in Settings wait for Save: {sel, texts} per channel, null = no edits
+const nameDraft=Array(8).fill(null);
+// Last config received from the node, to tell a name-only change from a config change
+const savedCfg=Array(8).fill(null);
 const LOCK_TIMEOUT_MS=5*60*1000;
 let isLocked=true,lockEnabled=false,lockTimer=null,lockUnlockAt=0;
 let lockFailedAttempts=0,lockThrottleUntil=0;
@@ -457,7 +467,7 @@ let eventLogExpanded=false;
 
 function init(){
     for(let i=0;i<CFG.CHANNEL_COUNT;i++){
-        channels.push({id:i,events:0,days:0,dailyDose:0,dosingRate:0.33,enabled:true,name:'CH'+i,eventsCompleted:0,eventsFailed:0,state:'inactive',});
+        channels.push({id:i,events:0,days:0,dailyDose:0,todayDosed:0,dosingRate:0.33,enabled:true,name:'CH'+i,eventsCompleted:0,eventsFailed:0,state:'inactive',});
     }
     renderChannels();
     refreshParams();
@@ -488,13 +498,12 @@ function renderChannels(){
     updateLockUI();
 }
 
-// Topbar badge and channel selector, shared by all channels
+// Channel selector, shared by all channels
 function renderNav(){
     document.getElementById('channelNav').innerHTML=channels.map((c,i)=>`<button class="ch-nav-btn ${c.state}${i===currentCh?' active':''}" data-ch="${i}" onclick="goToChannel(${i})">CH ${i+1}</button>`).join('');
-    const ch=channels[currentCh];
-    const badge=document.getElementById('stateBadge');
-    if(ch&&badge){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
+    updateInactiveView();
 }
+function updateInactiveView(){const ch=channels[currentCh];document.body.classList.toggle('ch-inactive',!!ch&&ch.state==='inactive');}
 
 function getNextEventHour(ch,chIdx){
     const now=new Date();
@@ -558,9 +567,10 @@ function renderChannelCard(ch,idx){
     return `<div class="channel-card ${enabledClass}" data-ch="${idx}">
 <div class="card-body">
 <div class="card-content">
-${renderNotesSection(idx)}
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><span class="card-time">--:--:--</span></div><div class="section-body"><div class="events-grid">${eventsHtml}</div></div></div>
-<div class="section"><div class="section-header"><div class="section-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div></div><div class="section-body"><div class="days-grid">${daysHtml}</div></div></div>
+<div class="ch-main">${renderChannelHead(ch,idx)}
+<div class="ch-sub"><div class="sub-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Time Schedule (UTC)</div><div class="events-grid">${eventsHtml}</div></div>
+<div class="ch-sub"><div class="sub-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Active Days</div><div class="days-grid">${daysHtml}</div></div>
+</div>
 <div class="settings-row"><button class="settings-btn${settingsOpen[idx]?' active':''}" id="settingsBtn_${idx}" onclick="toggleSettings(${idx})">&#9881; Settings</button></div>
 <div id="settingsPanel_${idx}" style="display:${settingsOpen[idx]?'block':'none'}">${renderConfigSection(ch,idx,validClass,validMsg,validIcon,single,pumpTime,weekly)}</div>
 </div>
@@ -578,7 +588,12 @@ function attachCardEvents(idx){
     if(durationInput){durationInput.addEventListener('focus',markEditing);durationInput.addEventListener('input',()=>updateChannel(idx));}
     const calibInput=document.getElementById(`calibMl_${idx}`);
     if(calibInput){calibInput.addEventListener('focus',markEditing);calibInput.addEventListener('change',()=>calcCalibration(idx));}
-    for(let ni=0;ni<12;ni++){const inp=document.getElementById('noteInput_'+idx+'_'+ni);if(inp){inp.addEventListener('focus',()=>{editingNotes=true;if(chNoteIdx[idx]!==ni)selectNote(idx,ni);});inp.addEventListener('blur',()=>onNoteBlur(idx,ni,inp.value));inp.addEventListener('keydown',e=>{if(e.key==='Enter'){inp.blur();e.preventDefault();}if(e.key==='Escape'){inp.value=sharedNotes[ni]||'';editingNotes=false;inp.blur();}});}}
+    for(let ni=0;ni<12;ni++){
+        const inp=document.getElementById('noteInput_'+idx+'_'+ni);if(!inp)continue;
+        inp.addEventListener('focus',markEditing);
+        inp.addEventListener('input',()=>onNameInput(idx,ni,inp.value));
+        inp.addEventListener('keydown',e=>{if(e.key==='Enter'){inp.blur();e.preventDefault();}if(e.key==='Escape'){inp.value=sharedNotes[ni]||'';onNameInput(idx,ni,inp.value);inp.blur();}});
+    }
     const holdBtn=document.getElementById(`pumpHoldBtn_${idx}`);
     if(holdBtn){
         const press=e=>{e.preventDefault();pumpHoldStart(idx);};
@@ -623,13 +638,70 @@ const NOTE_NONE=255;
 function utf8Cut(s,max){const enc=new TextEncoder();if(enc.encode(s).length<=max)return s;let out='';for(const c of s){if(enc.encode(out+c).length>max)break;out+=c;}return out;}
 function postForm(url,params){return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params)}).then(r=>r.json().catch(()=>({success:false,error:'HTTP '+r.status}))).catch(()=>({success:false,error:'Network error'}));}
 function userDataError(d){showAlert('Error','Save failed: '+(d.error||'unknown'),'err');}
-function canRerender(){return editingChannel===-1&&!editingNotes;}
+function canRerender(){return editingChannel===-1;}
 function trackerIdle(){return !document.querySelector('.new-tmpl-form.visible,.add-record-form.visible,.rec-value-input');}
 function loadNotes(){fetch('api/notes').then(r=>r.json()).then(d=>{if(Array.isArray(d.notes))sharedNotes=d.notes;if(Array.isArray(d.ch_note_idx))chNoteIdx=d.ch_note_idx;if(d.rev!==undefined)notesRev=d.rev;if(canRerender())renderChannels();else for(let i=0;i<CFG.CHANNEL_COUNT;i++)refreshNotesPreview(i);}).catch(()=>{});}
-function toggleNotes(idx){notesExpanded[idx]=!notesExpanded[idx];const s=document.getElementById('notesSec_'+idx);const b=document.getElementById('notesToggleBtn_'+idx);if(s)s.classList.toggle('expanded',notesExpanded[idx]);if(b)b.textContent=notesExpanded[idx]?'▴':'▾';}
-function selectNote(ch,ni,fromBtn){if(fromBtn&&chNoteIdx[ch]===ni)ni=NOTE_NONE;const prev=chNoteIdx[ch];chNoteIdx[ch]=ni;[prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+ch+'_'+i);const btn=document.getElementById('noteSelBtn_'+ch+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});refreshNotesPreview(ch);if(ni===NOTE_NONE||(sharedNotes[ni]||'').trim())postForm('api/note-select',{channel:ch,slot:ni}).then(d=>{if(!d.success)userDataError(d);loadNotes();});}
-function onNoteBlur(ch,ni,val){editingNotes=false;const t=utf8Cut(val.trim(),29);if(sharedNotes[ni]===t)return;sharedNotes[ni]=t;for(let c=0;c<CFG.CHANNEL_COUNT;c++){const inp=document.getElementById('noteInput_'+c+'_'+ni);if(inp&&inp!==document.activeElement)inp.value=t;refreshNotesPreview(c);}postForm('api/note-set',{slot:ni,text:t}).then(d=>{if(!d.success){userDataError(d);loadNotes();return;}if(t.trim()&&chNoteIdx[ch]===ni)postForm('api/note-select',{channel:ch,slot:ni}).then(()=>loadNotes());else loadNotes();});}
-function refreshNotesPreview(ch){const p=document.getElementById('notesPreview_'+ch);if(!p)return;const t=sharedNotes[chNoteIdx[ch]]||'';const empty=!t.trim();p.textContent=empty?'— no note —':t;p.classList.toggle('empty',empty);}
+function nameDraftOf(idx){
+    if(!nameDraft[idx])nameDraft[idx]={sel:chNoteIdx[idx],texts:sharedNotes.map(t=>t||'')};
+    return nameDraft[idx];
+}
+function cleanNote(t){return utf8Cut((t||'').trim(),29);}
+// Slots whose text the draft changes
+function changedNoteSlots(idx){
+    const d=nameDraft[idx];if(!d)return [];
+    const out=[];for(let i=0;i<12;i++){if(cleanNote(d.texts[i])!==(sharedNotes[i]||''))out.push(i);}
+    return out;
+}
+function draftName(idx){const d=nameDraft[idx];if(!d||d.sel===NOTE_NONE)return '';return cleanNote(d.texts[d.sel]);}
+function nameDirty(idx){
+    const d=nameDraft[idx];if(!d)return false;
+    return d.sel!==chNoteIdx[idx]||changedNoteSlots(idx).length>0;
+}
+function configDirty(idx){
+    const c=channels[idx],v=savedCfg[idx];if(!v)return true;
+    return c.events!==v.events||c.days!==v.days||c.dailyDose!==v.dailyDose||c.dosingRate!==v.dosingRate;
+}
+function nameOnlyChange(idx){return nameDirty(idx)&&!configDirty(idx);}
+function onNameInput(idx,ni,val){
+    editingChannel=idx;
+    const d=nameDraftOf(idx);d.texts[ni]=val;
+    if(d.sel===ni&&!val.trim())pickName(idx,NOTE_NONE);
+    refreshNotesPreview(idx);updateChannel(idx);
+}
+// ◎: pick a slot as the channel name (again = no name); saved with Save
+function selectNote(idx,ni){
+    const d=nameDraftOf(idx);
+    if(d.sel!==ni&&!(d.texts[ni]||'').trim())return;
+    editingChannel=idx;
+    pickName(idx,d.sel===ni?NOTE_NONE:ni);
+    refreshNotesPreview(idx);updateChannel(idx);
+}
+function pickName(idx,ni){
+    const d=nameDraftOf(idx);const prev=d.sel;d.sel=ni;
+    [prev,ni].forEach((i,j)=>{const sel=(j===1);const inp=document.getElementById('noteInput_'+idx+'_'+i);const btn=document.getElementById('noteSelBtn_'+idx+'_'+i);if(inp)inp.classList.toggle('sel',sel);if(btn){btn.classList.toggle('active',sel);btn.innerHTML=selSvg(sel);}});
+}
+// Saves the name draft: changed texts first, then the selection
+async function saveNameDraft(idx){
+    const d=nameDraft[idx];if(!d)return {success:true};
+    for(const i of changedNoteSlots(idx)){const r=await postForm('api/note-set',{slot:i,text:cleanNote(d.texts[i])});if(!r.success)return r;}
+    const sel=(d.sel!==NOTE_NONE&&cleanNote(d.texts[d.sel]))?d.sel:NOTE_NONE;
+    if(sel!==chNoteIdx[idx]||changedNoteSlots(idx).includes(sel)){const r=await postForm('api/note-select',{channel:idx,slot:sel});if(!r.success)return r;}
+    return {success:true};
+}
+// Saved name in the channel head; saved and pending name in Settings
+function refreshNotesPreview(ch){
+    const t=(sharedNotes[chNoteIdx[ch]]||'').trim();
+    const p=document.getElementById('chName_'+ch);
+    if(p){p.textContent=t||'no name \xB7 set in Settings';p.classList.toggle('empty',!t);}
+    const c=document.getElementById('nameCurrent_'+ch);
+    if(c)c.innerHTML=nameCurrentHtml(ch);
+}
+function nameCurrentHtml(ch){
+    const t=(sharedNotes[chNoteIdx[ch]]||'').trim();
+    let h='Current: '+(t?'<b>'+escAttr(t)+'</b>':'<i>none</i>');
+    if(nameDirty(ch)){const n=draftName(ch);h+=' \u2192 '+(n?'<b>'+escAttr(n)+'</b>':'<i>none</i>')+' (after Save)';}
+    return h;
+}
 function selSvg(f){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"'+(f?' fill="currentColor"':'')+'/></svg>';}
 function escAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function setSettingsOpen(idx,open){
@@ -639,7 +711,9 @@ function setSettingsOpen(idx,open){
 }
 function closeSettings(idx){
     setSettingsOpen(idx,false);
+    const hadDraft=!!nameDraft[idx];nameDraft[idx]=null;
     if(editingChannel===idx){editingChannel=-1;loadStatus();}
+    if(hadDraft&&canRerender())renderChannels();
 }
 function toggleSettings(idx){if(settingsOpen[idx])closeSettings(idx);else setSettingsOpen(idx,true);}
 function renderConfigSection(ch,idx,validClass,validMsg,validIcon,single,pumpTime,weekly){
@@ -647,10 +721,30 @@ const holdTile=`<div class="settings-field"><span>Hold to Run</span><button clas
 const stopTile=`<div class="settings-field"><span>Emergency Stop</span><button class="btn-stop" onclick="emergencyStop()">STOP</button><button class="btn-resume" onclick="showResumeModal()">Resume</button></div>`;
 const manualGroup=`<div class="settings-group"><div class="settings-title">Pump Control</div><div class="settings-grid">${holdTile}${stopTile}</div><div class="settings-note">STOP: all pumps and the master relay off at once, scheduler paused until Resume (also after a restart).</div></div>`;
 const footer=`<div class="valid-msg ${validClass}" id="validMsg_${idx}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${validIcon}</svg><span id="validTxt_${idx}">${validMsg}</span></div><div class="params-actions"><button class="btn btn-primary lockable-btn" id="saveBtn_${idx}" onclick="requestSave(${idx})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg><span class="save-lbl">Save</span></button><button class="btn btn-secondary" onclick="closeSettings(${idx})">Cancel</button></div><div class="lock-status"><span>Unlocked &middot; <span class="lock-time"></span></span><button class="lock-again-btn" onclick="setLocked(true)">Lock</button></div>`;
-if(idx===7){const dur=Math.round(ch.dailyDose)||60;return `<div class="settings-panel"><div class="settings-groups"><div class="settings-group"><div class="settings-title">Air Pump</div><div class="settings-grid settings-grid-single"><label class="settings-field">Run Duration (s/event)<input type="number" id="duration_${idx}" value="${dur}" step="1" min="1" max="${CFG.MAX_PUMP_SEC}" data-ch="${idx}"></label></div></div>${manualGroup}</div>${footer}</div>`;}
-return `<div class="settings-panel"><div class="settings-title">Configuration</div><div class="settings-grid"><label class="settings-field">Daily Dose (ml)<input type="number" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></label><div class="settings-field"><span>Single Dose</span><div class="settings-readout" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="settings-field"><span>Pump Time</span><div class="settings-readout" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="settings-field"><span>Weekly</span><div class="settings-readout" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div><div class="settings-groups"><div class="settings-group"><div class="settings-title">Pump Calibration</div><div class="settings-grid"><label class="settings-field">Measured in 30 s (ml)<input type="number" id="calibMl_${idx}" placeholder="—" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"></label><div class="settings-field"><span>Start Calibration</span><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="calibTxt_${idx}">30s</span></button></div></div></div>${manualGroup}</div>${footer}</div>`;}
+if(idx===7){const dur=Math.round(ch.dailyDose)||60;return `<div class="settings-panel">${renderNamePicker(idx)}<div class="settings-groups" style="margin-top:14px"><div class="settings-group"><div class="settings-title">Air Pump</div><div class="settings-grid settings-grid-single"><label class="settings-field">Run Duration (s/event)<input type="number" id="duration_${idx}" value="${dur}" step="1" min="1" max="${CFG.MAX_PUMP_SEC}" data-ch="${idx}"></label></div></div>${manualGroup}</div>${footer}</div>`;}
+return `<div class="settings-panel">${renderNamePicker(idx)}<div class="settings-title">Configuration</div><div class="settings-grid"><label class="settings-field">Daily Dose (ml)<input type="number" id="dose_${idx}" value="${ch.dailyDose}" step="0.1" min="0" data-ch="${idx}"></label><div class="settings-field"><span>Single Dose</span><div class="settings-readout" id="single_${idx}">${single.toFixed(1)} ml</div></div><div class="settings-field"><span>Pump Time</span><div class="settings-readout" id="pumpTime_${idx}">${pumpTime.toFixed(1)} s</div></div><div class="settings-field"><span>Weekly</span><div class="settings-readout" id="weekly_${idx}">${weekly.toFixed(1)} ml</div></div></div><div class="settings-groups"><div class="settings-group"><div class="settings-title">Pump Calibration</div><div class="settings-grid"><label class="settings-field">Measured in 30 s (ml)<input type="number" id="calibMl_${idx}" placeholder="—" step="0.1" min="0" value="${ch.dosingRate>0?(ch.dosingRate*CFG.CALIB_SEC).toFixed(2):''}" data-ch="${idx}"></label><div class="settings-field"><span>Start Calibration</span><button class="calib-run-btn" id="calibBtn_${idx}" onclick="runCalib(${idx})"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="calibTxt_${idx}">30s</span></button></div></div></div>${manualGroup}</div>${footer}</div>`;}
 
-function renderNotesSection(idx){const si=chNoteIdx[idx];const st=sharedNotes[si]||'';const empty=!st.trim();const exp=notesExpanded[idx];let entries='';for(let i=0;i<12;i++){const isSel=(i===si);entries+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="29" value="'+escAttr(sharedNotes[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+',true)">'+selSvg(isSel)+'</button></div>';}return '<div class="notes-section'+(exp?' expanded':'')+'" id="notesSec_'+idx+'"><div class="notes-header"><svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="notes-preview'+(empty?' empty':'')+'" id="notesPreview_'+idx+'">'+(empty?'— no note —':escAttr(st))+'</span><button class="notes-toggle-btn" id="notesToggleBtn_'+idx+'" onclick="toggleNotes('+idx+')">'+(exp?'▴':'▾')+'</button></div><div class="notes-list" id="notesList_'+idx+'">'+entries+'<div class="notes-hint">blur \xB7 Enter = save \xB7 ◎ = set for channel</div></div></div>';}
+// Channel name picker (Settings): shared pool of 12 texts, the selected one names the channel
+function renderNamePicker(idx){
+    const d=nameDraft[idx];
+    const si=d?d.sel:chNoteIdx[idx];
+    const texts=d?d.texts:sharedNotes;
+    let rows='';
+    for(let i=0;i<12;i++){const isSel=(i===si);rows+='<div class="note-entry"><span class="note-idx">'+(i+1)+'</span><input class="note-input'+(isSel?' sel':'')+'" id="noteInput_'+idx+'_'+i+'" type="text" maxlength="29" value="'+escAttr(texts[i]||'')+'" placeholder="— empty —" data-ch="'+idx+'" data-ni="'+i+'"><button class="note-sel-btn'+(isSel?' active':'')+'" id="noteSelBtn_'+idx+'_'+i+'" onclick="selectNote('+idx+','+i+')">'+selSvg(isSel)+'</button></div>';}
+    return '<div class="settings-group"><div class="settings-title">Channel Name</div><div class="name-current" id="nameCurrent_'+idx+'">'+nameCurrentHtml(idx)+'</div><div class="name-list">'+rows+'</div><div class="settings-note">Shared list for all channels \xB7 \u25CE = this channel\'s name \xB7 changes apply on Save</div></div>';
+}
+// Channel head: number, name, UTC clock, today's dose
+function renderChannelHead(ch,idx){
+    const t=(sharedNotes[chNoteIdx[idx]]||'').trim();
+    const evCnt=popcount(ch.events);
+    const todayIdx=(new Date().getDay()+6)%7;
+    let info;
+    if(evCnt===0||popcount(ch.days)===0)info='No dosing scheduled';
+    else if(idx===7)info=`Air pump \xB7 <b>${Math.round(ch.dailyDose)} s</b> \xD7 ${evCnt} / day`;
+    else if(!(ch.days&(1<<todayIdx)))info=`Not scheduled today \xB7 <b>${ch.dailyDose.toFixed(1)} ml</b> / day`;
+    else{const pct=ch.dailyDose>0?Math.min(100,ch.todayDosed/ch.dailyDose*100):0;info=`Today <b>${ch.todayDosed.toFixed(1)} / ${ch.dailyDose.toFixed(1)} ml</b><span class="dose-bar"><span style="width:${pct}%"></span></span><span>${evCnt} \xD7 ${(ch.dailyDose/evCnt).toFixed(1)} ml</span>`;}
+    return `<div class="ch-head"><div class="ch-head-top"><span class="ch-label">Channel ${idx+1}</span><span class="ch-name${t?'':' empty'}" id="chName_${idx}">${t?escAttr(t):'no name \xB7 set in Settings'}</span><span class="card-time">--:--:--</span></div><div class="ch-head-info">${info}</div></div>`;
+}
 
 function updateChannel(idx){
     const ch=channels[idx];
@@ -668,8 +762,6 @@ function updateChannel(idx){
     const single=evCnt>0?ch.dailyDose/evCnt:0;
     const pumpTime=ch.dosingRate>0?single/ch.dosingRate:0;
     const weekly=ch.dailyDose*dayCnt;
-    document.getElementById(`evInfo_${idx}`).textContent=`${evCnt} of 23`;
-    document.getElementById(`dayInfo_${idx}`).textContent=`${dayCnt} of 7`;
     if(!isDur){document.getElementById(`single_${idx}`).textContent=`${single.toFixed(1)} ml`;document.getElementById(`pumpTime_${idx}`).textContent=`${pumpTime.toFixed(1)} s`;document.getElementById(`weekly_${idx}`).textContent=`${weekly.toFixed(1)} ml`;}
 
     const validMsg=document.getElementById(`validMsg_${idx}`);
@@ -687,9 +779,9 @@ function updateChannel(idx){
     else{validMsg.classList.add('ok');validTxt.textContent='Configuration valid';icon='<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>';saveBtn.disabled=false;ch.state='configured';}
     
     validMsg.querySelector('svg').innerHTML=icon;
-    const badge=document.getElementById('stateBadge');
-    if(badge&&idx===currentCh){badge.className=`state-badge ${ch.state}`;badge.textContent=getStateLabel(ch.state);}
+    if(saveBtn.disabled&&nameOnlyChange(idx))saveBtn.disabled=false;
     document.querySelectorAll(`.ch-nav-btn[data-ch="${idx}"]`).forEach(btn=>{btn.className=`ch-nav-btn ${ch.state}${currentCh===idx?' active':''}`;});
+    if(idx===currentCh)updateInactiveView();
 }
 
 function runCalib(idx){
@@ -792,7 +884,7 @@ function loadStatus(){
     fetch('api/dosing-status').then(r=>{if(r.status===401){showSessionExpired();return null;}return r.json();}).then(data=>{if(!data)return;
         updateAlarmBanner(data);
         if(data.stopped!==undefined)setStopped(data.stopped);
-        if(data.notesRev!==undefined&&notesRev!==null&&data.notesRev!==notesRev&&!editingNotes)loadNotes();
+        if(data.notesRev!==undefined&&notesRev!==null&&data.notesRev!==notesRev)loadNotes();
         if(data.paramsRev!==undefined&&paramsRev!==null&&data.paramsRev!==paramsRev&&trackerIdle())loadParamLog();
         if(data.channels){
             data.channels.forEach((chData,i)=>{
@@ -808,6 +900,8 @@ function loadStatus(){
                 channels[i].name=chData.name||('CH'+i);
                 channels[i].eventsCompleted=chData.eventsCompleted||0;
                 channels[i].eventsFailed=chData.eventsFailed||0;
+                channels[i].todayDosed=chData.todayDosed||0;
+                savedCfg[i]={events:channels[i].events,days:channels[i].days,dailyDose:channels[i].dailyDose,dosingRate:channels[i].dosingRate};
                 channels[i].state=chData.state||'inactive';
             });
             if(canRerender()){
@@ -818,14 +912,13 @@ function loadStatus(){
             const wasActive=activeChannel>=0;
             activeChannel=data.activeChannel;
             activeEventHour=data.activeEventHour!==undefined?data.activeEventHour:-1;
-            if(wasActive!==(activeChannel>=0)&&editingChannel===-1&&!editingNotes)renderChannels();
+            if(wasActive!==(activeChannel>=0)&&editingChannel===-1)renderChannels();
         }
     }).catch(()=>{});
 }
 
 function popcount(n){let count=0;while(n){count+=n&1;n>>>=1;}return count;}
-function getStateLabel(state){return{inactive:'Inactive',incomplete:'Setup',invalid:'Invalid',configured:'Active'}[state]||state;}
-function updateClock(){const now=new Date();const t=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0')+':'+String(now.getUTCSeconds()).padStart(2,'0');document.querySelectorAll('.card-time').forEach(el=>el.textContent=t);}
+function updateClock(){const now=new Date();const t=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0')+':'+String(now.getUTCSeconds()).padStart(2,'0');document.querySelectorAll('.card-time').forEach(el=>el.textContent=t+' UTC');}
 function logout(){fetch('api/logout',{method:'POST'}).then(()=>{if(window.location.pathname.indexOf('/device/')!==-1){window.location.href='/dashboard';}else{window.location.href='login';}});}
 
 let pendingSaveChannel=-1;
@@ -833,6 +926,17 @@ let pendingSaveChannel=-1;
 function showSaveModal(idx){
     pendingSaveChannel=idx;
     document.getElementById('saveModalChannel').textContent=idx+1;
+    const nameOnly=nameOnlyChange(idx);
+    document.getElementById('saveModalText').textContent=nameOnly?'Only the channel name changes; the schedule stays as it is.':"Changes apply immediately. Today's remaining doses are recalculated from what has already been dosed.";
+    let name='',also='';
+    if(nameDirty(idx)){
+        name=draftName(idx)||'(no name)';
+        const slots=changedNoteSlots(idx);
+        const others=[];for(let c=0;c<CFG.CHANNEL_COUNT;c++){if(c!==idx&&slots.includes(chNoteIdx[c]))others.push('CH'+(c+1));}
+        if(others.length)also='Also renames '+others.join(', ');
+    }
+    document.getElementById('saveModalName').textContent=name;
+    document.getElementById('saveModalAlso').textContent=also;
     document.getElementById('saveModal').classList.add('show');
 }
 
@@ -854,10 +958,16 @@ function confirmSave(){
     let payload;
     if(idx===7){const di=document.getElementById(`duration_${idx}`);const ds=parseFloat(di?di.value:0)||0;const ec=popcount(ch.events);payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ds,dosingRate:1/Math.max(1,ec),enabled:ch.enabled!==false};}
     else{payload={channel:idx,events:ch.events,days:ch.days,dailyDose:ch.dailyDose,dosingRate:ch.dosingRate,enabled:ch.enabled!==false};}
-    fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-    .then(r=>r.json())
-    .then(data=>{editingChannel=-1;if(data.success){settingsOpen[idx]=false;resetLockTimer();renderChannels();showAlert('Success',saveResultText(data,idx),'ok');}else{showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');}})
-    .catch(()=>showAlert('Error','Connection error','err'));
+    const nameOnly=nameOnlyChange(idx);
+    const cfgReq=nameOnly?Promise.resolve(null):fetch('api/dosing-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+    cfgReq.then(async data=>{
+        if(data&&!data.success){editingChannel=-1;showAlert('Error','Save failed: '+(data.error||'Unknown error'),'err');return;}
+        const nr=await saveNameDraft(idx);
+        editingChannel=-1;nameDraft[idx]=null;settingsOpen[idx]=false;resetLockTimer();
+        loadNotes();renderChannels();
+        if(!nr.success)showAlert('Error',(data?'Configuration saved, but the name was not: ':'Name not saved: ')+(nr.error||'unknown'),'err');
+        else showAlert('Success',data?saveResultText(data,idx):'Channel name saved.','ok');
+    }).catch(()=>showAlert('Error','Connection error','err'));
 }
 
 document.addEventListener('click',function(e){if(e.target.id==='alertModal')closeAlert();if(e.target.id==='saveModal')closeSaveModal();if(e.target.id==='lockModal')hideLockForm();});
